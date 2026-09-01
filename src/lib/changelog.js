@@ -1,0 +1,44 @@
+// Hand-written release notes, shown once in a "What's new" popup the first
+// time the app launches on a newer version than it last recorded. Add an
+// entry here as part of shipping any version you want users to actually
+// notice — silent bumps (an unlisted version) are simply skipped over.
+export const CHANGELOG = {
+  '0.5.17': [
+    'Fixed idea nodes sometimes getting deleted while typing in a different node',
+    'Fixed multi-node drags on the mind map accidentally selecting text instead of moving',
+    'Idea node text boxes now grow with what you write, instead of a fixed size',
+    'Idea node titles can be bolded, and their text can be hidden — good for marking beats',
+    'Select multiple mind-map nodes and press Ctrl+Shift+E to link them in a chain',
+    'Right-click multiple selected nodes to align, snap to grid, or space them evenly',
+    'More contrast on mind-map nodes and their text',
+    'Misspelled words now show real spelling suggestions on right-click'
+  ]
+}
+
+function parseVersion(v) {
+  return String(v || '')
+    .split('.')
+    .map((n) => parseInt(n, 10) || 0)
+}
+
+// True if `a` is a strictly newer semver than `b`.
+export function isNewerVersion(a, b) {
+  const pa = parseVersion(a)
+  const pb = parseVersion(b)
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const da = pa[i] || 0
+    const db = pb[i] || 0
+    if (da !== db) return da > db
+  }
+  return false
+}
+
+// Every changelog entry newer than `fromVersion` (exclusive) and no newer
+// than `toVersion` (inclusive) — covers the case where auto-update or a
+// manual Mac download jumps across more than one released version at once.
+export function changelogSince(fromVersion, toVersion) {
+  return Object.keys(CHANGELOG)
+    .filter((v) => isNewerVersion(v, fromVersion) && !isNewerVersion(v, toVersion))
+    .sort((a, b) => (isNewerVersion(a, b) ? 1 : isNewerVersion(b, a) ? -1 : 0))
+    .flatMap((v) => CHANGELOG[v])
+}

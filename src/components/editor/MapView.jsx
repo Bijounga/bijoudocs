@@ -91,6 +91,7 @@ export default function MapView({ scriptId, script }) {
   const duplicateSection = useStore((s) => s.duplicateSection)
   const duplicateSections = useStore((s) => s.duplicateSections)
   const duplicateIdeaNode = useStore((s) => s.duplicateIdeaNode)
+  const linkMapNodesInOrder = useStore((s) => s.linkMapNodesInOrder)
   const ideaNodePresets = useStore((s) => s.ideaNodePresets)
   const addIdeaNodePreset = useStore((s) => s.addIdeaNodePreset)
   const deleteIdeaNodePreset = useStore((s) => s.deleteIdeaNodePreset)
@@ -158,24 +159,28 @@ export default function MapView({ scriptId, script }) {
         spaceDownRef.current = true
         if (canvasRef.current) canvasRef.current.style.cursor = 'grab'
       }
-      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedEdgeId) {
+      // Computed up front and used to guard every node/edge-deleting branch
+      // below — this listener is on `document`, so without it, typing a
+      // real Backspace inside a node's title/text field (or a section
+      // heading, or the idea-node preset manager) while some *other* node
+      // or edge was left selected from an earlier click would silently
+      // delete that selection instead of just erasing a character. That's
+      // exactly what a leftover selection looks like: text you're actively
+      // editing, and a node vanishing for no visible reason.
+      const active = document.activeElement
+      const isEditingText = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)
+      if (!isEditingText && (e.key === 'Delete' || e.key === 'Backspace') && selectedEdgeId) {
         removeMapEdge(scriptId, selectedEdgeId)
         setSelectedEdgeId(null)
         return
       }
-      if ((e.key === 'Delete' || e.key === 'Backspace') && validSelectedNodeIds.length) {
+      if (!isEditingText && (e.key === 'Delete' || e.key === 'Backspace') && validSelectedNodeIds.length) {
         e.preventDefault()
         deleteSelection(validSelectedNodeIds)
         return
       }
       const st = useStore.getState()
       const combo = comboFromEvent(e)
-      // Guarded against whatever's actually focused — this listener is on
-      // `document`, so without this a Ctrl+C/V meant for a node's own
-      // title/text field (or, in split view, the script editor sitting
-      // right next to the map) would get hijacked into duplicating nodes.
-      const active = document.activeElement
-      const isEditingText = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)
 
       // While the idea-node menu is open, a number picks an item directly
       // (1 = Blank, 2+ = presets in order) — a keybind-driven way to spawn
@@ -237,6 +242,10 @@ export default function MapView({ scriptId, script }) {
           ...ideaIds.map((id) => duplicateIdeaNode(scriptId, id)).filter(Boolean)
         ]
         if (newIds.length) setSelectedNodeIds(newIds)
+      }
+      if (!isEditingText && combo === st.keybinds.mapLinkNodes && validSelectedNodeIds.length >= 2) {
+        e.preventDefault()
+        linkMapNodesInOrder(scriptId, validSelectedNodeIds)
       }
     }
     function onKeyUp(e) {
@@ -320,6 +329,13 @@ export default function MapView({ scriptId, script }) {
     if (e.button !== 0) return
     const node = script.mapLayout.nodes[sectionId]
     if (!node) return
+    // Without this, dragging a node (most noticeably a multi-node group,
+    // where the pointer inevitably crosses over other nodes' text) lets the
+    // browser's native text-selection-drag kick in at the same time as the
+    // move — titles/summaries start highlighting instead of just the nodes
+    // sliding. Titles are already double-click-to-edit, so a plain
+    // mousedown-drag on a card is never meant to select its text anyway.
+    e.preventDefault()
     const isPartOfSelection = validSelectedNodeIds.includes(sectionId) && validSelectedNodeIds.length > 1
     const groupIds = isPartOfSelection ? validSelectedNodeIds : [sectionId]
     const groupStart = {}
@@ -656,6 +672,7 @@ export default function MapView({ scriptId, script }) {
                   node={node}
                   isLit={order.has(id)}
                   isSelected={validSelectedNodeIds.includes(id)}
+                  hideSummaries={script.mapLayout.hideSummaries}
                   order={order.get(id)}
                   threadEndDir={threadEndDirection(id, nodes, script.mapLayout.edges)}
                   connectedSides={connectedSides}

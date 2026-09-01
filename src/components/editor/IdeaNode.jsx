@@ -16,6 +16,7 @@ export default function IdeaNode({
   isSelected,
   isLit,
   order,
+  hideSummaries,
   connectedSides,
   threadEndDir,
   onNodeMouseDown,
@@ -29,11 +30,15 @@ export default function IdeaNode({
   const setIdeaNodeText = useStore((s) => s.setIdeaNodeText)
   const commitIdeaNodeText = useStore((s) => s.commitIdeaNodeText)
   const setIdeaNodeColor = useStore((s) => s.setIdeaNodeColor)
+  const toggleIdeaNodeTitleBold = useStore((s) => s.toggleIdeaNodeTitleBold)
+  const toggleMapNodeCollapsed = useStore((s) => s.toggleMapNodeCollapsed)
   const deleteIdeaNodes = useStore((s) => s.deleteIdeaNodes)
 
   const [editingTitle, setEditingTitle] = useState(false)
 
   const color = node.color || 'var(--ink-faint)'
+  const titleWeight = node.titleBold ? 800 : 600
+  const showText = !hideSummaries && !node.collapsed
 
   return (
     <div
@@ -52,7 +57,7 @@ export default function IdeaNode({
         {editingTitle ? (
           <input
             className="idea-node-title"
-            style={{ color }}
+            style={{ color, fontWeight: titleWeight }}
             placeholder="Title…"
             value={node.title}
             autoFocus
@@ -74,7 +79,7 @@ export default function IdeaNode({
         ) : (
           <span
             className="idea-node-title idea-node-title-display"
-            style={{ color: node.title ? color : 'var(--ink-faint)' }}
+            style={{ color: node.title ? color : 'var(--ink-faint)', fontWeight: titleWeight }}
             onMouseDown={(e) => e.detail > 1 && e.stopPropagation()}
             onDoubleClick={(e) => {
               e.stopPropagation()
@@ -84,6 +89,14 @@ export default function IdeaNode({
             {node.title || 'Title…'}
           </span>
         )}
+        <button
+          className={'idea-node-bold' + (node.titleBold ? ' active' : '')}
+          title={node.titleBold ? 'Unbold title' : 'Bold title'}
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={() => toggleIdeaNodeTitleBold(scriptId, id)}
+        >
+          B
+        </button>
         <input
           type="color"
           className="idea-node-color-input"
@@ -101,15 +114,29 @@ export default function IdeaNode({
           <Icon name="x" size={11} />
         </button>
       </div>
-      <textarea
-        className="idea-node-text"
-        placeholder="Write the idea…"
-        value={node.text}
-        onMouseDown={(e) => e.stopPropagation()}
-        onFocus={() => pushUndo(scriptId)}
-        onChange={(e) => setIdeaNodeText(scriptId, id, e.target.value)}
-        onBlur={() => commitIdeaNodeText(scriptId)}
-      />
+      {showText && (
+        <textarea
+          className="idea-node-text"
+          placeholder="Write the idea…"
+          value={node.text}
+          onMouseDown={(e) => e.stopPropagation()}
+          onFocus={() => pushUndo(scriptId)}
+          onChange={(e) => setIdeaNodeText(scriptId, id, e.target.value)}
+          onBlur={() => commitIdeaNodeText(scriptId)}
+        />
+      )}
+      {!hideSummaries && (
+        <div className="map-node-btns idea-node-btns">
+          <button
+            className={'map-node-btn' + (node.collapsed ? ' active' : '')}
+            title={node.collapsed ? 'Show this node’s text' : 'Hide just this node’s text'}
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={() => toggleMapNodeCollapsed(scriptId, id)}
+          >
+            <Icon name="eye" size={12} />
+          </button>
+        </div>
+      )}
       {CONNECTOR_SIDES.map((side) => {
         const connected = connectedSides.has(side)
         return (

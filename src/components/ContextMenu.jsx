@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useRef, useState } from 'react'
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useStore } from '../state/store.js'
 import { findLine, sectionsHaveContent } from '../lib/model.js'
 
@@ -21,6 +21,9 @@ export default function ContextMenu() {
   const deleteMapSelection = useStore((s) => s.deleteMapSelection)
   const duplicateSection = useStore((s) => s.duplicateSection)
   const duplicateIdeaNode = useStore((s) => s.duplicateIdeaNode)
+  const alignMapNodesToLine = useStore((s) => s.alignMapNodesToLine)
+  const snapMapNodesToGrid = useStore((s) => s.snapMapNodesToGrid)
+  const spaceMapNodesEvenly = useStore((s) => s.spaceMapNodesEvenly)
   const scripts = useStore((s) => s.scripts)
   const openScript = useStore((s) => s.openScript)
   const togglePin = useStore((s) => s.togglePin)
@@ -28,6 +31,14 @@ export default function ContextMenu() {
 
   const ref = useRef(null)
   const [pos, setPos] = useState(null)
+
+  // A misspelled-word right-click pops Electron's native spellcheck-
+  // suggestions menu from the main process (see electron/main/index.js) —
+  // it doesn't know about this component's own menu, so it tells us to
+  // close ours via IPC rather than leaving it sitting open underneath.
+  useEffect(() => {
+    if (window.bijou && window.bijou.onCloseContextMenu) window.bijou.onCloseContextMenu(closeContextMenu)
+  }, [closeContextMenu])
 
   useLayoutEffect(() => {
     if (!menu || !ref.current) {
@@ -117,6 +128,9 @@ export default function ContextMenu() {
             onClick: act(() => (isIdea ? duplicateIdeaNode(menu.scriptId, menu.sectionId) : duplicateSection(menu.scriptId, menu.sectionId)))
           }
         : null,
+      ids.length > 1 ? { label: 'Align to a line', onClick: act(() => alignMapNodesToLine(menu.scriptId, ids)) } : null,
+      ids.length > 1 ? { label: 'Snap to grid', onClick: act(() => snapMapNodesToGrid(menu.scriptId, ids)) } : null,
+      ids.length > 1 ? { label: 'Space evenly', onClick: act(() => spaceMapNodesEvenly(menu.scriptId, ids)) } : null,
       {
         label: deleteLabel,
         danger: true,

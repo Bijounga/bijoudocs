@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, dialog, Menu } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import https from 'https'
 import path from 'path'
@@ -67,6 +67,35 @@ function createWindow() {
   win.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url)
     return { action: 'deny' }
+  })
+
+  // The renderer has its own right-click menu (tag/note/duplicate/delete
+  // etc. — see ContextMenu.jsx) for normal actions, but that meant right-
+  // clicking a misspelled word only ever showed the app's menu, never the
+  // OS's real spelling suggestions ("can see it's misspelled but there's no
+  // suggestions"). This is Electron's separate, lower-level context-menu
+  // notification — it fires regardless of what the renderer's own JS does
+  // with the DOM contextmenu event — so it's able to layer a native
+  // suggestions menu on top without touching any of the app's own menu
+  // logic. Only acts when there's actually a misspelled word under the
+  // cursor; every other right-click is untouched and still goes through
+  // the app's own menu exactly as before.
+  win.webContents.on('context-menu', (_e, params) => {
+    if (!params.misspelledWord) return
+    // The app's own React-driven menu may have already opened for this same
+    // right-click (its handler doesn't know about spellcheck) — tell the
+    // renderer to close it first so it isn't left sitting underneath/behind
+    // the native menu once that one closes.
+    win.webContents.send('contextmenu:close')
+    const template = params.dictionarySuggestions.length
+      ? params.dictionarySuggestions.map((s) => ({ label: s, click: () => win.webContents.replaceMisspelling(s) }))
+      : [{ label: 'No suggestions', enabled: false }]
+    template.push({ type: 'separator' })
+    template.push({
+      label: 'Add to dictionary',
+      click: () => win.webContents.session.addWordToSpellCheckerDictionary(params.misspelledWord)
+    })
+    Menu.buildFromTemplate(template).popup({ window: win, x: params.x, y: params.y })
   })
 
   if (isDev && process.env['ELECTRON_RENDERER_URL']) {

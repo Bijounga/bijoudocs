@@ -8,6 +8,7 @@ import { buildExportContent, parseImportedText } from '../lib/exportImport.js'
 import { DEFAULT_KEYBINDS } from '../lib/keybinds.js'
 import { buildNavList } from '../lib/navigation.js'
 import { totalWordCountAll } from '../lib/timecode.js'
+import { changelogSince } from '../lib/changelog.js'
 
 const MAX_UNDO = 60
 const saveTimers = {}
@@ -85,6 +86,10 @@ export const useStore = create(
     contextMenu: null,
     mapViewOpen: false,
     mapSplitOpen: false,
+    whatsNewOpen: false,
+    whatsNewVersion: null,
+    whatsNewEntries: [],
+    lastSeenVersion: null,
     // App-wide (not per-script) — quick-add presets for mind-map idea
     // nodes. Seeded with "But"/"Therefore" (the South Park writing-method
     // pair) on first use, fully user-editable after.
@@ -133,8 +138,30 @@ export const useStore = create(
         if (settings && settings.leftMarginWidth) s.leftMarginWidth = settings.leftMarginWidth
         if (settings && settings.rightMarginWidth) s.rightMarginWidth = settings.rightMarginWidth
         if (settings && settings.ideaNodePresets) s.ideaNodePresets = settings.ideaNodePresets
+        s.lastSeenVersion = appVersion
       })
+      // Only pops the "what's new" popup once this device has already
+      // recorded a version once before — the very first launch ever (or
+      // the first launch after adding this feature) has nothing to compare
+      // against, and showing a changelog on a brand-new install would just
+      // be confusing rather than useful.
+      if (settings && settings.lastSeenVersion && settings.lastSeenVersion !== appVersion) {
+        const entries = changelogSince(settings.lastSeenVersion, appVersion)
+        if (entries.length) {
+          set((s) => {
+            s.whatsNewOpen = true
+            s.whatsNewVersion = appVersion
+            s.whatsNewEntries = entries
+          })
+        }
+      }
+      get().saveAppSettings()
       if (sorted.length) get().ensureDailyRollover(sorted[0].id)
+    },
+    closeWhatsNew() {
+      set((s) => {
+        s.whatsNewOpen = false
+      })
     },
     // Switches which folder scripts are read from/saved to (e.g. a Google
     // Drive/Dropbox/iCloud folder, for syncing scripts across machines).
@@ -194,7 +221,8 @@ export const useStore = create(
         noteColor: s.noteColor,
         leftMarginWidth: s.leftMarginWidth,
         rightMarginWidth: s.rightMarginWidth,
-        ideaNodePresets: s.ideaNodePresets
+        ideaNodePresets: s.ideaNodePresets,
+        lastSeenVersion: s.lastSeenVersion
       })
     },
     setNoteColor(color) {
@@ -1974,6 +2002,108 @@ export const useStore = create(
         const node = script && script.mapLayout.nodes[nodeId]
         if (node) node.color = color
         if (script) script.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+    },
+    toggleIdeaNodeTitleBold(scriptId, nodeId) {
+      get().pushUndo(scriptId)
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        const node = script && script.mapLayout.nodes[nodeId]
+        if (node) node.titleBold = !node.titleBold
+        if (script) script.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+    },
+    // Connects a multi-node map selection into one directed chain, in
+    // whatever order they're currently selected — one keypress instead of
+    // dragging N-1 edges by hand. Skips any consecutive pair that's already
+    // linked. One pushUndo for the whole chain, same reasoning as
+    // duplicateLines/duplicateSections: a single user action, single undo
+    // step, not one per edge.
+    linkMapNodesInOrder(scriptId, ids) {
+      if (ids.length < 2) return
+      get().pushUndo(scriptId)
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        if (!script) return
+        for (let i = 0; i < ids.length - 1; i++) {
+          const fromId = ids[i]
+          const toId = ids[i + 1]
+          const exists = script.mapLayout.edges.some((e) => e.from === fromId && e.to === toId)
+          if (!exists) script.mapLayout.edges.push({ id: uid(), from: fromId, to: toId })
+        }
+        script.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+    },
+    // Three separate "straighten out a selection" moves, each its own
+    // right-click action rather than one combined behavior — the user asked
+    // for all three as distinct options, not one auto-layout.
+    alignMapNodesToLine(scriptId, ids) {
+      if (ids.length < 2) return
+      get().pushUndo(scriptId)
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        if (!script) return
+        const nodes = ids.map((id) => script.mapLayout.nodes[id]).filter(Boolean)
+        if (nodes.length < 2) return
+        const xs = nodes.map((n) => n.x)
+        const ys = nodes.map((n) => n.y)
+        const xSpread = Math.max(...xs) - Math.min(...xs)
+        const ySpread = Math.max(...ys) - Math.min(...ys)
+        // Whichever axis they're already more spread along is the one that
+        // reads as "a row"/"a column" — snap the *other* axis flat onto it.
+        if (xSpread >= ySpread) {
+          const avgY = ys.reduce((a, b) => a + b, 0) / ys.length
+          nodes.forEach((n) => { n.y = avgY })
+        } else {
+          const avgX = xs.reduce((a, b) => a + b, 0) / xs.length
+          nodes.forEach((n) => { n.x = avgX })
+        }
+        script.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+    },
+    snapMapNodesToGrid(scriptId, ids) {
+      if (!ids.length) return
+      const gridSize = 20
+      get().pushUndo(scriptId)
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        if (!script) return
+        ids.forEach((id) => {
+          const n = script.mapLayout.nodes[id]
+          if (!n) return
+          n.x = Math.round(n.x / gridSize) * gridSize
+          n.y = Math.round(n.y / gridSize) * gridSize
+        })
+        script.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+    },
+    spaceMapNodesEvenly(scriptId, ids) {
+      if (ids.length < 2) return
+      get().pushUndo(scriptId)
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        if (!script) return
+        const nodes = ids.map((id) => script.mapLayout.nodes[id]).filter(Boolean)
+        if (nodes.length < 2) return
+        const xs = nodes.map((n) => n.x)
+        const ys = nodes.map((n) => n.y)
+        const xSpread = Math.max(...xs) - Math.min(...xs)
+        const ySpread = Math.max(...ys) - Math.min(...ys)
+        const horizontal = xSpread >= ySpread
+        const sorted = nodes.slice().sort((a, b) => (horizontal ? a.x - b.x : a.y - b.y))
+        const first = horizontal ? sorted[0].x : sorted[0].y
+        const last = horizontal ? sorted[sorted.length - 1].x : sorted[sorted.length - 1].y
+        const step = (last - first) / (sorted.length - 1)
+        sorted.forEach((n, i) => {
+          if (horizontal) n.x = first + step * i
+          else n.y = first + step * i
+        })
+        script.updatedAt = Date.now()
       })
       get().scheduleSave(scriptId, { flash: false })
     },

@@ -16,6 +16,7 @@ const api = {
   chooseStorageDir: () => ipcRenderer.invoke('settings:chooseStorageDir'),
   resetStorageDir: () => ipcRenderer.invoke('settings:resetStorageDir'),
   onUpdateStatus: (cb) => ipcRenderer.on('update:status', (_e, payload) => cb(payload)),
+  onCloseContextMenu: (cb) => ipcRenderer.on('contextmenu:close', () => cb()),
   installUpdateNow: () => ipcRenderer.invoke('update:installNow'),
   checkForUpdatesNow: () => ipcRenderer.invoke('update:checkNow'),
   downloadManualUpdate: (version) => ipcRenderer.invoke('update:downloadManualMac', version)

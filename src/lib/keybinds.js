@@ -22,7 +22,8 @@ export const DEFAULT_KEYBINDS = {
   mapAddSection: 'ctrl+shift+m',
   mapToggleSummaries: 'ctrl+shift+y',
   mapAddIdeaNode: 'ctrl+shift+i',
-  duplicate: 'ctrl+d'
+  duplicate: 'ctrl+d',
+  mapLinkNodes: 'ctrl+shift+e'
 }
 
 export const SHORTCUT_META = [
@@ -61,6 +62,11 @@ export const SHORTCUT_META = [
     id: 'duplicate',
     label: 'Duplicate selection',
     desc: 'Duplicates whatever is currently highlighted — selected lines, the line your cursor is in, a selected section, or (in the mind map) selected nodes.'
+  },
+  {
+    id: 'mapLinkNodes',
+    label: 'Link selected mind-map nodes',
+    desc: 'With 2+ nodes selected on the mind map, connects them into one chain in selection order — one press instead of dragging each edge by hand.'
   }
 ]
 
