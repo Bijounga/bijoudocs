@@ -1,6 +1,6 @@
 {
   "name": "bijoudocs",
-  "version": "0.5.7",
+  "version": "0.5.8",
   "description": "BijouDocs — a desktop script workspace for YouTube scripts",
   "main": "out/main/index.js",
   "author": "Bijou",
@@ -41,7 +41,7 @@
       "provider": "github",
       "owner": "Bijounga",
       "repo": "bijoudocs",
-      "draft": false
+      "releaseType": "release"
     },
     "win": {
       "target": "nsis",
