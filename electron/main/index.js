@@ -1,11 +1,42 @@
 import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { autoUpdater } from 'electron-updater'
+import https from 'https'
 import path from 'path'
 import fs from 'fs'
 import * as fileStore from './fileStore.js'
 import { migrateScript, newBlankScript } from './scriptSchema.js'
 
 const isDev = !app.isPackaged
+const isMac = process.platform === 'darwin'
+
+// Follows redirects manually — GitHub release asset URLs 302 to a CDN —
+// and streams the response straight to disk.
+function downloadFile(url, destPath, redirectsLeft = 5) {
+  return new Promise((resolve, reject) => {
+    https
+      .get(url, (res) => {
+        if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+          res.resume()
+          if (redirectsLeft <= 0) {
+            reject(new Error('Too many redirects downloading ' + url))
+            return
+          }
+          downloadFile(res.headers.location, destPath, redirectsLeft - 1).then(resolve, reject)
+          return
+        }
+        if (res.statusCode !== 200) {
+          res.resume()
+          reject(new Error('Download failed: HTTP ' + res.statusCode + ' for ' + url))
+          return
+        }
+        const file = fs.createWriteStream(destPath)
+        res.pipe(file)
+        file.on('finish', () => file.close(() => resolve()))
+        file.on('error', reject)
+      })
+      .on('error', reject)
+  })
+}
 // Lets a local script drive/inspect the renderer via CDP during development
 // (see scripts/cdp.mjs) instead of OS-level mouse automation.
 if (isDev) app.commandLine.appendSwitch('remote-debugging-port', '9222')
@@ -131,19 +162,25 @@ function registerIpc() {
   })
 }
 
-// Checks GitHub Releases for a newer published version, downloads it
-// silently in the background, and tells the renderer once it's ready to
-// install — the renderer just shows a "restart to update" button, actually
-// applying it (quitAndInstall) waits for the user to ask for it. No-op in
-// dev, where there's no packaged app/update feed to check against.
+// Checks GitHub Releases for a newer published version. On Windows this
+// downloads it silently in the background and tells the renderer once
+// it's ready to install (electron-updater's NSIS-based quitAndInstall
+// works cleanly there). On macOS, electron-updater's native path goes
+// through Squirrel.Mac, which requires the app to be code-signed — this
+// project has no Apple Developer certificate, so that path fails. Rather
+// than try to silently auto-apply an update Squirrel.Mac will refuse,
+// autoDownload is left off on Mac and 'update-available' instead offers a
+// direct download-the-dmg-and-open-it-in-Finder flow (see
+// update:downloadManualMac below) — not fully automatic, but no dead end.
+// No-op in dev, where there's no packaged app/update feed to check against.
 function setupAutoUpdater(win) {
   if (isDev) return
-  autoUpdater.autoDownload = true
+  autoUpdater.autoDownload = !isMac
   autoUpdater.on('checking-for-update', () => {
     win.webContents.send('update:status', { state: 'checking' })
   })
   autoUpdater.on('update-available', (info) => {
-    win.webContents.send('update:status', { state: 'available', version: info.version })
+    win.webContents.send('update:status', { state: isMac ? 'available-manual' : 'available', version: info.version })
   })
   autoUpdater.on('update-not-available', () => {
     win.webContents.send('update:status', { state: 'not-available' })
@@ -177,6 +214,26 @@ app.whenReady().then(() => {
   ipcMain.handle('update:checkNow', () => {
     if (checkNow) checkNow()
     else win.webContents.send('update:status', { state: 'not-available' }) // dev — nothing to check against
+  })
+
+  // The Mac fallback from setupAutoUpdater's 'available-manual' state:
+  // fetches the actual .dmg release asset directly (not the .zip
+  // electron-updater's own Squirrel.Mac path uses internally) and opens
+  // it, so the user just has to drag the app into Applications same as a
+  // first install — no dependency on Squirrel.Mac's signature check.
+  ipcMain.handle('update:downloadManualMac', async (_e, version) => {
+    const fileName = `BijouDocs-${version}-universal.dmg`
+    const url = `https://github.com/Bijounga/bijoudocs/releases/download/v${version}/${fileName}`
+    const destPath = path.join(app.getPath('downloads'), fileName)
+    win.webContents.send('update:status', { state: 'manual-downloading', version })
+    try {
+      await downloadFile(url, destPath)
+      await shell.openPath(destPath)
+      win.webContents.send('update:status', { state: 'manual-ready', version })
+    } catch (err) {
+      console.error('BijouDocs: manual update download failed', err)
+      win.webContents.send('update:status', { state: 'error', message: err && err.message })
+    }
   })
 
   app.on('activate', () => {

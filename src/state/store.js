@@ -42,7 +42,7 @@ export const useStore = create(
     // scriptId -> backup filename, set when a save just detected exactly
     // that and backed up the version it would otherwise have clobbered.
     saveConflicts: {},
-    updateStatus: null, // null | 'checking' | 'available' | 'not-available' | 'downloaded' | 'error'
+    updateStatus: null, // null | 'checking' | 'available' | 'available-manual' | 'not-available' | 'downloaded' | 'manual-downloading' | 'manual-ready' | 'error'
     updateVersion: null,
     updateErrorMessage: null,
 
@@ -168,6 +168,9 @@ export const useStore = create(
     },
     checkForUpdates() {
       window.bijou.checkForUpdatesNow()
+    },
+    downloadManualUpdate(version) {
+      window.bijou.downloadManualUpdate(version)
     },
     installUpdate() {
       window.bijou.installUpdateNow()

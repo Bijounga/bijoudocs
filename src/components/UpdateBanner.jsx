@@ -14,6 +14,7 @@ export default function UpdateBanner() {
   const installUpdate = useStore((s) => s.installUpdate)
   const checkForUpdates = useStore((s) => s.checkForUpdates)
   const dismissUpdateStatus = useStore((s) => s.dismissUpdateStatus)
+  const downloadManualUpdate = useStore((s) => s.downloadManualUpdate)
 
   if (updateStatus === 'downloaded') {
     return (
@@ -22,6 +23,42 @@ export default function UpdateBanner() {
         <span>Update to v{updateVersion} ready</span>
         <button className="update-banner-btn" onClick={installUpdate}>
           Restart to update
+        </button>
+      </div>
+    )
+  }
+
+  // Mac path — Squirrel.Mac won't apply an update to this unsigned build,
+  // so instead of pretending it'll install itself, offer to fetch the
+  // real .dmg and hand it to Finder, same as a first install.
+  if (updateStatus === 'available-manual') {
+    return (
+      <div className="update-banner">
+        <Icon name="download" size={13} />
+        <span>Update to v{updateVersion} available</span>
+        <button className="update-banner-btn" onClick={() => downloadManualUpdate(updateVersion)}>
+          Download &amp; open
+        </button>
+      </div>
+    )
+  }
+
+  if (updateStatus === 'manual-downloading') {
+    return (
+      <div className="update-banner">
+        <Icon name="download" size={13} />
+        <span>Downloading v{updateVersion}…</span>
+      </div>
+    )
+  }
+
+  if (updateStatus === 'manual-ready') {
+    return (
+      <div className="update-banner">
+        <Icon name="download" size={13} />
+        <span>Opened in Finder — drag BijouDocs into Applications, then relaunch.</span>
+        <button className="update-banner-btn" onClick={dismissUpdateStatus}>
+          Got it
         </button>
       </div>
     )
