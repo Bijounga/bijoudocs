@@ -157,7 +157,11 @@ app.whenReady().then(() => {
   setupAutoUpdater(win)
 
   ipcMain.handle('update:installNow', () => {
-    autoUpdater.quitAndInstall()
+    // Both args default to false — without them the NSIS installer runs
+    // its full interactive wizard (welcome screen, install-dir picker,
+    // etc.) on every single update, not just first install. `true, true`
+    // installs silently in the background and relaunches the app after.
+    autoUpdater.quitAndInstall(true, true)
   })
 
   app.on('activate', () => {
