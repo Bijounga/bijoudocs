@@ -1,6 +1,6 @@
 {
   "name": "bijoudocs",
-  "version": "0.5.6",
+  "version": "0.5.7",
   "description": "BijouDocs — a desktop script workspace for YouTube scripts",
   "main": "out/main/index.js",
   "author": "Bijou",
@@ -40,7 +40,8 @@
     "publish": {
       "provider": "github",
       "owner": "Bijounga",
-      "repo": "bijoudocs"
+      "repo": "bijoudocs",
+      "draft": false
     },
     "win": {
       "target": "nsis",
@@ -54,7 +55,7 @@
       "createStartMenuShortcut": true
     },
     "mac": {
-      "target": ["dmg", "zip"],
+      "target": [{ "target": "dmg", "arch": "universal" }, { "target": "zip", "arch": "universal" }],
       "icon": "build/icon.png",
       "category": "public.app-category.productivity"
     }
