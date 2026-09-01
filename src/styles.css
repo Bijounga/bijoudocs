@@ -101,6 +101,21 @@ textarea {
   background: var(--line);
   flex: 0 0 auto;
 }
+.version-badge {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--ink-faint);
+  background: transparent;
+  border: 1px solid var(--line-soft);
+  border-radius: 5px;
+  padding: 3px 7px;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+.version-badge:hover {
+  color: var(--cyan);
+  border-color: var(--cyan);
+}
 .title-input {
   background: transparent;
   border: 1px solid transparent;

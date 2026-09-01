@@ -12,6 +12,7 @@ import { totalWordCountAll } from '../lib/timecode.js'
 const MAX_UNDO = 60
 const saveTimers = {}
 let savedFlashTimer = null
+let updateStatusTimer = null
 // In-memory only, like the prototype's own `clipboardLines` — never persisted.
 let clipboardLines = []
 
@@ -31,6 +32,7 @@ export const useStore = create(
     scripts: [],
     currentScriptId: null,
     storageDir: '',
+    appVersion: '',
     // updatedAt this instance last knew the on-disk copy of each script to
     // have (from loading it, or from this instance's own last successful
     // save) — scheduleSave sends it along so the main process can tell
@@ -101,10 +103,11 @@ export const useStore = create(
 
     // ---------- persistence ----------
     async init() {
-      const [scripts, settings, storageDir] = await Promise.all([
+      const [scripts, settings, storageDir, appVersion] = await Promise.all([
         window.bijou.loadAllScripts(),
         window.bijou.loadSettings(),
-        window.bijou.getDocsDir()
+        window.bijou.getDocsDir(),
+        window.bijou.getAppVersion()
       ])
       const sorted = scripts.slice().sort((a, b) => b.updatedAt - a.updatedAt)
       set((s) => {
@@ -112,6 +115,7 @@ export const useStore = create(
         s.currentScriptId = sorted.length ? sorted[0].id : null
         s.loaded = true
         s.storageDir = storageDir
+        s.appVersion = appVersion
         s.diskUpdatedAt = {}
         scripts.forEach((sc) => {
           s.diskUpdatedAt[sc.id] = sc.updatedAt
@@ -139,8 +143,22 @@ export const useStore = create(
     setUpdateStatus(payload) {
       set((s) => {
         s.updateStatus = payload.state
-        s.updateVersion = payload.version
+        if (payload.version) s.updateVersion = payload.version
       })
+      clearTimeout(updateStatusTimer)
+      // 'checking' and 'not-available' are transient status text (next to
+      // the version number) rather than something that should sit there
+      // indefinitely — 'available'/'downloaded' persist until acted on.
+      if (payload.state === 'checking' || payload.state === 'not-available' || payload.state === 'error') {
+        updateStatusTimer = setTimeout(() => {
+          set((s) => {
+            if (s.updateStatus === payload.state) s.updateStatus = null
+          })
+        }, 2500)
+      }
+    },
+    checkForUpdates() {
+      window.bijou.checkForUpdatesNow()
     },
     installUpdate() {
       window.bijou.installUpdateNow()

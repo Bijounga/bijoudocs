@@ -67,6 +67,8 @@ function registerIpc() {
 
   ipcMain.handle('scripts:docsDir', () => fileStore.getDocsDir())
 
+  ipcMain.handle('app:version', () => app.getVersion())
+
   ipcMain.handle('settings:load', () => fileStore.loadSettings())
   ipcMain.handle('settings:save', (_e, settings) => fileStore.saveSettings(settings))
 
@@ -137,24 +139,32 @@ function registerIpc() {
 function setupAutoUpdater(win) {
   if (isDev) return
   autoUpdater.autoDownload = true
+  autoUpdater.on('checking-for-update', () => {
+    win.webContents.send('update:status', { state: 'checking' })
+  })
   autoUpdater.on('update-available', (info) => {
     win.webContents.send('update:status', { state: 'available', version: info.version })
+  })
+  autoUpdater.on('update-not-available', () => {
+    win.webContents.send('update:status', { state: 'not-available' })
   })
   autoUpdater.on('update-downloaded', (info) => {
     win.webContents.send('update:status', { state: 'downloaded', version: info.version })
   })
   autoUpdater.on('error', (err) => {
     console.error('BijouDocs: auto-update error', err)
+    win.webContents.send('update:status', { state: 'error' })
   })
   const check = () => autoUpdater.checkForUpdates().catch((err) => console.error('BijouDocs: update check failed', err))
   check()
   setInterval(check, 4 * 60 * 60 * 1000)
+  return check
 }
 
 app.whenReady().then(() => {
   registerIpc()
   const win = createWindow()
-  setupAutoUpdater(win)
+  const checkNow = setupAutoUpdater(win)
 
   ipcMain.handle('update:installNow', () => {
     // Both args default to false — without them the NSIS installer runs
@@ -162,6 +172,11 @@ app.whenReady().then(() => {
     // etc.) on every single update, not just first install. `true, true`
     // installs silently in the background and relaunches the app after.
     autoUpdater.quitAndInstall(true, true)
+  })
+
+  ipcMain.handle('update:checkNow', () => {
+    if (checkNow) checkNow()
+    else win.webContents.send('update:status', { state: 'not-available' }) // dev — nothing to check against
   })
 
   app.on('activate', () => {

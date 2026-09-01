@@ -1,6 +1,7 @@
 import React from 'react'
 import { useStore } from '../state/store.js'
 import Icon from './icons.jsx'
+import VersionBadge from './VersionBadge.jsx'
 import SectionJumpMenu from './SectionJumpMenu.jsx'
 import LineSearchMenu from './LineSearchMenu.jsx'
 import { formatTC, scriptTotalStats, dueDateInfo, totalWordCountAll } from '../lib/timecode.js'
@@ -45,6 +46,7 @@ export default function Topbar({ script }) {
     return (
       <div className="topbar">
         <div className="logo"><span className="dot" />BIJOUDOCS</div>
+        <VersionBadge />
       </div>
     )
   }
@@ -65,6 +67,7 @@ export default function Topbar({ script }) {
   return (
     <div className="topbar">
       <div className="logo"><span className="dot" />BIJOUDOCS</div>
+      <VersionBadge />
       <div className="divider-v" />
       <input
         className="title-input"

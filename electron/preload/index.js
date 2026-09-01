@@ -8,6 +8,7 @@ const api = {
   deleteScript: (id) => ipcRenderer.invoke('scripts:delete', id),
   newBlankScript: (title) => ipcRenderer.invoke('scripts:newBlank', title),
   getDocsDir: () => ipcRenderer.invoke('scripts:docsDir'),
+  getAppVersion: () => ipcRenderer.invoke('app:version'),
   exportFile: (payload) => ipcRenderer.invoke('dialog:exportFile', payload),
   importFile: () => ipcRenderer.invoke('dialog:importFile'),
   loadSettings: () => ipcRenderer.invoke('settings:load'),
@@ -15,7 +16,8 @@ const api = {
   chooseStorageDir: () => ipcRenderer.invoke('settings:chooseStorageDir'),
   resetStorageDir: () => ipcRenderer.invoke('settings:resetStorageDir'),
   onUpdateStatus: (cb) => ipcRenderer.on('update:status', (_e, payload) => cb(payload)),
-  installUpdateNow: () => ipcRenderer.invoke('update:installNow')
+  installUpdateNow: () => ipcRenderer.invoke('update:installNow'),
+  checkForUpdatesNow: () => ipcRenderer.invoke('update:checkNow')
 }
 
 contextBridge.exposeInMainWorld('bijou', api)
