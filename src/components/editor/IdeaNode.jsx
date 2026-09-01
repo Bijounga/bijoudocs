@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useStore } from '../../state/store.js'
 import Icon from '../icons.jsx'
 
@@ -31,6 +31,8 @@ export default function IdeaNode({
   const setIdeaNodeColor = useStore((s) => s.setIdeaNodeColor)
   const deleteIdeaNodes = useStore((s) => s.deleteIdeaNodes)
 
+  const [editingTitle, setEditingTitle] = useState(false)
+
   const color = node.color || 'var(--ink-faint)'
 
   return (
@@ -47,16 +49,41 @@ export default function IdeaNode({
     >
       {order != null && <span className="map-node-order">{order}</span>}
       <div className="map-node-head idea-node-head">
-        <input
-          className="idea-node-title"
-          style={{ color }}
-          placeholder="Title…"
-          value={node.title}
-          onMouseDown={(e) => e.stopPropagation()}
-          onFocus={() => pushUndo(scriptId)}
-          onChange={(e) => setIdeaNodeTitle(scriptId, id, e.target.value)}
-          onBlur={() => commitIdeaNodeTitle(scriptId)}
-        />
+        {editingTitle ? (
+          <input
+            className="idea-node-title"
+            style={{ color }}
+            placeholder="Title…"
+            value={node.title}
+            autoFocus
+            onFocus={(e) => {
+              pushUndo(scriptId)
+              e.target.select()
+            }}
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
+            onChange={(e) => setIdeaNodeTitle(scriptId, id, e.target.value)}
+            onBlur={() => {
+              commitIdeaNodeTitle(scriptId)
+              setEditingTitle(false)
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === 'Escape') e.target.blur()
+            }}
+          />
+        ) : (
+          <span
+            className="idea-node-title idea-node-title-display"
+            style={{ color: node.title ? color : 'var(--ink-faint)' }}
+            onMouseDown={(e) => e.detail > 1 && e.stopPropagation()}
+            onDoubleClick={(e) => {
+              e.stopPropagation()
+              setEditingTitle(true)
+            }}
+          >
+            {node.title || 'Title…'}
+          </span>
+        )}
         <input
           type="color"
           className="idea-node-color-input"

@@ -21,7 +21,8 @@ export const DEFAULT_KEYBINDS = {
   bookmark: 'ctrl+shift+b',
   mapAddSection: 'ctrl+shift+m',
   mapToggleSummaries: 'ctrl+shift+y',
-  mapAddIdeaNode: 'ctrl+shift+i'
+  mapAddIdeaNode: 'ctrl+shift+i',
+  duplicate: 'ctrl+d'
 }
 
 export const SHORTCUT_META = [
@@ -51,7 +52,16 @@ export const SHORTCUT_META = [
     label: 'Toggle mind map summaries',
     desc: 'Hides or shows every beat summary in the mind map at once — or, if a node is selected, just that node’s summary.'
   },
-  { id: 'mapAddIdeaNode', label: 'Add idea node in mind map', desc: 'Adds a blank freeform note node (not tied to any section), while the mind map is open.' }
+  {
+    id: 'mapAddIdeaNode',
+    label: 'Add idea node in mind map',
+    desc: 'Opens the idea-node menu while the mind map is open — press a number for a specific preset (or Blank), or Enter/click as usual.'
+  },
+  {
+    id: 'duplicate',
+    label: 'Duplicate selection',
+    desc: 'Duplicates whatever is currently highlighted — selected lines, the line your cursor is in, a selected section, or (in the mind map) selected nodes.'
+  }
 ]
 
 export const COLOR_PALETTE = ['#4FD1C5', '#F2A65A', '#D46FB0', '#E2665B', '#7FA9F2', '#ECE9E2']

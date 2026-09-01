@@ -89,10 +89,12 @@ export default function MapView({ scriptId, script }) {
   const addConnectedIdeaNodeFromMap = useStore((s) => s.addConnectedIdeaNodeFromMap)
   const deleteMapSelection = useStore((s) => s.deleteMapSelection)
   const duplicateSection = useStore((s) => s.duplicateSection)
+  const duplicateSections = useStore((s) => s.duplicateSections)
   const duplicateIdeaNode = useStore((s) => s.duplicateIdeaNode)
   const ideaNodePresets = useStore((s) => s.ideaNodePresets)
   const addIdeaNodePreset = useStore((s) => s.addIdeaNodePreset)
   const deleteIdeaNodePreset = useStore((s) => s.deleteIdeaNodePreset)
+  const updateIdeaNodePreset = useStore((s) => s.updateIdeaNodePreset)
 
   const canvasRef = useRef(null)
   const dragRef = useRef(null) // { type: 'node'|'pan'|'connect'|'select', ... }
@@ -168,6 +170,30 @@ export default function MapView({ scriptId, script }) {
       }
       const st = useStore.getState()
       const combo = comboFromEvent(e)
+      // Guarded against whatever's actually focused — this listener is on
+      // `document`, so without this a Ctrl+C/V meant for a node's own
+      // title/text field (or, in split view, the script editor sitting
+      // right next to the map) would get hijacked into duplicating nodes.
+      const active = document.activeElement
+      const isEditingText = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)
+
+      // While the idea-node menu is open, a number picks an item directly
+      // (1 = Blank, 2+ = presets in order) — a keybind-driven way to spawn
+      // one specific preset, not just a blank node.
+      if (ideaMenuOpen && !isEditingText) {
+        if (e.key === 'Escape') {
+          e.preventDefault()
+          setIdeaMenuOpen(false)
+          return
+        }
+        const n = parseInt(e.key, 10)
+        if (!isNaN(n) && n >= 1 && n <= ideaNodePresets.length + 1) {
+          e.preventDefault()
+          handleAddIdeaNode(n === 1 ? undefined : ideaNodePresets[n - 2])
+          return
+        }
+      }
+
       if (combo === st.keybinds.mapAddSection) {
         e.preventDefault()
         handleAddSection()
@@ -184,15 +210,10 @@ export default function MapView({ scriptId, script }) {
       }
       if (combo === st.keybinds.mapAddIdeaNode) {
         e.preventDefault()
-        handleAddIdeaNode()
+        setIdeaMenuOpen((v) => !v)
+        setPresetManagerOpen(false)
         return
       }
-      // Guarded against whatever's actually focused — this listener is on
-      // `document`, so without this a Ctrl+C/V meant for a node's own
-      // title/text field (or, in split view, the script editor sitting
-      // right next to the map) would get hijacked into duplicating nodes.
-      const active = document.activeElement
-      const isEditingText = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)
       if (!isEditingText && combo === 'ctrl+c' && validSelectedNodeIds.length) {
         e.preventDefault()
         const nodes = script.mapLayout.nodes
@@ -204,6 +225,17 @@ export default function MapView({ scriptId, script }) {
         const newIds = mapClipboardRef.current
           .map((item) => (item.type === 'idea' ? duplicateIdeaNode(scriptId, item.id) : duplicateSection(scriptId, item.id)))
           .filter(Boolean)
+        if (newIds.length) setSelectedNodeIds(newIds)
+      }
+      if (!isEditingText && combo === st.keybinds.duplicate && validSelectedNodeIds.length) {
+        e.preventDefault()
+        const nodes = script.mapLayout.nodes
+        const sectionIds = validSelectedNodeIds.filter((id) => !isIdeaNode(nodes[id]))
+        const ideaIds = validSelectedNodeIds.filter((id) => isIdeaNode(nodes[id]))
+        const newIds = [
+          ...(sectionIds.length ? duplicateSections(scriptId, sectionIds) : []),
+          ...ideaIds.map((id) => duplicateIdeaNode(scriptId, id)).filter(Boolean)
+        ]
         if (newIds.length) setSelectedNodeIds(newIds)
       }
     }
@@ -220,7 +252,7 @@ export default function MapView({ scriptId, script }) {
       document.removeEventListener('keyup', onKeyUp)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedEdgeId, validSelectedNodeIds, scriptId, removeMapEdge, pan, zoom])
+  }, [selectedEdgeId, validSelectedNodeIds, scriptId, removeMapEdge, pan, zoom, ideaMenuOpen, ideaNodePresets])
 
   // Reads pan/zoom from the refs (always current) rather than closing over
   // the state values directly, so this stays correct even when called from
@@ -481,6 +513,7 @@ export default function MapView({ scriptId, script }) {
               presets={ideaNodePresets}
               onAdd={addIdeaNodePreset}
               onDelete={deleteIdeaNodePreset}
+              onUpdate={updateIdeaNodePreset}
               onClose={() => setPresetManagerOpen(false)}
             />
           )}
@@ -639,7 +672,7 @@ export default function MapView({ scriptId, script }) {
   )
 }
 
-function PresetManager({ presets, onAdd, onDelete, onClose }) {
+function PresetManager({ presets, onAdd, onDelete, onUpdate, onClose }) {
   const [label, setLabel] = useState('')
   const [color, setColor] = useState('#8a8d99')
   const ref = useRef(null)
@@ -657,8 +690,20 @@ function PresetManager({ presets, onAdd, onDelete, onClose }) {
       <div className="map-preset-manager-title">Idea node presets</div>
       {presets.map((p) => (
         <div key={p.id} className="map-idea-menu-item map-preset-row">
-          <span className="map-idea-swatch" style={{ background: p.color }} />
-          <span style={{ flex: 1 }}>{p.label}</span>
+          <input
+            type="color"
+            className="map-preset-color-input"
+            value={p.color}
+            title="Change preset color"
+            onChange={(e) => onUpdate(p.id, { color: e.target.value })}
+          />
+          <input
+            className="map-preset-label-input"
+            style={{ flex: 1 }}
+            value={p.label}
+            title="Rename preset"
+            onChange={(e) => onUpdate(p.id, { label: e.target.value })}
+          />
           <button className="map-preset-delete" onClick={() => onDelete(p.id)} title="Delete preset">
             <Icon name="x" size={11} />
           </button>

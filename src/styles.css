@@ -2319,6 +2319,13 @@ textarea {
 .idea-node-title::placeholder {
   color: var(--ink-faint);
 }
+.idea-node-title-display {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: default;
+}
 .idea-node-color-input {
   flex: 0 0 auto;
   width: 16px;
@@ -2424,6 +2431,33 @@ textarea {
 }
 .map-preset-row {
   cursor: default;
+}
+.map-preset-color-input {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.map-preset-label-input {
+  min-width: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--ink);
+  font-size: 12px;
+  padding: 3px 5px;
+}
+.map-preset-label-input:hover {
+  border-color: var(--line-soft);
+}
+.map-preset-label-input:focus {
+  outline: none;
+  border-color: var(--cyan);
+  background: var(--panel-2);
 }
 .map-preset-delete {
   flex: 0 0 auto;

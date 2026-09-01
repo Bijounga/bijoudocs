@@ -227,6 +227,13 @@ export const useStore = create(
       })
       get().saveAppSettings()
     },
+    updateIdeaNodePreset(id, patch) {
+      set((s) => {
+        const preset = s.ideaNodePresets.find((p) => p.id === id)
+        if (preset) Object.assign(preset, patch)
+      })
+      get().saveAppSettings()
+    },
 
     scheduleSave(id, { flash = true, text = 'Saved', delay = 250 } = {}) {
       clearTimeout(saveTimers[id])
@@ -1693,6 +1700,33 @@ export const useStore = create(
       get().scheduleSave(scriptId, { flash: false })
       return newKey
     },
+    // Duplicates every given line in one combined pushUndo/set/save — used
+    // by the "duplicate selection" keybind for a multi-line selection, so
+    // one keypress is one undo step, not one per line (see duplicateLine).
+    duplicateLines(scriptId, lineKeys) {
+      if (!lineKeys.length) return []
+      get().pushUndo(scriptId)
+      const newKeys = []
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        if (!script) return
+        lineKeys.forEach((key) => {
+          const [sectionId, lineId] = key.split(':')
+          const sec = script.sections.find((se) => se.id === sectionId)
+          if (!sec) return
+          const idx = sec.lines.findIndex((l) => l.id === lineId)
+          if (idx < 0) return
+          const clone = JSON.parse(JSON.stringify(sec.lines[idx]))
+          clone.id = uid()
+          clone.noteOpen = false
+          sec.lines.splice(idx + 1, 0, clone)
+          newKeys.push(sectionId + ':' + clone.id)
+        })
+        script.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+      return newKeys
+    },
 
     // ---------- teleprompter / recording mode ----------
     openTeleprompter() {
@@ -2020,6 +2054,35 @@ export const useStore = create(
       })
       get().scheduleSave(scriptId, { flash: false })
       return newId
+    },
+    // Bulk sibling of duplicateSection, one combined pushUndo/set/save for
+    // the whole batch — used by the "duplicate selection" keybind so a
+    // multi-section selection is still a single undo step (see duplicateLines
+    // for the same reasoning on the line side).
+    duplicateSections(scriptId, sectionIds) {
+      if (!sectionIds.length) return []
+      get().pushUndo(scriptId)
+      const newIds = []
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        if (!script) return
+        sectionIds.forEach((sectionId) => {
+          const sec = script.sections.find((se) => se.id === sectionId)
+          if (!sec) return
+          const clone = JSON.parse(JSON.stringify(sec))
+          clone.id = uid()
+          clone.lines = clone.lines.map((l) => ({ ...l, id: uid() }))
+          script.sections.push(clone)
+          const origNode = script.mapLayout.nodes[sectionId]
+          script.mapLayout.nodes[clone.id] = origNode
+            ? { x: origNode.x + 30, y: origNode.y + 30, collapsed: false }
+            : { x: 60, y: 60, collapsed: false }
+          newIds.push(clone.id)
+        })
+        script.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+      return newIds
     },
 
     // ---------- pinned section references (editor margin) ----------

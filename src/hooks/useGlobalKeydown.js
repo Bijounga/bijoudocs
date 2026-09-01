@@ -161,6 +161,27 @@ export function useGlobalKeydown() {
         return
       }
 
+      if (combo === st.keybinds.duplicate) {
+        e.preventDefault()
+        if (st.selectedLines.length) {
+          const n = st.selectedLines.length
+          const newKeys = st.duplicateLines(script.id, st.selectedLines)
+          st.setSelectedLines(newKeys)
+          st.flashSaved('Duplicated ' + n + ' line' + (n === 1 ? '' : 's'))
+        } else if (st.selectedSections.length) {
+          const n = st.selectedSections.length
+          st.duplicateSections(script.id, st.selectedSections)
+          st.flashSaved('Duplicated ' + n + ' section' + (n === 1 ? '' : 's'))
+        } else if (activeLineKey) {
+          const [secId, lineId] = activeLineKey.split(':')
+          const newKey = st.duplicateLine(script.id, secId, lineId)
+          if (newKey) focusLineEnd(newKey)
+        } else if (activeHeadingFor) {
+          st.duplicateSection(script.id, activeHeadingFor)
+        }
+        return
+      }
+
       if (combo === st.keybinds.strike && st.selectedLines.length) {
         e.preventDefault()
         st.toggleStruckForLines(script.id, st.selectedLines)
