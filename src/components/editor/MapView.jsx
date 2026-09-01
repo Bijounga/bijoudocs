@@ -4,7 +4,12 @@ import { comboFromEvent } from '../../lib/keybinds.js'
 import { sectionsHaveContent } from '../../lib/model.js'
 import Icon from '../icons.jsx'
 import MapNode, { NODE_WIDTH } from './MapNode.jsx'
+import IdeaNode from './IdeaNode.jsx'
 import { computeMainThread } from '../../lib/mapGraph.js'
+
+function isIdeaNode(node) {
+  return !!node && node.type === 'idea'
+}
 
 const NODE_H = 80 // nominal card height for edge-anchor math — cards vary a little with content, close enough for connector lines
 const ZOOM_MIN = 0.25
@@ -79,8 +84,15 @@ export default function MapView({ scriptId, script }) {
   const addMapEdge = useStore((s) => s.addMapEdge)
   const removeMapEdge = useStore((s) => s.removeMapEdge)
   const removeMapEdgesByIds = useStore((s) => s.removeMapEdgesByIds)
-  const deleteSections = useStore((s) => s.deleteSections)
   const openContextMenu = useStore((s) => s.openContextMenu)
+  const addIdeaNode = useStore((s) => s.addIdeaNode)
+  const addConnectedIdeaNodeFromMap = useStore((s) => s.addConnectedIdeaNodeFromMap)
+  const deleteMapSelection = useStore((s) => s.deleteMapSelection)
+  const duplicateSection = useStore((s) => s.duplicateSection)
+  const duplicateIdeaNode = useStore((s) => s.duplicateIdeaNode)
+  const ideaNodePresets = useStore((s) => s.ideaNodePresets)
+  const addIdeaNodePreset = useStore((s) => s.addIdeaNodePreset)
+  const deleteIdeaNodePreset = useStore((s) => s.deleteIdeaNodePreset)
 
   const canvasRef = useRef(null)
   const dragRef = useRef(null) // { type: 'node'|'pan'|'connect'|'select', ... }
@@ -93,27 +105,47 @@ export default function MapView({ scriptId, script }) {
   const [selectionBox, setSelectionBox] = useState(null) // { x1, y1, x2, y2 } in world coords
   const [selectedEdgeId, setSelectedEdgeId] = useState(null)
   const [selectedNodeIds, setSelectedNodeIds] = useState([])
+  const [ideaMenuOpen, setIdeaMenuOpen] = useState(false)
+  const [presetManagerOpen, setPresetManagerOpen] = useState(false)
   const spaceDownRef = useRef(false)
+  const mapClipboardRef = useRef([]) // [{id, type: 'section'|'idea'}] — Ctrl+C/V within the map, not the app-wide line clipboard
 
   // Defensive against a node getting deleted out from under a stale
   // selection (e.g. via the sidebar or another tab, not just this view).
-  const validSelectedNodeIds = selectedNodeIds.filter((id) => script.sections.some((s) => s.id === id))
+  // Checked against mapLayout.nodes rather than script.sections so idea
+  // nodes (which have no section behind them at all) count too.
+  const validSelectedNodeIds = selectedNodeIds.filter((id) => script.mapLayout.nodes[id])
 
   useEffect(() => {
     ensureMapNodes(scriptId)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scriptId, script.sections.length])
 
+  useEffect(() => {
+    if (!ideaMenuOpen) return
+    function onDocMouseDown(e) {
+      if (!e.target.closest('.map-idea-menu-wrap')) setIdeaMenuOpen(false)
+    }
+    document.addEventListener('mousedown', onDocMouseDown)
+    return () => document.removeEventListener('mousedown', onDocMouseDown)
+  }, [ideaMenuOpen])
+
+  // A selection can mix section nodes and idea nodes — each kind goes
+  // through its own delete action (sections need the content-confirm
+  // check + real data cleanup, idea nodes are just removed outright).
   function deleteSelection(ids) {
     if (!ids.length) return
-    const targetSections = ids.map((id) => script.sections.find((s) => s.id === id)).filter(Boolean)
-    const needsConfirm = sectionsHaveContent(targetSections)
+    const nodes = script.mapLayout.nodes
+    const sectionIds = ids.filter((id) => !isIdeaNode(nodes[id]))
+    const ideaIds = ids.filter((id) => isIdeaNode(nodes[id]))
+    const targetSections = sectionIds.map((id) => script.sections.find((s) => s.id === id)).filter(Boolean)
+    const needsConfirm = sectionIds.length > 0 && sectionsHaveContent(targetSections)
     const msg =
-      ids.length > 1
-        ? 'Delete ' + ids.length + ' sections? This removes their lines and checkpoints permanently.'
+      sectionIds.length > 1
+        ? 'Delete ' + sectionIds.length + ' sections? This removes their lines and checkpoints permanently.'
         : 'Delete this section? This removes its lines and checkpoints permanently.'
     if (!needsConfirm || window.confirm(msg)) {
-      deleteSections(scriptId, ids)
+      deleteMapSelection(scriptId, sectionIds, ideaIds)
       setSelectedNodeIds([])
     }
   }
@@ -148,6 +180,31 @@ export default function MapView({ scriptId, script }) {
         } else {
           toggleMapHideSummaries(scriptId)
         }
+        return
+      }
+      if (combo === st.keybinds.mapAddIdeaNode) {
+        e.preventDefault()
+        handleAddIdeaNode()
+        return
+      }
+      // Guarded against whatever's actually focused — this listener is on
+      // `document`, so without this a Ctrl+C/V meant for a node's own
+      // title/text field (or, in split view, the script editor sitting
+      // right next to the map) would get hijacked into duplicating nodes.
+      const active = document.activeElement
+      const isEditingText = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)
+      if (!isEditingText && combo === 'ctrl+c' && validSelectedNodeIds.length) {
+        e.preventDefault()
+        const nodes = script.mapLayout.nodes
+        mapClipboardRef.current = validSelectedNodeIds.map((id) => ({ id, type: isIdeaNode(nodes[id]) ? 'idea' : 'section' }))
+        return
+      }
+      if (!isEditingText && combo === 'ctrl+v' && mapClipboardRef.current.length) {
+        e.preventDefault()
+        const newIds = mapClipboardRef.current
+          .map((item) => (item.type === 'idea' ? duplicateIdeaNode(scriptId, item.id) : duplicateSection(scriptId, item.id)))
+          .filter(Boolean)
+        if (newIds.length) setSelectedNodeIds(newIds)
       }
     }
     function onKeyUp(e) {
@@ -358,8 +415,22 @@ export default function MapView({ scriptId, script }) {
     addSectionFromMap(scriptId, world.x - NODE_WIDTH / 2, world.y - NODE_H / 2)
   }
 
+  function handleAddIdeaNode(preset) {
+    if (!canvasRef.current) return
+    const rect = canvasRef.current.getBoundingClientRect()
+    const world = screenToWorld(rect.left + rect.width / 2, rect.top + rect.height / 2)
+    const opts = preset ? { title: preset.label, color: preset.color } : {}
+    const newId = addIdeaNode(scriptId, world.x - NODE_WIDTH / 2, world.y - NODE_H / 2, opts)
+    if (newId) setSelectedNodeIds([newId])
+    setIdeaMenuOpen(false)
+  }
+
   function handleAddInDirection(fromId, dir) {
-    addConnectedSectionFromMap(scriptId, fromId, dir)
+    if (isIdeaNode(script.mapLayout.nodes[fromId])) {
+      addConnectedIdeaNodeFromMap(scriptId, fromId, dir)
+    } else {
+      addConnectedSectionFromMap(scriptId, fromId, dir)
+    }
   }
 
   const { order, litEdgeIds } = computeMainThread(script.mapLayout)
@@ -371,6 +442,49 @@ export default function MapView({ scriptId, script }) {
         <button className="icon-btn" onClick={handleAddSection} title={'Add section (' + keybinds.mapAddSection + ')'}>
           <Icon name="idea" size={13} /> Add section
         </button>
+        <div className="map-idea-menu-wrap" style={{ position: 'relative' }}>
+          <button
+            className="icon-btn"
+            onClick={() => {
+              setIdeaMenuOpen((v) => !v)
+              setPresetManagerOpen(false)
+            }}
+            title={'Add idea node (' + keybinds.mapAddIdeaNode + ')'}
+          >
+            <Icon name="note" size={13} /> Add idea node ▾
+          </button>
+          {ideaMenuOpen && (
+            <div className="map-idea-menu">
+              <div className="map-idea-menu-item" onClick={() => handleAddIdeaNode()}>
+                <span className="map-idea-swatch" style={{ background: 'var(--ink-faint)' }} />
+                Blank
+              </div>
+              {ideaNodePresets.map((preset) => (
+                <div key={preset.id} className="map-idea-menu-item" onClick={() => handleAddIdeaNode(preset)}>
+                  <span className="map-idea-swatch" style={{ background: preset.color }} />
+                  {preset.label}
+                </div>
+              ))}
+              <div
+                className="map-idea-menu-item map-idea-menu-manage"
+                onClick={() => {
+                  setPresetManagerOpen(true)
+                  setIdeaMenuOpen(false)
+                }}
+              >
+                Manage presets…
+              </div>
+            </div>
+          )}
+          {presetManagerOpen && (
+            <PresetManager
+              presets={ideaNodePresets}
+              onAdd={addIdeaNodePreset}
+              onDelete={deleteIdeaNodePreset}
+              onClose={() => setPresetManagerOpen(false)}
+            />
+          )}
+        </div>
         <button
           className={'icon-btn' + (script.mapLayout.hideSummaries ? ' active' : '')}
           onClick={() => toggleMapHideSummaries(scriptId)}
@@ -384,7 +498,7 @@ export default function MapView({ scriptId, script }) {
           <button className="icon-btn" style={{ border: 'none', padding: '7px 9px' }} onClick={() => zoomByCenter(1.2)}>+</button>
         </div>
         <div className="map-hint">
-          Drag empty space to select several · right-click for options · click or pull a connected dot to disconnect it
+          Drag to select · right-click for options · Ctrl+C/V to duplicate · click or pull a connected dot to disconnect it
         </div>
       </div>
       <div
@@ -492,7 +606,95 @@ export default function MapView({ scriptId, script }) {
               />
             )
           })}
+          {Object.entries(nodes)
+            .filter(([, n]) => isIdeaNode(n))
+            .map(([id, node]) => {
+              const connectedSides = new Set(
+                script.mapLayout.edges
+                  .filter((edge) => edge.from === id || edge.to === id)
+                  .map((edge) => anchorSideForNode(edge, id, nodes))
+                  .filter(Boolean)
+              )
+              return (
+                <IdeaNode
+                  key={id}
+                  scriptId={scriptId}
+                  id={id}
+                  node={node}
+                  isLit={order.has(id)}
+                  isSelected={validSelectedNodeIds.includes(id)}
+                  order={order.get(id)}
+                  threadEndDir={threadEndDirection(id, nodes, script.mapLayout.edges)}
+                  connectedSides={connectedSides}
+                  onNodeMouseDown={handleNodeMouseDown}
+                  onConnectorMouseDown={handleConnectorMouseDown}
+                  onAddInDirection={handleAddInDirection}
+                  onContextMenu={handleNodeContextMenu}
+                />
+              )
+            })}
         </div>
+      </div>
+    </div>
+  )
+}
+
+function PresetManager({ presets, onAdd, onDelete, onClose }) {
+  const [label, setLabel] = useState('')
+  const [color, setColor] = useState('#8a8d99')
+  const ref = useRef(null)
+
+  useEffect(() => {
+    function onDocMouseDown(e) {
+      if (ref.current && !ref.current.contains(e.target)) onClose()
+    }
+    document.addEventListener('mousedown', onDocMouseDown)
+    return () => document.removeEventListener('mousedown', onDocMouseDown)
+  }, [onClose])
+
+  return (
+    <div className="map-idea-menu map-preset-manager" ref={ref}>
+      <div className="map-preset-manager-title">Idea node presets</div>
+      {presets.map((p) => (
+        <div key={p.id} className="map-idea-menu-item map-preset-row">
+          <span className="map-idea-swatch" style={{ background: p.color }} />
+          <span style={{ flex: 1 }}>{p.label}</span>
+          <button className="map-preset-delete" onClick={() => onDelete(p.id)} title="Delete preset">
+            <Icon name="x" size={11} />
+          </button>
+        </div>
+      ))}
+      <div className="map-preset-add">
+        <input
+          type="color"
+          value={color}
+          onChange={(e) => setColor(e.target.value)}
+          title="Preset color"
+        />
+        <input
+          className="map-preset-add-input"
+          placeholder="New preset label…"
+          value={label}
+          onChange={(e) => setLabel(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && label.trim()) {
+              onAdd(label.trim(), color)
+              setLabel('')
+            }
+          }}
+        />
+        <button
+          className="icon-btn"
+          style={{ padding: '5px 8px' }}
+          disabled={!label.trim()}
+          onClick={() => {
+            if (!label.trim()) return
+            onAdd(label.trim(), color)
+            setLabel('')
+          }}
+        >
+          Add
+        </button>
       </div>
     </div>
   )

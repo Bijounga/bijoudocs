@@ -39,6 +39,8 @@ export default function Topbar({ script }) {
   const setScriptDueDate = useStore((s) => s.setScriptDueDate)
   const mapViewOpen = useStore((s) => s.mapViewOpen)
   const toggleMapView = useStore((s) => s.toggleMapView)
+  const mapSplitOpen = useStore((s) => s.mapSplitOpen)
+  const toggleMapSplit = useStore((s) => s.toggleMapSplit)
   const noteColor = useStore((s) => s.noteColor)
   const setNoteColor = useStore((s) => s.setNoteColor)
 
@@ -161,6 +163,15 @@ export default function Topbar({ script }) {
       <button className={'icon-btn' + (mapViewOpen ? ' active' : '')} onClick={toggleMapView} title="Zoom out to the whole video as cards">
         <Icon name="map" /> Map
       </button>
+      {mapViewOpen && (
+        <button
+          className={'icon-btn' + (mapSplitOpen ? ' active' : '')}
+          onClick={toggleMapSplit}
+          title="Show the script and the map side by side"
+        >
+          <Icon name="split" size={13} />
+        </button>
+      )}
     </div>
   )
 }

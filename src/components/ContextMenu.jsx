@@ -15,10 +15,12 @@ export default function ContextMenu() {
   const copyLineToClipboard = useStore((s) => s.copyLineToClipboard)
   const flashSaved = useStore((s) => s.flashSaved)
   const deleteSection = useStore((s) => s.deleteSection)
-  const deleteSections = useStore((s) => s.deleteSections)
   const openSectionTab = useStore((s) => s.openSectionTab)
   const toggleSectionChecklistOpen = useStore((s) => s.toggleSectionChecklistOpen)
   const setMapMainThread = useStore((s) => s.setMapMainThread)
+  const deleteMapSelection = useStore((s) => s.deleteMapSelection)
+  const duplicateSection = useStore((s) => s.duplicateSection)
+  const duplicateIdeaNode = useStore((s) => s.duplicateIdeaNode)
   const scripts = useStore((s) => s.scripts)
   const openScript = useStore((s) => s.openScript)
   const togglePin = useStore((s) => s.togglePin)
@@ -95,23 +97,37 @@ export default function ContextMenu() {
     ]
   } else if (menu.type === 'mapNode') {
     const ids = menu.selectedIds && menu.selectedIds.length > 1 && menu.selectedIds.includes(menu.sectionId) ? menu.selectedIds : [menu.sectionId]
-    const targetSections = ids.map((id) => script.sections.find((se) => se.id === id)).filter(Boolean)
+    const nodes = script.mapLayout.nodes
+    const sectionIds = ids.filter((id) => nodes[id] && nodes[id].type !== 'idea')
+    const ideaIds = ids.filter((id) => nodes[id] && nodes[id].type === 'idea')
+    const targetSections = sectionIds.map((id) => script.sections.find((se) => se.id === id)).filter(Boolean)
     const isMain = script.mapLayout.mainThreadId === menu.sectionId
-    const deleteLabel = ids.length > 1 ? 'Delete ' + ids.length + ' sections' : 'Delete section'
+    const isIdea = ideaIds.includes(menu.sectionId)
+    const deleteLabel = ids.length > 1 ? 'Delete ' + ids.length + ' nodes' : isIdea ? 'Delete node' : 'Delete section'
     items = [
-      ids.length === 1 ? { label: 'Open in new tab', onClick: act(() => openSectionTab(menu.scriptId, menu.sectionId)) } : null,
-      ids.length === 1
+      ids.length === 1 && !isIdea
+        ? { label: 'Open in new tab', onClick: act(() => openSectionTab(menu.scriptId, menu.sectionId)) }
+        : null,
+      ids.length === 1 && !isIdea
         ? { label: isMain ? 'Unset as main thread start' : 'Set as main thread start', onClick: act(() => setMapMainThread(menu.scriptId, menu.sectionId)) }
+        : null,
+      ids.length === 1
+        ? {
+            label: 'Duplicate',
+            onClick: act(() => (isIdea ? duplicateIdeaNode(menu.scriptId, menu.sectionId) : duplicateSection(menu.scriptId, menu.sectionId)))
+          }
         : null,
       {
         label: deleteLabel,
         danger: true,
         onClick: act(() => {
-          const needsConfirm = sectionsHaveContent(targetSections)
+          const needsConfirm = sectionIds.length > 0 && sectionsHaveContent(targetSections)
           const msg = ids.length > 1
-            ? 'Delete ' + ids.length + ' sections? This removes their lines and checkpoints permanently.'
-            : 'Delete this section? This removes its lines and checkpoints permanently.'
-          if (!needsConfirm || window.confirm(msg)) deleteSections(menu.scriptId, ids)
+            ? 'Delete ' + ids.length + ' nodes? This removes any real sections’ lines and checkpoints permanently.'
+            : isIdea
+              ? 'Delete this node?'
+              : 'Delete this section? This removes its lines and checkpoints permanently.'
+          if (!needsConfirm || window.confirm(msg)) deleteMapSelection(menu.scriptId, sectionIds, ideaIds)
         })
       }
     ].filter(Boolean)

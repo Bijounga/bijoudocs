@@ -20,7 +20,8 @@ export const DEFAULT_KEYBINDS = {
   newTake: 'ctrl+shift+r',
   bookmark: 'ctrl+shift+b',
   mapAddSection: 'ctrl+shift+m',
-  mapToggleSummaries: 'ctrl+shift+y'
+  mapToggleSummaries: 'ctrl+shift+y',
+  mapAddIdeaNode: 'ctrl+shift+i'
 }
 
 export const SHORTCUT_META = [
@@ -49,7 +50,8 @@ export const SHORTCUT_META = [
     id: 'mapToggleSummaries',
     label: 'Toggle mind map summaries',
     desc: 'Hides or shows every beat summary in the mind map at once — or, if a node is selected, just that node’s summary.'
-  }
+  },
+  { id: 'mapAddIdeaNode', label: 'Add idea node in mind map', desc: 'Adds a blank freeform note node (not tied to any section), while the mind map is open.' }
 ]
 
 export const COLOR_PALETTE = ['#4FD1C5', '#F2A65A', '#D46FB0', '#E2665B', '#7FA9F2', '#ECE9E2']

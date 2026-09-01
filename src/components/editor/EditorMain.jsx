@@ -20,6 +20,7 @@ export default function EditorMain({ scriptId, script }) {
   const zoom = useStore((s) => s.zoom)
   const setActiveTab = useStore((s) => s.setActiveTab)
   const mapViewOpen = useStore((s) => s.mapViewOpen)
+  const mapSplitOpen = useStore((s) => s.mapSplitOpen)
   const leftMarginOpen = useStore((s) => s.leftMarginOpen)
   const toggleLeftMargin = useStore((s) => s.toggleLeftMargin)
   const rightMarginOpen = useStore((s) => s.rightMarginOpen)
@@ -37,7 +38,7 @@ export default function EditorMain({ scriptId, script }) {
     if (activeTabId && activeTabId !== 'all' && singleIdx < 0) setActiveTab(scriptId, 'all')
   }, [activeTabId, singleIdx, scriptId, setActiveTab])
 
-  if (mapViewOpen) {
+  if (mapViewOpen && !mapSplitOpen) {
     return <MapView scriptId={scriptId} script={script} />
   }
 
@@ -80,6 +81,19 @@ export default function EditorMain({ scriptId, script }) {
       )}
     </div>
   )
+
+  // Side-by-side mode — the script for reference while planning on the
+  // map, without giving up either view's own scroll/zoom/pan. Margin
+  // panels (timestamps, pinned, checklist, bookmarks) are left out here
+  // to keep it to two panes, not four.
+  if (mapViewOpen && mapSplitOpen) {
+    return (
+      <div className="main editor-split">
+        <div className="editor-split-pane">{editor}</div>
+        <MapView scriptId={scriptId} script={script} />
+      </div>
+    )
+  }
 
   if (focusMode) {
     return <div className="main">{editor}</div>

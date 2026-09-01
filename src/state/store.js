@@ -84,6 +84,14 @@ export const useStore = create(
 
     contextMenu: null,
     mapViewOpen: false,
+    mapSplitOpen: false,
+    // App-wide (not per-script) — quick-add presets for mind-map idea
+    // nodes. Seeded with "But"/"Therefore" (the South Park writing-method
+    // pair) on first use, fully user-editable after.
+    ideaNodePresets: [
+      { id: 'preset-but', label: 'But', color: '#e2665b' },
+      { id: 'preset-therefore', label: 'Therefore', color: '#4fd1c5' }
+    ],
     takesMenuFor: null,
     leftMarginOpen: true,
     rightMarginOpen: true,
@@ -124,6 +132,7 @@ export const useStore = create(
         if (settings && settings.noteColor) s.noteColor = settings.noteColor
         if (settings && settings.leftMarginWidth) s.leftMarginWidth = settings.leftMarginWidth
         if (settings && settings.rightMarginWidth) s.rightMarginWidth = settings.rightMarginWidth
+        if (settings && settings.ideaNodePresets) s.ideaNodePresets = settings.ideaNodePresets
       })
       if (sorted.length) get().ensureDailyRollover(sorted[0].id)
     },
@@ -181,7 +190,12 @@ export const useStore = create(
     // a saved margin width, and vice versa.
     saveAppSettings() {
       const s = get()
-      window.bijou.saveSettings({ noteColor: s.noteColor, leftMarginWidth: s.leftMarginWidth, rightMarginWidth: s.rightMarginWidth })
+      window.bijou.saveSettings({
+        noteColor: s.noteColor,
+        leftMarginWidth: s.leftMarginWidth,
+        rightMarginWidth: s.rightMarginWidth,
+        ideaNodePresets: s.ideaNodePresets
+      })
     },
     setNoteColor(color) {
       set((s) => {
@@ -198,6 +212,18 @@ export const useStore = create(
     setRightMarginWidth(width) {
       set((s) => {
         s.rightMarginWidth = Math.max(160, Math.min(420, Math.round(width)))
+      })
+      get().saveAppSettings()
+    },
+    addIdeaNodePreset(label, color) {
+      set((s) => {
+        s.ideaNodePresets.push({ id: uid(), label, color })
+      })
+      get().saveAppSettings()
+    },
+    deleteIdeaNodePreset(id) {
+      set((s) => {
+        s.ideaNodePresets = s.ideaNodePresets.filter((p) => p.id !== id)
       })
       get().saveAppSettings()
     },
@@ -1702,6 +1728,11 @@ export const useStore = create(
         s.mapViewOpen = !s.mapViewOpen
       })
     },
+    toggleMapSplit() {
+      set((s) => {
+        s.mapSplitOpen = !s.mapSplitOpen
+      })
+    },
     setSectionBeatSummary(scriptId, sectionId, text) {
       set((s) => {
         const script = s.scripts.find((sc) => sc.id === scriptId)
@@ -1833,6 +1864,162 @@ export const useStore = create(
         script.updatedAt = Date.now()
       })
       get().scheduleSave(scriptId, { flash: false })
+    },
+
+    // ---------- mind-map idea nodes (freeform notes, not real sections) ----------
+    // Live only in mapLayout.nodes, marked with type:'idea' — nodes without
+    // an explicit type are implicitly sections (all the ones that predate
+    // this feature). They share the exact same position/edge/connector
+    // machinery as section nodes, just carry their own title/text/color
+    // instead of pointing at a real section.
+    addIdeaNode(scriptId, x, y, opts = {}) {
+      get().pushUndo(scriptId)
+      let newId = null
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        if (!script) return
+        newId = uid()
+        script.mapLayout.nodes[newId] = {
+          x,
+          y,
+          collapsed: false,
+          type: 'idea',
+          title: opts.title || '',
+          text: opts.text || '',
+          color: opts.color || null
+        }
+        script.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+      return newId
+    },
+    // Mirrors addConnectedSectionFromMap, but for growing a thread with a
+    // blank idea node instead of a new section.
+    addConnectedIdeaNodeFromMap(scriptId, fromId, dir) {
+      const script = get().scripts.find((sc) => sc.id === scriptId)
+      const fromNode = script && script.mapLayout.nodes[fromId]
+      if (!fromNode) return null
+      const offsets = { up: [0, -190], down: [0, 190], left: [-280, 0], right: [280, 0] }
+      const [dx, dy] = offsets[dir] || offsets.down
+      const newId = get().addIdeaNode(scriptId, fromNode.x + dx, fromNode.y + dy)
+      if (newId) get().addMapEdge(scriptId, fromId, newId)
+      return newId
+    },
+    setIdeaNodeTitle(scriptId, nodeId, title) {
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        const node = script && script.mapLayout.nodes[nodeId]
+        if (node) node.title = title
+      })
+    },
+    commitIdeaNodeTitle(scriptId) {
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        if (script) script.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+    },
+    setIdeaNodeText(scriptId, nodeId, text) {
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        const node = script && script.mapLayout.nodes[nodeId]
+        if (node) node.text = text
+      })
+    },
+    commitIdeaNodeText(scriptId) {
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        if (script) script.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+    },
+    setIdeaNodeColor(scriptId, nodeId, color) {
+      get().pushUndo(scriptId)
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        const node = script && script.mapLayout.nodes[nodeId]
+        if (node) node.color = color
+        if (script) script.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+    },
+    deleteIdeaNodes(scriptId, nodeIds) {
+      if (!nodeIds.length) return
+      get().pushUndo(scriptId)
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        if (!script) return
+        const idSet = new Set(nodeIds)
+        idSet.forEach((id) => delete script.mapLayout.nodes[id])
+        script.mapLayout.edges = script.mapLayout.edges.filter((e) => !idSet.has(e.from) && !idSet.has(e.to))
+        if (idSet.has(script.mapLayout.mainThreadId)) script.mapLayout.mainThreadId = null
+        script.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+    },
+    // A single map selection can mix section nodes and idea nodes — this
+    // deletes both kinds in one pushUndo/set/save instead of calling
+    // deleteSections + deleteIdeaNodes back to back, which would push two
+    // separate undo snapshots for what the user experiences as one delete
+    // (and so need two Ctrl+Z presses to undo, not one).
+    deleteMapSelection(scriptId, sectionIds, ideaIds) {
+      if (!sectionIds.length && !ideaIds.length) return
+      get().pushUndo(scriptId)
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        if (!script) return
+        const idSet = new Set([...sectionIds, ...ideaIds])
+        if (sectionIds.length) {
+          const secSet = new Set(sectionIds)
+          script.sections = script.sections.filter((se) => !secSet.has(se.id))
+          if (script.sections.length === 0) script.sections.push(mkSection('New section', [mkLine('', null)]))
+          script.pinnedSectionIds = script.pinnedSectionIds.filter((id) => !secSet.has(id))
+        }
+        idSet.forEach((id) => delete script.mapLayout.nodes[id])
+        script.mapLayout.edges = script.mapLayout.edges.filter((e) => !idSet.has(e.from) && !idSet.has(e.to))
+        if (idSet.has(script.mapLayout.mainThreadId)) script.mapLayout.mainThreadId = null
+        script.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+    },
+    duplicateIdeaNode(scriptId, nodeId) {
+      get().pushUndo(scriptId)
+      let newId = null
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        const node = script && script.mapLayout.nodes[nodeId]
+        if (!node) return
+        newId = uid()
+        script.mapLayout.nodes[newId] = { ...JSON.parse(JSON.stringify(node)), x: node.x + 30, y: node.y + 30 }
+        script.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+      return newId
+    },
+    // Appends a full copy of a section (fresh ids throughout, including
+    // every line) at the end of the real script, with its own map node
+    // near the original's — a quick way to spin off a variant beat without
+    // touching the one it came from.
+    duplicateSection(scriptId, sectionId) {
+      get().pushUndo(scriptId)
+      let newId = null
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        const sec = script && script.sections.find((se) => se.id === sectionId)
+        if (!sec) return
+        const clone = JSON.parse(JSON.stringify(sec))
+        clone.id = uid()
+        clone.lines = clone.lines.map((l) => ({ ...l, id: uid() }))
+        script.sections.push(clone)
+        const origNode = script.mapLayout.nodes[sectionId]
+        script.mapLayout.nodes[clone.id] = origNode
+          ? { x: origNode.x + 30, y: origNode.y + 30, collapsed: false }
+          : { x: 60, y: 60, collapsed: false }
+        script.updatedAt = Date.now()
+        newId = clone.id
+      })
+      get().scheduleSave(scriptId, { flash: false })
+      return newId
     },
 
     // ---------- pinned section references (editor margin) ----------
