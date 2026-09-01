@@ -153,7 +153,7 @@ function setupAutoUpdater(win) {
   })
   autoUpdater.on('error', (err) => {
     console.error('BijouDocs: auto-update error', err)
-    win.webContents.send('update:status', { state: 'error' })
+    win.webContents.send('update:status', { state: 'error', message: err && err.message })
   })
   const check = () => autoUpdater.checkForUpdates().catch((err) => console.error('BijouDocs: update check failed', err))
   check()

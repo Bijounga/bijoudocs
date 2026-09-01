@@ -19,9 +19,11 @@ export default function VersionBadge() {
           ? 'Downloading update…'
           : updateStatus === 'downloaded'
             ? 'Update ready ↓'
-            : appVersion
-              ? 'v' + appVersion
-              : ''
+            : updateStatus === 'error'
+              ? 'Update failed — click to retry'
+              : appVersion
+                ? 'v' + appVersion
+                : ''
 
   if (!label) return null
 

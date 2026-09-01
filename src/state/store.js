@@ -42,8 +42,9 @@ export const useStore = create(
     // scriptId -> backup filename, set when a save just detected exactly
     // that and backed up the version it would otherwise have clobbered.
     saveConflicts: {},
-    updateStatus: null, // null | 'available' | 'downloaded'
+    updateStatus: null, // null | 'checking' | 'available' | 'not-available' | 'downloaded' | 'error'
     updateVersion: null,
+    updateErrorMessage: null,
 
     // ui
     focusMode: false,
@@ -144,18 +145,26 @@ export const useStore = create(
       set((s) => {
         s.updateStatus = payload.state
         if (payload.version) s.updateVersion = payload.version
+        s.updateErrorMessage = payload.state === 'error' ? payload.message || null : null
       })
       clearTimeout(updateStatusTimer)
       // 'checking' and 'not-available' are transient status text (next to
       // the version number) rather than something that should sit there
-      // indefinitely — 'available'/'downloaded' persist until acted on.
-      if (payload.state === 'checking' || payload.state === 'not-available' || payload.state === 'error') {
+      // indefinitely. 'available'/'downloaded' persist until acted on.
+      // 'error' persists too (dismissed manually) — long enough to actually
+      // read, since it means something real needs attention.
+      if (payload.state === 'checking' || payload.state === 'not-available') {
         updateStatusTimer = setTimeout(() => {
           set((s) => {
             if (s.updateStatus === payload.state) s.updateStatus = null
           })
         }, 2500)
       }
+    },
+    dismissUpdateStatus() {
+      set((s) => {
+        s.updateStatus = null
+      })
     },
     checkForUpdates() {
       window.bijou.checkForUpdatesNow()
