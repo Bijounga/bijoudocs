@@ -26,7 +26,8 @@ const PATHS = {
   map: '<rect x="2.5" y="2.5" width="4.5" height="4.5" rx="1"/><rect x="9" y="2.5" width="4.5" height="4.5" rx="1"/><rect x="5.75" y="9" width="4.5" height="4.5" rx="1"/><path d="M4.75 7v1a1 1 0 001 1H6"/><path d="M11.25 7v1a1 1 0 01-1 1h-.25"/>',
   layers: '<path d="M8 2.5l5.5 3L8 8.5l-5.5-3z"/><path d="M2.5 8.5L8 11.5l5.5-3"/><path d="M2.5 11.5L8 14.5l5.5-3"/>',
   check: '<polyline points="3,8.5 6.5,12 13,4.5"/>',
-  x: '<line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/>'
+  x: '<line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/>',
+  folder: '<path d="M2.5 4.5a1 1 0 011-1h3l1.3 1.6h5.2a1 1 0 011 1v6.4a1 1 0 01-1 1h-9.5a1 1 0 01-1-1z"/>'
 }
 
 export default function Icon({ name, size = 14, className, filled = false }) {

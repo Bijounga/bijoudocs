@@ -9,6 +9,7 @@ import EditorMain from './components/editor/EditorMain.jsx'
 import DiffModal from './components/DiffModal.jsx'
 import TeleprompterView from './components/TeleprompterView.jsx'
 import ContextMenu from './components/ContextMenu.jsx'
+import UpdateBanner from './components/UpdateBanner.jsx'
 import { useGlobalKeydown } from './hooks/useGlobalKeydown.js'
 import { installGlobalDragSelectListeners } from './state/dragSelect.js'
 
@@ -35,12 +36,17 @@ export default function App() {
   const closeContextMenu = useStore((s) => s.closeContextMenu)
   const takesMenuFor = useStore((s) => s.takesMenuFor)
   const closeTakesMenu = useStore((s) => s.closeTakesMenu)
+  const setUpdateStatus = useStore((s) => s.setUpdateStatus)
 
   useGlobalKeydown()
 
   useEffect(() => {
     init()
   }, [init])
+
+  useEffect(() => {
+    if (window.bijou.onUpdateStatus) window.bijou.onUpdateStatus(setUpdateStatus)
+  }, [setUpdateStatus])
 
   useEffect(() => {
     document.documentElement.style.setProperty('--note-color', noteColor)
@@ -160,6 +166,7 @@ export default function App() {
       <DiffModal />
       {script && <TeleprompterView script={script} />}
       <ContextMenu />
+      <UpdateBanner />
     </div>
   )
 }

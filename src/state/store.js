@@ -30,6 +30,9 @@ export const useStore = create(
     loaded: false,
     scripts: [],
     currentScriptId: null,
+    storageDir: '',
+    updateStatus: null, // null | 'available' | 'downloaded'
+    updateVersion: null,
 
     // ui
     focusMode: false,
@@ -89,17 +92,45 @@ export const useStore = create(
 
     // ---------- persistence ----------
     async init() {
-      const [scripts, settings] = await Promise.all([window.bijou.loadAllScripts(), window.bijou.loadSettings()])
+      const [scripts, settings, storageDir] = await Promise.all([
+        window.bijou.loadAllScripts(),
+        window.bijou.loadSettings(),
+        window.bijou.getDocsDir()
+      ])
       const sorted = scripts.slice().sort((a, b) => b.updatedAt - a.updatedAt)
       set((s) => {
         s.scripts = scripts
         s.currentScriptId = sorted.length ? sorted[0].id : null
         s.loaded = true
+        s.storageDir = storageDir
         if (settings && settings.noteColor) s.noteColor = settings.noteColor
         if (settings && settings.leftMarginWidth) s.leftMarginWidth = settings.leftMarginWidth
         if (settings && settings.rightMarginWidth) s.rightMarginWidth = settings.rightMarginWidth
       })
       if (sorted.length) get().ensureDailyRollover(sorted[0].id)
+    },
+    // Switches which folder scripts are read from/saved to (e.g. a Google
+    // Drive/Dropbox/iCloud folder, for syncing scripts across machines).
+    // The main process copies over anything the old folder had that the
+    // new one doesn't before we reload, so nothing gets stranded.
+    async chooseStorageDir() {
+      const result = await window.bijou.chooseStorageDir()
+      if (result.canceled) return false
+      await get().init()
+      return true
+    },
+    async resetStorageDir() {
+      await window.bijou.resetStorageDir()
+      await get().init()
+    },
+    setUpdateStatus(payload) {
+      set((s) => {
+        s.updateStatus = payload.state
+        s.updateVersion = payload.version
+      })
+    },
+    installUpdate() {
+      window.bijou.installUpdateNow()
     },
     // Persisted app-wide settings are saved as one whole object, so every
     // setter here goes through this rather than calling saveSettings with

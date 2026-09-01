@@ -13,6 +13,8 @@ export default function Sidebar() {
   const togglePin = useStore((s) => s.togglePin)
   const deleteScript = useStore((s) => s.deleteScript)
   const openContextMenu = useStore((s) => s.openContextMenu)
+  const storageDir = useStore((s) => s.storageDir)
+  const chooseStorageDir = useStore((s) => s.chooseStorageDir)
 
   const q = librarySearch.trim().toLowerCase()
   const filtered = scripts
@@ -89,6 +91,13 @@ export default function Sidebar() {
             </div>
           )
         })}
+      </div>
+      <div className="sb-storage" title={storageDir}>
+        <Icon name="folder" size={12} />
+        <span className="sb-storage-path">{storageDir.split(/[\\/]/).slice(-2).join('/')}</span>
+        <button className="sb-storage-btn" onClick={chooseStorageDir}>
+          Change…
+        </button>
       </div>
     </div>
   )

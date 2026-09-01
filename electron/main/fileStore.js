@@ -6,8 +6,35 @@ import path from 'path'
 import { app } from 'electron'
 import { migrateScript } from './scriptSchema.js'
 
-function getDocsDir() {
+function defaultDocsDir() {
   return path.join(app.getPath('documents'), 'BijouDocs')
+}
+
+// Where scripts are actually read from/written to — a user-chosen folder
+// (e.g. inside a Google Drive/Dropbox/iCloud sync folder, for sharing
+// scripts across machines) if one's been set, else the default local
+// Documents folder. The choice itself is saved in settings.json, which is
+// deliberately per-machine (Electron's own userData dir, never synced) —
+// each machine points at wherever its own copy of the sync folder lives.
+function getDocsDir() {
+  const settings = loadSettings()
+  return settings.storageDir || defaultDocsDir()
+}
+
+// Copies any script JSON the old folder has that the new one doesn't, so
+// switching to a synced folder (or switching between machines) never
+// silently drops scripts that only exist in the old location. Never
+// overwrites a file already present at the destination — if the new
+// folder already has a same-named script (e.g. synced in from another
+// machine), that copy wins.
+function migrateStorageDir(oldDir, newDir) {
+  fs.mkdirSync(newDir, { recursive: true })
+  if (path.resolve(oldDir) === path.resolve(newDir) || !fs.existsSync(oldDir)) return
+  const files = fs.readdirSync(oldDir).filter((f) => f.endsWith('.json'))
+  for (const file of files) {
+    const dest = path.join(newDir, file)
+    if (!fs.existsSync(dest)) fs.copyFileSync(path.join(oldDir, file), dest)
+  }
 }
 
 // App-wide preferences (not tied to any one script) — kept in Electron's
@@ -67,4 +94,4 @@ function deleteScript(id) {
   return true
 }
 
-export { getDocsDir, ensureDir, loadAllScripts, saveScript, deleteScript, loadSettings, saveSettings }
+export { getDocsDir, defaultDocsDir, migrateStorageDir, ensureDir, loadAllScripts, saveScript, deleteScript, loadSettings, saveSettings }

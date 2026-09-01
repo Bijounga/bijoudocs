@@ -11,7 +11,11 @@ const api = {
   exportFile: (payload) => ipcRenderer.invoke('dialog:exportFile', payload),
   importFile: () => ipcRenderer.invoke('dialog:importFile'),
   loadSettings: () => ipcRenderer.invoke('settings:load'),
-  saveSettings: (settings) => ipcRenderer.invoke('settings:save', settings)
+  saveSettings: (settings) => ipcRenderer.invoke('settings:save', settings),
+  chooseStorageDir: () => ipcRenderer.invoke('settings:chooseStorageDir'),
+  resetStorageDir: () => ipcRenderer.invoke('settings:resetStorageDir'),
+  onUpdateStatus: (cb) => ipcRenderer.on('update:status', (_e, payload) => cb(payload)),
+  installUpdateNow: () => ipcRenderer.invoke('update:installNow')
 }
 
 contextBridge.exposeInMainWorld('bijou', api)

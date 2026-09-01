@@ -1,4 +1,5 @@
 import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
+import { autoUpdater } from 'electron-updater'
 import path from 'path'
 import fs from 'fs'
 import * as fileStore from './fileStore.js'
@@ -70,6 +71,32 @@ function registerIpc() {
   ipcMain.handle('settings:load', () => fileStore.loadSettings())
   ipcMain.handle('settings:save', (_e, settings) => fileStore.saveSettings(settings))
 
+  ipcMain.handle('settings:chooseStorageDir', async () => {
+    const win = BrowserWindow.getFocusedWindow()
+    const { canceled, filePaths } = await dialog.showOpenDialog(win, {
+      properties: ['openDirectory', 'createDirectory'],
+      title: 'Choose a folder to store your scripts in'
+    })
+    if (canceled || !filePaths.length) return { canceled: true }
+    const newDir = filePaths[0]
+    const oldDir = fileStore.getDocsDir()
+    fileStore.migrateStorageDir(oldDir, newDir)
+    const settings = fileStore.loadSettings()
+    settings.storageDir = newDir
+    fileStore.saveSettings(settings)
+    return { canceled: false, dir: newDir }
+  })
+
+  ipcMain.handle('settings:resetStorageDir', () => {
+    const oldDir = fileStore.getDocsDir()
+    const newDir = fileStore.defaultDocsDir()
+    fileStore.migrateStorageDir(oldDir, newDir)
+    const settings = fileStore.loadSettings()
+    delete settings.storageDir
+    fileStore.saveSettings(settings)
+    return { dir: newDir }
+  })
+
   ipcMain.handle('dialog:exportFile', async (_e, { defaultName, content, filters }) => {
     const win = BrowserWindow.getFocusedWindow()
     const { canceled, filePath } = await dialog.showSaveDialog(win, {
@@ -103,9 +130,36 @@ function registerIpc() {
   })
 }
 
+// Checks GitHub Releases for a newer published version, downloads it
+// silently in the background, and tells the renderer once it's ready to
+// install — the renderer just shows a "restart to update" button, actually
+// applying it (quitAndInstall) waits for the user to ask for it. No-op in
+// dev, where there's no packaged app/update feed to check against.
+function setupAutoUpdater(win) {
+  if (isDev) return
+  autoUpdater.autoDownload = true
+  autoUpdater.on('update-available', (info) => {
+    win.webContents.send('update:status', { state: 'available', version: info.version })
+  })
+  autoUpdater.on('update-downloaded', (info) => {
+    win.webContents.send('update:status', { state: 'downloaded', version: info.version })
+  })
+  autoUpdater.on('error', (err) => {
+    console.error('BijouDocs: auto-update error', err)
+  })
+  const check = () => autoUpdater.checkForUpdates().catch((err) => console.error('BijouDocs: update check failed', err))
+  check()
+  setInterval(check, 4 * 60 * 60 * 1000)
+}
+
 app.whenReady().then(() => {
   registerIpc()
-  createWindow()
+  const win = createWindow()
+  setupAutoUpdater(win)
+
+  ipcMain.handle('update:installNow', () => {
+    autoUpdater.quitAndInstall()
+  })
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
