@@ -8,7 +8,7 @@ import { buildExportContent, parseImportedText } from '../lib/exportImport.js'
 import { DEFAULT_KEYBINDS } from '../lib/keybinds.js'
 import { buildNavList } from '../lib/navigation.js'
 import { totalWordCountAll } from '../lib/timecode.js'
-import { changelogSince } from '../lib/changelog.js'
+import { CHANGELOG, changelogSince } from '../lib/changelog.js'
 
 const MAX_UNDO = 60
 const saveTimers = {}
@@ -140,11 +140,17 @@ export const useStore = create(
         if (settings && settings.ideaNodePresets) s.ideaNodePresets = settings.ideaNodePresets
         s.lastSeenVersion = appVersion
       })
-      // Only pops the "what's new" popup once this device has already
-      // recorded a version once before — the very first launch ever (or
-      // the first launch after adding this feature) has nothing to compare
-      // against, and showing a changelog on a brand-new install would just
-      // be confusing rather than useful.
+      // A missing lastSeenVersion means one of two very different things:
+      // either this is a genuinely brand-new install (no scripts yet —
+      // showing a changelog before the user has done anything would just
+      // be confusing), or it's an existing user whose app simply predates
+      // this feature (this project's whole history so far, until now) —
+      // for them, skipping the popup silently would mean never showing it
+      // for the version that introduced it, which is exactly the "I didn't
+      // see anything" gap this branch exists to close. Only the true
+      // fresh-install case is skipped; an existing user instead sees just
+      // the current version's own entry, since there's no real prior
+      // version on file to compute a since-then range from.
       if (settings && settings.lastSeenVersion && settings.lastSeenVersion !== appVersion) {
         const entries = changelogSince(settings.lastSeenVersion, appVersion)
         if (entries.length) {
@@ -154,6 +160,12 @@ export const useStore = create(
             s.whatsNewEntries = entries
           })
         }
+      } else if ((!settings || !settings.lastSeenVersion) && scripts.length > 0 && CHANGELOG[appVersion]) {
+        set((s) => {
+          s.whatsNewOpen = true
+          s.whatsNewVersion = appVersion
+          s.whatsNewEntries = CHANGELOG[appVersion]
+        })
       }
       get().saveAppSettings()
       if (sorted.length) get().ensureDailyRollover(sorted[0].id)

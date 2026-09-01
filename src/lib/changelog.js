@@ -12,7 +12,8 @@ export const CHANGELOG = {
     'Right-click multiple selected nodes to align, snap to grid, or space them evenly',
     'More contrast on mind-map nodes and their text',
     'Misspelled words now show real spelling suggestions on right-click'
-  ]
+  ],
+  '0.5.18': ['Fixed the "what\'s new" popup not showing up on the update that introduced it']
 }
 
 function parseVersion(v) {
