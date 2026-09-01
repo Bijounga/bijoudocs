@@ -2445,4 +2445,21 @@ textarea {
   padding: 5px 10px;
   font-size: 12px;
   font-weight: 600;
+  white-space: nowrap;
+}
+.update-banner.conflict {
+  bottom: 64px;
+  max-width: 420px;
+  border-color: var(--amber, #f2a65a);
+  align-items: flex-start;
+}
+.update-banner.conflict code {
+  font-family: var(--mono);
+  font-size: 11px;
+  background: var(--panel-2);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+.update-banner.conflict .update-banner-btn {
+  background: var(--amber, #f2a65a);
 }

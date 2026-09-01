@@ -10,6 +10,7 @@ import DiffModal from './components/DiffModal.jsx'
 import TeleprompterView from './components/TeleprompterView.jsx'
 import ContextMenu from './components/ContextMenu.jsx'
 import UpdateBanner from './components/UpdateBanner.jsx'
+import SaveConflictBanner from './components/SaveConflictBanner.jsx'
 import { useGlobalKeydown } from './hooks/useGlobalKeydown.js'
 import { installGlobalDragSelectListeners } from './state/dragSelect.js'
 
@@ -166,6 +167,7 @@ export default function App() {
       <DiffModal />
       {script && <TeleprompterView script={script} />}
       <ContextMenu />
+      {script && <SaveConflictBanner scriptId={script.id} />}
       <UpdateBanner />
     </div>
   )

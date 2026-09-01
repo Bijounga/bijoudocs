@@ -68,7 +68,7 @@ function scriptPath(id) {
 
 function loadAllScripts() {
   const dir = ensureDir()
-  const files = fs.readdirSync(dir).filter((f) => f.endsWith('.json'))
+  const files = fs.readdirSync(dir).filter((f) => f.endsWith('.json') && !f.includes('.conflict-'))
   const scripts = []
   for (const file of files) {
     try {
@@ -82,15 +82,46 @@ function loadAllScripts() {
   return scripts
 }
 
-function saveScript(script) {
+// `expectedUpdatedAt` is whatever `updatedAt` this app instance last knew
+// the on-disk file to have (from loading it, or from this instance's own
+// last successful save) — if the file on disk now has a *different*
+// `updatedAt`, something else (almost always: this same app, saved from
+// another machine sharing this folder via Drive/Dropbox/etc) wrote a
+// change we never saw. Rather than silently clobber that with whatever's
+// in memory here, the losing copy gets backed up alongside it first, so a
+// save can never make data actually disappear — worst case, a human has
+// to go compare two files by hand.
+function saveScript(script, expectedUpdatedAt) {
   if (!script || !script.id) throw new Error('saveScript requires a script with an id')
-  fs.writeFileSync(scriptPath(script.id), JSON.stringify(script, null, 2), 'utf-8')
-  return true
+  const file = scriptPath(script.id)
+  let conflict = false
+  let backupFile = null
+  if (expectedUpdatedAt != null && fs.existsSync(file)) {
+    try {
+      const onDisk = JSON.parse(fs.readFileSync(file, 'utf-8'))
+      if (onDisk && onDisk.updatedAt != null && onDisk.updatedAt !== expectedUpdatedAt) {
+        conflict = true
+        backupFile = script.id + '.conflict-' + Date.now() + '.json'
+        fs.copyFileSync(file, path.join(ensureDir(), backupFile))
+      }
+    } catch (err) {
+      // Unreadable/corrupt on-disk file — nothing sensible to compare
+      // against or back up, just proceed with a normal save.
+    }
+  }
+  fs.writeFileSync(file, JSON.stringify(script, null, 2), 'utf-8')
+  return { conflict, backupFile, updatedAt: script.updatedAt }
 }
 
 function deleteScript(id) {
+  const dir = ensureDir()
   const file = scriptPath(id)
   if (fs.existsSync(file)) fs.unlinkSync(file)
+  // Also clean up any conflict backups left for this script — no point
+  // keeping them around once the script itself is gone for good.
+  fs.readdirSync(dir)
+    .filter((f) => f.startsWith(id + '.conflict-'))
+    .forEach((f) => fs.unlinkSync(path.join(dir, f)))
   return true
 }
 

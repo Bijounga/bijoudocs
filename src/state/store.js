@@ -31,6 +31,15 @@ export const useStore = create(
     scripts: [],
     currentScriptId: null,
     storageDir: '',
+    // updatedAt this instance last knew the on-disk copy of each script to
+    // have (from loading it, or from this instance's own last successful
+    // save) — scheduleSave sends it along so the main process can tell
+    // whether something else (this same app, saved from another machine
+    // sharing this folder) wrote a change we never saw. Keyed by scriptId.
+    diskUpdatedAt: {},
+    // scriptId -> backup filename, set when a save just detected exactly
+    // that and backed up the version it would otherwise have clobbered.
+    saveConflicts: {},
     updateStatus: null, // null | 'available' | 'downloaded'
     updateVersion: null,
 
@@ -103,6 +112,10 @@ export const useStore = create(
         s.currentScriptId = sorted.length ? sorted[0].id : null
         s.loaded = true
         s.storageDir = storageDir
+        s.diskUpdatedAt = {}
+        scripts.forEach((sc) => {
+          s.diskUpdatedAt[sc.id] = sc.updatedAt
+        })
         if (settings && settings.noteColor) s.noteColor = settings.noteColor
         if (settings && settings.leftMarginWidth) s.leftMarginWidth = settings.leftMarginWidth
         if (settings && settings.rightMarginWidth) s.rightMarginWidth = settings.rightMarginWidth
@@ -165,12 +178,22 @@ export const useStore = create(
         const script = get().scripts.find((s) => s.id === id)
         if (!script) return
         try {
-          await window.bijou.saveScript(script)
+          const expected = get().diskUpdatedAt[id]
+          const result = await window.bijou.saveScript(script, expected != null ? expected : null)
+          set((s) => {
+            s.diskUpdatedAt[id] = result.updatedAt
+            if (result.conflict) s.saveConflicts[id] = result.backupFile
+          })
           if (flash) get().flashSaved(text)
         } catch (err) {
           console.error('BijouDocs: save failed', err)
         }
       }, delay)
+    },
+    dismissSaveConflict(id) {
+      set((s) => {
+        delete s.saveConflicts[id]
+      })
     },
 
     flashSaved(text) {
@@ -265,6 +288,7 @@ export const useStore = create(
       set((s) => {
         s.scripts.push(script)
         s.currentScriptId = script.id
+        s.diskUpdatedAt[script.id] = script.updatedAt
       })
       get().scheduleSave(script.id, { flash: false })
     },
@@ -277,6 +301,8 @@ export const useStore = create(
           const sorted = s.scripts.slice().sort((a, b) => b.updatedAt - a.updatedAt)
           s.currentScriptId = sorted.length ? sorted[0].id : null
         }
+        delete s.diskUpdatedAt[id]
+        delete s.saveConflicts[id]
       })
     },
 
@@ -1266,6 +1292,7 @@ export const useStore = create(
       set((s) => {
         s.scripts.push(newScript)
         s.currentScriptId = newScript.id
+        s.diskUpdatedAt[newScript.id] = newScript.updatedAt
       })
       get().scheduleSave(newScript.id, { flash: false })
     },

@@ -52,9 +52,8 @@ function registerIpc() {
     return fileStore.loadAllScripts()
   })
 
-  ipcMain.handle('scripts:save', (_e, script) => {
-    fileStore.saveScript(script)
-    return true
+  ipcMain.handle('scripts:save', (_e, script, expectedUpdatedAt) => {
+    return fileStore.saveScript(script, expectedUpdatedAt)
   })
 
   ipcMain.handle('scripts:delete', (_e, id) => {

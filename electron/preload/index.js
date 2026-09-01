@@ -4,7 +4,7 @@ import { contextBridge, ipcRenderer } from 'electron'
 // through here — no direct fs/ipcRenderer access from React code.
 const api = {
   loadAllScripts: () => ipcRenderer.invoke('scripts:loadAll'),
-  saveScript: (script) => ipcRenderer.invoke('scripts:save', script),
+  saveScript: (script, expectedUpdatedAt) => ipcRenderer.invoke('scripts:save', script, expectedUpdatedAt),
   deleteScript: (id) => ipcRenderer.invoke('scripts:delete', id),
   newBlankScript: (title) => ipcRenderer.invoke('scripts:newBlank', title),
   getDocsDir: () => ipcRenderer.invoke('scripts:docsDir'),
