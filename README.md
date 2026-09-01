@@ -28,10 +28,14 @@ The installer lands in `dist/` (e.g. `dist/BijouDocs Setup <version>.exe` on Win
 
 ## Where your data lives
 
-- Each script is saved as its own JSON file in `~/Documents/BijouDocs/`.
-- App-wide preferences (note color, margin widths, etc.) are saved separately, in Electron's own per-OS app-data folder, as `settings.json`.
+- Each script is saved as its own JSON file in `~/Documents/BijouDocs/` by default — or wherever you point it via the folder icon at the bottom of the sidebar ("Change…"), e.g. a Google Drive/Dropbox/iCloud-synced folder, to share scripts across machines. Switching folders copies over anything the old one had that the new one doesn't, without ever overwriting a file already at the destination.
+- App-wide preferences (note color, margin widths, *which* storage folder is chosen, etc.) are saved separately and locally on each machine, in Electron's own per-OS app-data folder, as `settings.json` — never synced itself, since each machine may point at the sync folder via a different local path.
 
-Nothing is sent anywhere — it's all local files.
+Nothing is sent anywhere except the app's own update check (see below) — script content itself never leaves your machine or your chosen sync folder.
+
+## Auto-updates
+
+This copy is wired to check `github.com/Bijounga/bijoudocs` (Releases) for newer versions on launch and periodically while running, download silently in the background, and show a small "restart to update" banner once ready. To point a fork at your own releases instead, change `build.publish` in `package.json` and update `.github/workflows/release.yml`'s target repo — then push a `vX.Y.Z` tag to build and publish a new release automatically (both Windows and a universal Mac build).
 
 ## Project structure
 
