@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain, dialog, Menu } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, dialog, Menu, session } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import https from 'https'
 import path from 'path'
@@ -81,6 +81,7 @@ function createWindow() {
   // cursor; every other right-click is untouched and still goes through
   // the app's own menu exactly as before.
   win.webContents.on('context-menu', (_e, params) => {
+    if (isDev) console.log('[spellcheck] context-menu fired, misspelledWord=', JSON.stringify(params.misspelledWord), 'suggestions=', params.dictionarySuggestions)
     if (!params.misspelledWord) return
     // The app's own React-driven menu may have already opened for this same
     // right-click (its handler doesn't know about spellcheck) — tell the
@@ -231,6 +232,18 @@ function setupAutoUpdater(win) {
 }
 
 app.whenReady().then(() => {
+  // Electron's spellchecker can leave `dictionarySuggestions` empty (and
+  // sometimes `misspelledWord` unset) in the context-menu event without an
+  // explicit language — the inline red-squiggly marking runs regardless
+  // (a separate, always-on check), which is exactly the reported symptom:
+  // visibly misspelled, but no suggestions on right-click. Doesn't rely on
+  // the OS locale being detected correctly.
+  try {
+    session.defaultSession.setSpellCheckerLanguages(['en-US'])
+    if (isDev) console.log('[spellcheck] configured en-US, available:', session.defaultSession.availableSpellCheckerLanguages)
+  } catch (err) {
+    console.error('BijouDocs: spellchecker language setup failed', err)
+  }
   registerIpc()
   const win = createWindow()
   const checkNow = setupAutoUpdater(win)

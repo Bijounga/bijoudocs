@@ -144,6 +144,14 @@ export const useStore = create(
         if (settings && settings.leftMarginWidth) s.leftMarginWidth = settings.leftMarginWidth
         if (settings && settings.rightMarginWidth) s.rightMarginWidth = settings.rightMarginWidth
         if (settings && settings.ideaNodePresets) s.ideaNodePresets = settings.ideaNodePresets
+        // Booleans need an explicit-presence check, not a truthy check — a
+        // saved `false` (the user left a panel closed) is a real, meaningful
+        // value, not "unset," so `if (settings.leftMarginOpen)` would wrongly
+        // skip applying it and silently reopen the panel every launch.
+        if (settings && typeof settings.leftMarginOpen === 'boolean') s.leftMarginOpen = settings.leftMarginOpen
+        if (settings && typeof settings.rightMarginOpen === 'boolean') s.rightMarginOpen = settings.rightMarginOpen
+        if (settings && typeof settings.bookmarksMarginOpen === 'boolean') s.bookmarksMarginOpen = settings.bookmarksMarginOpen
+        if (settings && typeof settings.pinnedMarginOpen === 'boolean') s.pinnedMarginOpen = settings.pinnedMarginOpen
         s.lastSeenVersion = appVersion
       })
       // A missing lastSeenVersion means one of two very different things:
@@ -242,6 +250,10 @@ export const useStore = create(
         noteColor: s.noteColor,
         leftMarginWidth: s.leftMarginWidth,
         rightMarginWidth: s.rightMarginWidth,
+        leftMarginOpen: s.leftMarginOpen,
+        rightMarginOpen: s.rightMarginOpen,
+        bookmarksMarginOpen: s.bookmarksMarginOpen,
+        pinnedMarginOpen: s.pinnedMarginOpen,
         ideaNodePresets: s.ideaNodePresets,
         lastSeenVersion: s.lastSeenVersion
       })
@@ -2400,25 +2412,32 @@ export const useStore = create(
     },
 
     // ---------- margin panels ----------
+    // Open/closed state persists across launches (the user's explicit ask:
+    // "if I have it open, and I open [the app], it should be open") — same
+    // saveAppSettings() whole-object pattern as noteColor/margin widths/etc.
     toggleLeftMargin() {
       set((s) => {
         s.leftMarginOpen = !s.leftMarginOpen
       })
+      get().saveAppSettings()
     },
     toggleRightMargin() {
       set((s) => {
         s.rightMarginOpen = !s.rightMarginOpen
       })
+      get().saveAppSettings()
     },
     toggleBookmarksMargin() {
       set((s) => {
         s.bookmarksMarginOpen = !s.bookmarksMarginOpen
       })
+      get().saveAppSettings()
     },
     togglePinnedMargin() {
       set((s) => {
         s.pinnedMarginOpen = !s.pinnedMarginOpen
       })
+      get().saveAppSettings()
     },
 
     // ---------- video-timestamp log (left margin) ----------

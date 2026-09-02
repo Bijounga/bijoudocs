@@ -1,6 +1,6 @@
 {
   "name": "bijoudocs",
-  "version": "0.5.19",
+  "version": "0.5.20",
   "description": "BijouDocs — a desktop script workspace for YouTube scripts",
   "main": "out/main/index.js",
   "author": "Bijou",

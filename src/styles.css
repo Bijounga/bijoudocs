@@ -147,6 +147,8 @@ textarea {
   color: var(--ink-faint);
   white-space: nowrap;
   flex: 0 0 auto;
+  display: inline-block;
+  min-width: 92px;
 }
 .save-status.error {
   color: var(--danger);

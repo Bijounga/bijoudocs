@@ -37,7 +37,12 @@ export default function IdeaNode({
   const [editingTitle, setEditingTitle] = useState(false)
 
   const color = node.color || 'var(--ink-faint)'
-  const titleWeight = node.titleBold ? 800 : 600
+  // `font-weight` alone silently no-ops on a monospace stack that falls
+  // back to a static, single-weight font (confirmed: 400 vs 800 rendered
+  // at the exact same pixel width here) — `-webkit-text-stroke` thickens
+  // the glyphs at the rendering layer instead, so "bold" stays visible
+  // regardless of which font in the stack actually loaded.
+  const titleBoldStyle = node.titleBold ? { fontWeight: 800, WebkitTextStroke: '0.5px currentColor' } : { fontWeight: 600 }
   const showText = !hideSummaries && !node.collapsed
 
   return (
@@ -57,7 +62,7 @@ export default function IdeaNode({
         {editingTitle ? (
           <input
             className="idea-node-title"
-            style={{ color, fontWeight: titleWeight }}
+            style={{ color, ...titleBoldStyle }}
             placeholder="Title…"
             value={node.title}
             autoFocus
@@ -79,7 +84,7 @@ export default function IdeaNode({
         ) : (
           <span
             className="idea-node-title idea-node-title-display"
-            style={{ color: node.title ? color : 'var(--ink-faint)', fontWeight: titleWeight }}
+            style={{ color: node.title ? color : 'var(--ink-faint)', ...titleBoldStyle }}
             onMouseDown={(e) => e.detail > 1 && e.stopPropagation()}
             onDoubleClick={(e) => {
               e.stopPropagation()

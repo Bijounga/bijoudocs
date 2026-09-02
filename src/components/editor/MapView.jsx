@@ -318,6 +318,13 @@ export default function MapView({ scriptId, script }) {
     }
     if (e.button !== 0) return
     if (e.target.closest('.map-node') || e.target.closest('.map-edge-hit')) return
+    // Same fix as the node-drag one above (see handleNodeMouseDown): a
+    // rubber-band select drag starting on empty canvas is exactly the kind
+    // of large, fast pointer sweep that triggers the browser's native
+    // text-selection-drag if nothing suppresses it — and since this drag
+    // can span the *entire* visible canvas, the result looks like
+    // "everything" getting highlighted at once, not just one node's title.
+    e.preventDefault()
     setSelectedEdgeId(null)
     const world = screenToWorld(e.clientX, e.clientY)
     dragRef.current = { type: 'select', startWorld: world, curWorld: world, shiftKey: e.shiftKey }

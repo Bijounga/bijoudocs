@@ -20,6 +20,13 @@ export const CHANGELOG = {
     'New "Save now" button forces an immediate save and checkpoint',
     'New "History" panel lets you see and restore earlier saved versions of a script yourself',
     'Right-click a script in the library to reveal its file, or change where scripts are stored'
+  ],
+  '0.5.20': [
+    'Fixed idea-node title bolding not being visible on some systems',
+    'Fixed dragging on the mind-map canvas sometimes highlighting the whole page instead of just selecting nodes',
+    'Fixed the save-status text jumping the toolbar around every time it updated',
+    'Checklist, bookmarks, timestamps, and pinned panels now remember whether you left them open or closed',
+    'Improved spellcheck suggestion setup — still tracking down one report that it doesn\'t show on right-click yet'
   ]
 }
 
