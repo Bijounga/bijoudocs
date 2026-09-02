@@ -31,6 +31,9 @@ export const CHANGELOG = {
   '0.5.21': [
     'Actually fixed the save-status toolbar jumping this time — the previous fix only covered one of two things that were shifting it',
     'A small red debug box will appear in the corner after any right-click, temporarily, to help track down the spellcheck suggestions issue — safe to ignore or dismiss, nothing is sent anywhere'
+  ],
+  '0.5.22': [
+    'Spelling suggestions now show up right at the top of the normal right-click menu on a misspelled word, instead of trying to pop a separate menu — removed the debug box now that this is in'
   ]
 }
 

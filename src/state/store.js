@@ -90,6 +90,7 @@ export const useStore = create(
     rebindingActionKey: null,
 
     contextMenu: null,
+    lastMisspelling: null,
     mapViewOpen: false,
     mapSplitOpen: false,
     whatsNewOpen: false,
@@ -205,6 +206,27 @@ export const useStore = create(
     },
     revealScriptInFolder(id) {
       window.bijou.revealInFolder(id)
+    },
+    // Suggestions/misspelledWord for the word under the cursor at the last
+    // real right-click — Electron reports this per-click regardless of
+    // whether it's actually misspelled (null/empty when it's fine), so
+    // this always reflects the *current* click, never a stale one.
+    setLastMisspelling(info) {
+      set((s) => {
+        s.lastMisspelling = info && info.misspelledWord ? info : null
+      })
+    },
+    replaceMisspelling(word) {
+      window.bijou.replaceMisspelling(word)
+      set((s) => {
+        s.lastMisspelling = null
+      })
+    },
+    addWordToDictionary(word) {
+      window.bijou.addWordToDictionary(word)
+      set((s) => {
+        s.lastMisspelling = null
+      })
     },
     setUpdateStatus(payload) {
       set((s) => {

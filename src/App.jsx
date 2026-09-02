@@ -9,7 +9,6 @@ import EditorMain from './components/editor/EditorMain.jsx'
 import DiffModal from './components/DiffModal.jsx'
 import WhatsNewModal from './components/WhatsNewModal.jsx'
 import SaveHistoryPanel from './components/SaveHistoryPanel.jsx'
-import SpellcheckDebugOverlay from './components/SpellcheckDebugOverlay.jsx'
 import TeleprompterView from './components/TeleprompterView.jsx'
 import ContextMenu from './components/ContextMenu.jsx'
 import UpdateBanner from './components/UpdateBanner.jsx'
@@ -41,6 +40,7 @@ export default function App() {
   const takesMenuFor = useStore((s) => s.takesMenuFor)
   const closeTakesMenu = useStore((s) => s.closeTakesMenu)
   const setUpdateStatus = useStore((s) => s.setUpdateStatus)
+  const setLastMisspelling = useStore((s) => s.setLastMisspelling)
 
   useGlobalKeydown()
 
@@ -51,6 +51,10 @@ export default function App() {
   useEffect(() => {
     if (window.bijou.onUpdateStatus) window.bijou.onUpdateStatus(setUpdateStatus)
   }, [setUpdateStatus])
+
+  useEffect(() => {
+    if (window.bijou.onSpellcheckInfo) window.bijou.onSpellcheckInfo(setLastMisspelling)
+  }, [setLastMisspelling])
 
   useEffect(() => {
     document.documentElement.style.setProperty('--note-color', noteColor)
@@ -170,7 +174,6 @@ export default function App() {
       <DiffModal />
       <WhatsNewModal />
       <SaveHistoryPanel />
-      <SpellcheckDebugOverlay />
       {script && <TeleprompterView script={script} />}
       <ContextMenu />
       {script && <SaveConflictBanner scriptId={script.id} />}

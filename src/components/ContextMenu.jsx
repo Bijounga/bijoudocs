@@ -1,10 +1,11 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import React, { useLayoutEffect, useRef, useState } from 'react'
 import { useStore } from '../state/store.js'
 import { findLine, sectionsHaveContent } from '../lib/model.js'
 
 export default function ContextMenu() {
   const menu = useStore((s) => s.contextMenu)
   const closeContextMenu = useStore((s) => s.closeContextMenu)
+  const lastMisspelling = useStore((s) => s.lastMisspelling)
   const deleteLine = useStore((s) => s.deleteLine)
   const duplicateLine = useStore((s) => s.duplicateLine)
   const openTagMenu = useStore((s) => s.openTagMenu)
@@ -30,17 +31,11 @@ export default function ContextMenu() {
   const deleteScript = useStore((s) => s.deleteScript)
   const revealScriptInFolder = useStore((s) => s.revealScriptInFolder)
   const chooseStorageDir = useStore((s) => s.chooseStorageDir)
+  const replaceMisspelling = useStore((s) => s.replaceMisspelling)
+  const addWordToDictionary = useStore((s) => s.addWordToDictionary)
 
   const ref = useRef(null)
   const [pos, setPos] = useState(null)
-
-  // A misspelled-word right-click pops Electron's native spellcheck-
-  // suggestions menu from the main process (see electron/main/index.js) —
-  // it doesn't know about this component's own menu, so it tells us to
-  // close ours via IPC rather than leaving it sitting open underneath.
-  useEffect(() => {
-    if (window.bijou && window.bijou.onCloseContextMenu) window.bijou.onCloseContextMenu(closeContextMenu)
-  }, [closeContextMenu])
 
   useLayoutEffect(() => {
     if (!menu || !ref.current) {
@@ -86,7 +81,22 @@ export default function ContextMenu() {
     const key = menu.sectionId + ':' + menu.lineId
     const found = findLine(script, key)
     const line = found && found.line
+    // Folded directly into this menu rather than a separate native one —
+    // see electron/main/index.js's context-menu handler for why. Only
+    // meaningful the instant this menu opens on an actually-misspelled
+    // word; lastMisspelling is cleared/refreshed on every real right-click,
+    // so it can't show suggestions left over from a previous one.
+    const spellItems = lastMisspelling
+      ? [
+          ...(lastMisspelling.suggestions.length
+            ? lastMisspelling.suggestions.map((s) => ({ label: s, suggestion: true, onClick: act(() => replaceMisspelling(s)) }))
+            : [{ label: 'No suggestions', disabled: true, onClick: () => {} }]),
+          { label: 'Add "' + lastMisspelling.misspelledWord + '" to dictionary', onClick: act(() => addWordToDictionary(lastMisspelling.misspelledWord)) },
+          { separator: true }
+        ]
+      : []
     items = [
+      ...spellItems,
       { label: 'Tag…', onClick: act(() => openTagMenu(key)) },
       { label: line && line.noteOpen ? 'Close note' : 'Add note', onClick: act(() => toggleLineNote(menu.scriptId, menu.sectionId, menu.lineId)) },
       line && line.categoryId
@@ -158,11 +168,19 @@ export default function ContextMenu() {
       style={{ left: pos ? pos.x : menu.x, top: pos ? pos.y : menu.y, visibility: pos ? 'visible' : 'hidden' }}
       onContextMenu={(e) => e.preventDefault()}
     >
-      {items.map((it, i) => (
-        <div key={i} className={'context-menu-item' + (it.danger ? ' danger' : '')} onClick={it.onClick}>
-          {it.label}
-        </div>
-      ))}
+      {items.map((it, i) =>
+        it.separator ? (
+          <div key={i} className="context-menu-separator" />
+        ) : (
+          <div
+            key={i}
+            className={'context-menu-item' + (it.danger ? ' danger' : '') + (it.suggestion ? ' suggestion' : '') + (it.disabled ? ' disabled' : '')}
+            onClick={it.disabled ? undefined : it.onClick}
+          >
+            {it.label}
+          </div>
+        )
+      )}
     </div>
   )
 }

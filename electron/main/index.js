@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain, dialog, Menu, session } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, dialog, session } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import https from 'https'
 import path from 'path'
@@ -69,46 +69,19 @@ function createWindow() {
     return { action: 'deny' }
   })
 
-  // The renderer has its own right-click menu (tag/note/duplicate/delete
-  // etc. — see ContextMenu.jsx) for normal actions, but that meant right-
-  // clicking a misspelled word only ever showed the app's menu, never the
-  // OS's real spelling suggestions ("can see it's misspelled but there's no
-  // suggestions"). This is Electron's separate, lower-level context-menu
-  // notification — it fires regardless of what the renderer's own JS does
-  // with the DOM contextmenu event — so it's able to layer a native
-  // suggestions menu on top without touching any of the app's own menu
-  // logic. Only acts when there's actually a misspelled word under the
-  // cursor; every other right-click is untouched and still goes through
-  // the app's own menu exactly as before.
+  // A separate native menu popped from here (an earlier approach) never
+  // reliably appeared for the user despite the underlying event firing
+  // correctly — instead of a second, competing menu, spelling suggestions
+  // are folded directly into the app's own right-click menu (see
+  // ContextMenu.jsx). This just forwards what Electron reports for every
+  // right-click — misspelledWord empty/undefined when the word under the
+  // cursor is fine, so the renderer always reflects the *current* click,
+  // never a stale suggestion left over from a previous one.
   win.webContents.on('context-menu', (_e, params) => {
-    // Temporary, on-screen only (never printed/logged anywhere) — the
-    // native spellcheck menu below has been reported not to appear, and
-    // this event can't be triggered by test automation at all (it's driven
-    // by real OS mouse input), so this is the only way left to see what
-    // Electron is actually reporting for a real right-click. Remove once
-    // that's confirmed fixed.
-    win.webContents.send('spellcheck:debug', {
-      misspelledWord: params.misspelledWord,
-      suggestions: params.dictionarySuggestions,
-      isEditable: params.isEditable,
-      x: params.x,
-      y: params.y
+    win.webContents.send('spellcheck:info', {
+      misspelledWord: params.misspelledWord || null,
+      suggestions: params.dictionarySuggestions || []
     })
-    if (!params.misspelledWord) return
-    // The app's own React-driven menu may have already opened for this same
-    // right-click (its handler doesn't know about spellcheck) — tell the
-    // renderer to close it first so it isn't left sitting underneath/behind
-    // the native menu once that one closes.
-    win.webContents.send('contextmenu:close')
-    const template = params.dictionarySuggestions.length
-      ? params.dictionarySuggestions.map((s) => ({ label: s, click: () => win.webContents.replaceMisspelling(s) }))
-      : [{ label: 'No suggestions', enabled: false }]
-    template.push({ type: 'separator' })
-    template.push({
-      label: 'Add to dictionary',
-      click: () => win.webContents.session.addWordToSpellCheckerDictionary(params.misspelledWord)
-    })
-    Menu.buildFromTemplate(template).popup({ window: win, x: params.x, y: params.y })
   })
 
   if (isDev && process.env['ELECTRON_RENDERER_URL']) {
@@ -136,6 +109,20 @@ function registerIpc() {
 
   ipcMain.handle('scripts:saveHistory', (_e, id) => fileStore.listSaveHistory(id))
   ipcMain.handle('scripts:restoreFromHistory', (_e, id, file) => fileStore.restoreFromHistory(id, file))
+
+  // Both act on whatever's still selected/focused from the right-click
+  // that produced the suggestion — the same mechanism a native spellcheck
+  // menu's own suggestion items would call. Registered once here (not
+  // inside createWindow, which can run again on macOS dock-reactivate) and
+  // resolved against whichever window is actually focused at click time.
+  ipcMain.handle('spellcheck:replace', (_e, word) => {
+    const win = BrowserWindow.getFocusedWindow()
+    if (win) win.webContents.replaceMisspelling(word)
+  })
+  ipcMain.handle('spellcheck:addToDictionary', (_e, word) => {
+    const win = BrowserWindow.getFocusedWindow()
+    if (win) win.webContents.session.addWordToSpellCheckerDictionary(word)
+  })
 
   ipcMain.handle('scripts:newBlank', (_e, title) => {
     return newBlankScript(title)
