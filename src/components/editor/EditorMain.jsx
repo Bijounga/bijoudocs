@@ -3,6 +3,7 @@ import { useStore } from '../../state/store.js'
 import SectionBlock from './SectionBlock.jsx'
 import FilterView from './FilterView.jsx'
 import MapView from './MapView.jsx'
+import OutlineView from './OutlineView.jsx'
 import MarginPanel from './MarginPanel.jsx'
 import TimestampLogPanel from './TimestampLogPanel.jsx'
 import ProjectChecklistPanel from './ProjectChecklistPanel.jsx'
@@ -21,6 +22,7 @@ export default function EditorMain({ scriptId, script }) {
   const setActiveTab = useStore((s) => s.setActiveTab)
   const mapViewOpen = useStore((s) => s.mapViewOpen)
   const mapSplitOpen = useStore((s) => s.mapSplitOpen)
+  const outlineViewOpen = useStore((s) => s.outlineViewOpen)
   const leftMarginOpen = useStore((s) => s.leftMarginOpen)
   const toggleLeftMargin = useStore((s) => s.toggleLeftMargin)
   const rightMarginOpen = useStore((s) => s.rightMarginOpen)
@@ -37,6 +39,10 @@ export default function EditorMain({ scriptId, script }) {
   useEffect(() => {
     if (activeTabId && activeTabId !== 'all' && singleIdx < 0) setActiveTab(scriptId, 'all')
   }, [activeTabId, singleIdx, scriptId, setActiveTab])
+
+  if (outlineViewOpen) {
+    return <OutlineView scriptId={scriptId} script={script} />
+  }
 
   if (mapViewOpen && !mapSplitOpen) {
     return <MapView scriptId={scriptId} script={script} />

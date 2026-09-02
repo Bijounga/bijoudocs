@@ -93,6 +93,7 @@ export const useStore = create(
     lastMisspelling: null,
     mapViewOpen: false,
     mapSplitOpen: false,
+    outlineViewOpen: false,
     whatsNewOpen: false,
     whatsNewVersion: null,
     whatsNewEntries: [],
@@ -1905,11 +1906,21 @@ export const useStore = create(
     toggleMapView() {
       set((s) => {
         s.mapViewOpen = !s.mapViewOpen
+        if (s.mapViewOpen) s.outlineViewOpen = false
       })
     },
     toggleMapSplit() {
       set((s) => {
         s.mapSplitOpen = !s.mapSplitOpen
+      })
+    },
+    // A flattened, linear read/edit of the same map data — see
+    // src/lib/mapGraph.js's flattenMapOrder for how it's ordered. Mutually
+    // exclusive with the map view itself, same as a single view switcher.
+    toggleOutlineView() {
+      set((s) => {
+        s.outlineViewOpen = !s.outlineViewOpen
+        if (s.outlineViewOpen) s.mapViewOpen = false
       })
     },
     setSectionBeatSummary(scriptId, sectionId, text) {

@@ -42,6 +42,8 @@ export default function Topbar({ script }) {
   const toggleMapView = useStore((s) => s.toggleMapView)
   const mapSplitOpen = useStore((s) => s.mapSplitOpen)
   const toggleMapSplit = useStore((s) => s.toggleMapSplit)
+  const outlineViewOpen = useStore((s) => s.outlineViewOpen)
+  const toggleOutlineView = useStore((s) => s.toggleOutlineView)
   const noteColor = useStore((s) => s.noteColor)
   const setNoteColor = useStore((s) => s.setNoteColor)
   const forceSave = useStore((s) => s.forceSave)
@@ -172,6 +174,9 @@ export default function Topbar({ script }) {
       </button>
       <button className={'icon-btn' + (mapViewOpen ? ' active' : '')} onClick={toggleMapView} title="Zoom out to the whole video as cards">
         <Icon name="map" /> Map
+      </button>
+      <button className={'icon-btn' + (outlineViewOpen ? ' active' : '')} onClick={toggleOutlineView} title="A flattened, editable list of the whole mind map">
+        <Icon name="menu" /> Outline
       </button>
       {mapViewOpen && (
         <button

@@ -31,3 +31,69 @@ export function computeMainThread(mapLayout) {
   }
   return { order, litEdgeIds }
 }
+
+// Turns the map's nodes into a single reading order for the Outline tab —
+// a flattened, linear list view of the same content, meant to be easy to
+// skim/export/eventually import from elsewhere. Reuses the main thread (if
+// one's set) as the natural backbone: it's the same "follow the arrows"
+// order already shown as badges on the map, so the two views agree with
+// each other instead of introducing a second, unrelated sort. Anything not
+// reachable from the main thread is appended as its own connected chains
+// (each walked from whichever end has no incoming edge, so a thread reads
+// start-to-finish), and anything with no connections at all comes last,
+// top-to-bottom then left-to-right the way it visually reads on the map.
+export function flattenMapOrder(mapLayout) {
+  const { nodes, edges, mainThreadId } = mapLayout
+  const ids = Object.keys(nodes)
+  const outgoing = new Map()
+  const incoming = new Map()
+  edges.forEach((e) => {
+    if (!nodes[e.from] || !nodes[e.to]) return
+    if (!outgoing.has(e.from)) outgoing.set(e.from, [])
+    outgoing.get(e.from).push(e.to)
+    if (!incoming.has(e.to)) incoming.set(e.to, [])
+    incoming.get(e.to).push(e.from)
+  })
+
+  const visited = new Set()
+  const ordered = []
+
+  function walk(startId) {
+    const queue = [startId]
+    visited.add(startId)
+    while (queue.length) {
+      const current = queue.shift()
+      ordered.push(current)
+      const nexts = outgoing.get(current) || []
+      nexts.forEach((id) => {
+        if (visited.has(id) || !nodes[id]) return
+        visited.add(id)
+        queue.push(id)
+      })
+    }
+  }
+
+  if (mainThreadId && nodes[mainThreadId]) walk(mainThreadId)
+
+  const hasEdges = (id) => outgoing.has(id) || incoming.has(id)
+  const isChainStart = (id) => !(incoming.get(id) || []).some((from) => !visited.has(from) && nodes[from])
+
+  // Other connected chains, each from its own natural start.
+  ids.forEach((id) => {
+    if (!visited.has(id) && hasEdges(id) && isChainStart(id)) walk(id)
+  })
+  // Leftover connected nodes only possible inside a pure cycle (every node
+  // in it has an incoming edge) — no clean start, so just pick one.
+  ids.forEach((id) => {
+    if (!visited.has(id) && hasEdges(id)) walk(id)
+  })
+
+  const connectedCount = ordered.length
+
+  // Fully isolated nodes — no edges at all.
+  const stray = ids
+    .filter((id) => !visited.has(id))
+    .sort((a, b) => nodes[a].y - nodes[b].y || nodes[a].x - nodes[b].x)
+
+  return { ordered: [...ordered, ...stray], connectedCount }
+}

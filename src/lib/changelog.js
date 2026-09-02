@@ -34,6 +34,9 @@ export const CHANGELOG = {
   ],
   '0.5.22': [
     'Spelling suggestions now show up right at the top of the normal right-click menu on a misspelled word, instead of trying to pop a separate menu — removed the debug box now that this is in'
+  ],
+  '0.5.23': [
+    'New "Outline" tab: a flattened, editable list of everything on the mind map, in one linear reading order — sections follow the main thread if you\'ve set one, then any other connected threads, then anything not yet connected'
   ]
 }
 
