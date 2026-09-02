@@ -146,6 +146,12 @@ export const useStore = create(
         if (settings && settings.leftMarginWidth) s.leftMarginWidth = settings.leftMarginWidth
         if (settings && settings.rightMarginWidth) s.rightMarginWidth = settings.rightMarginWidth
         if (settings && settings.ideaNodePresets) s.ideaNodePresets = settings.ideaNodePresets
+        // Spread saved overrides onto the current defaults rather than
+        // replacing wholesale — a saved keybinds object can predate an
+        // action added since (e.g. mapLinkNodes), and a plain overwrite
+        // would leave that action with no combo at all instead of falling
+        // back to its default.
+        if (settings && settings.keybinds) s.keybinds = { ...DEFAULT_KEYBINDS, ...settings.keybinds }
         // Booleans need an explicit-presence check, not a truthy check — a
         // saved `false` (the user left a panel closed) is a real, meaningful
         // value, not "unset," so `if (settings.leftMarginOpen)` would wrongly
@@ -278,7 +284,8 @@ export const useStore = create(
         bookmarksMarginOpen: s.bookmarksMarginOpen,
         pinnedMarginOpen: s.pinnedMarginOpen,
         ideaNodePresets: s.ideaNodePresets,
-        lastSeenVersion: s.lastSeenVersion
+        lastSeenVersion: s.lastSeenVersion,
+        keybinds: s.keybinds
       })
     },
     setNoteColor(color) {
@@ -921,6 +928,16 @@ export const useStore = create(
         const idx = sec.lines.findIndex((l) => l.id === lineId)
         if (idx <= 0) return
         const prev = sec.lines[idx - 1]
+        // A blank line directly above is just spacing, not a sentence to
+        // weld onto — backspacing here should close that gap (delete the
+        // blank line), not merge the current sentence's text into it and
+        // leave the two run together as if they'd always been one line.
+        if (stripHtmlToText(prev.text).trim() === '') {
+          sec.lines.splice(idx - 1, 1)
+          script.updatedAt = Date.now()
+          result = { key: sectionId + ':' + lineId, offset: 0 }
+          return
+        }
         const prevLen = stripHtmlToText(prev.text).length
         prev.text = (prev.text || '') + sanitizeHtml(currentHtml || '')
         sec.lines.splice(idx, 1)
@@ -1814,6 +1831,7 @@ export const useStore = create(
         s.keybinds[actionId] = combo
         s.rebindingActionKey = null
       })
+      get().saveAppSettings()
     },
 
     // ---------- right-click context menu ----------

@@ -37,6 +37,10 @@ export const CHANGELOG = {
   ],
   '0.5.23': [
     'New "Outline" tab: a flattened, editable list of everything on the mind map, in one linear reading order — sections follow the main thread if you\'ve set one, then any other connected threads, then anything not yet connected'
+  ],
+  '0.5.24': [
+    'Fixed a real bug: rebinding a keyboard shortcut never actually saved — it silently reset back to default on every relaunch, not just after an update',
+    'Fixed backspacing at the start of a sentence with a blank line above it: it now just closes the gap, instead of welding the sentence onto the blank line and running them together'
   ]
 }
 
