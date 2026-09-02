@@ -28,6 +28,8 @@ export default function ContextMenu() {
   const openScript = useStore((s) => s.openScript)
   const togglePin = useStore((s) => s.togglePin)
   const deleteScript = useStore((s) => s.deleteScript)
+  const revealScriptInFolder = useStore((s) => s.revealScriptInFolder)
+  const chooseStorageDir = useStore((s) => s.chooseStorageDir)
 
   const ref = useRef(null)
   const [pos, setPos] = useState(null)
@@ -68,6 +70,8 @@ export default function ContextMenu() {
     items = [
       { label: 'Open', onClick: act(() => openScript(menu.scriptId)) },
       { label: script.pinned ? 'Unpin' : 'Pin', onClick: act(() => togglePin(menu.scriptId)) },
+      { label: 'Reveal file in folder', onClick: act(() => revealScriptInFolder(menu.scriptId)) },
+      { label: 'Change storage location…', onClick: act(() => chooseStorageDir()) },
       {
         label: 'Delete',
         danger: true,

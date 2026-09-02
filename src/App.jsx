@@ -8,6 +8,7 @@ import Inspector from './components/inspector/Inspector.jsx'
 import EditorMain from './components/editor/EditorMain.jsx'
 import DiffModal from './components/DiffModal.jsx'
 import WhatsNewModal from './components/WhatsNewModal.jsx'
+import SaveHistoryPanel from './components/SaveHistoryPanel.jsx'
 import TeleprompterView from './components/TeleprompterView.jsx'
 import ContextMenu from './components/ContextMenu.jsx'
 import UpdateBanner from './components/UpdateBanner.jsx'
@@ -167,6 +168,7 @@ export default function App() {
       </div>
       <DiffModal />
       <WhatsNewModal />
+      <SaveHistoryPanel />
       {script && <TeleprompterView script={script} />}
       <ContextMenu />
       {script && <SaveConflictBanner scriptId={script.id} />}

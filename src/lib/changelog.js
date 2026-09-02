@@ -13,7 +13,14 @@ export const CHANGELOG = {
     'More contrast on mind-map nodes and their text',
     'Misspelled words now show real spelling suggestions on right-click'
   ],
-  '0.5.18': ['Fixed the "what\'s new" popup not showing up on the update that introduced it']
+  '0.5.18': ['Fixed the "what\'s new" popup not showing up on the update that introduced it'],
+  '0.5.19': [
+    'Fixed a real bug: the app could silently reset your storage folder back to the default on launch, breaking sync with other devices',
+    'Save status is now always visible next to the title (like Google Docs), not just a brief flash — and it now shows for mind-map edits too',
+    'New "Save now" button forces an immediate save and checkpoint',
+    'New "History" panel lets you see and restore earlier saved versions of a script yourself',
+    'Right-click a script in the library to reveal its file, or change where scripts are stored'
+  ]
 }
 
 function parseVersion(v) {

@@ -60,6 +60,12 @@ export const useStore = create(
     catAddDraft: false,
     savedFlash: false,
     savedFlashText: 'Saved',
+    saveStatus: 'idle', // 'idle' | 'pending' | 'saved' | 'error' — drives the persistent Topbar save indicator
+    lastSavedAt: null,
+    saveHistoryOpen: false,
+    saveHistoryScriptId: null,
+    saveHistoryEntries: [],
+    saveHistoryLoading: false,
     exportMenuOpen: false,
 
     sectionJumpOpen: false,
@@ -189,6 +195,9 @@ export const useStore = create(
       await window.bijou.resetStorageDir()
       await get().init()
     },
+    revealScriptInFolder(id) {
+      window.bijou.revealInFolder(id)
+    },
     setUpdateStatus(payload) {
       set((s) => {
         s.updateStatus = payload.state
@@ -276,27 +285,89 @@ export const useStore = create(
     },
 
     scheduleSave(id, { flash = true, text = 'Saved', delay = 250 } = {}) {
+      set((s) => {
+        s.saveStatus = 'pending'
+      })
       clearTimeout(saveTimers[id])
-      saveTimers[id] = setTimeout(async () => {
-        const script = get().scripts.find((s) => s.id === id)
-        if (!script) return
-        try {
-          const expected = get().diskUpdatedAt[id]
-          const result = await window.bijou.saveScript(script, expected != null ? expected : null)
-          set((s) => {
-            s.diskUpdatedAt[id] = result.updatedAt
-            if (result.conflict) s.saveConflicts[id] = result.backupFile
-          })
-          if (flash) get().flashSaved(text)
-        } catch (err) {
-          console.error('BijouDocs: save failed', err)
-        }
+      saveTimers[id] = setTimeout(() => {
+        get().performSave(id, { flash, text })
       }, delay)
+    },
+    // Shared by the debounced path above and forceSave below — the only
+    // difference is forceSave skips the debounce timer and always writes a
+    // fresh snapshot regardless of the usual ~5-minute throttle, so it
+    // doubles as a deliberate "checkpoint this moment" action.
+    async performSave(id, { flash = true, text = 'Saved', forceSnapshot = false } = {}) {
+      const script = get().scripts.find((s) => s.id === id)
+      if (!script) return
+      try {
+        const expected = get().diskUpdatedAt[id]
+        const result = await window.bijou.saveScript(script, expected != null ? expected : null, { forceSnapshot })
+        set((s) => {
+          s.diskUpdatedAt[id] = result.updatedAt
+          if (result.conflict) s.saveConflicts[id] = result.backupFile
+          s.saveStatus = 'saved'
+          s.lastSavedAt = Date.now()
+        })
+        if (flash) get().flashSaved(text)
+      } catch (err) {
+        console.error('BijouDocs: save failed', err)
+        set((s) => {
+          s.saveStatus = 'error'
+        })
+      }
+    },
+    // The "force save" button — writes right now instead of waiting out the
+    // debounce, and always drops a snapshot even if one was taken recently,
+    // so it's a reliable way to deliberately checkpoint before doing
+    // something risky (not just a reassurance click).
+    forceSave(id) {
+      clearTimeout(saveTimers[id])
+      return get().performSave(id, { flash: true, text: 'Saved', forceSnapshot: true })
     },
     dismissSaveConflict(id) {
       set((s) => {
         delete s.saveConflicts[id]
       })
+    },
+    async openSaveHistory(id) {
+      set((s) => {
+        s.saveHistoryOpen = true
+        s.saveHistoryScriptId = id
+        s.saveHistoryEntries = []
+        s.saveHistoryLoading = true
+      })
+      const entries = await window.bijou.getSaveHistory(id)
+      set((s) => {
+        if (s.saveHistoryScriptId !== id) return // closed/switched before this resolved
+        s.saveHistoryEntries = entries
+        s.saveHistoryLoading = false
+      })
+    },
+    closeSaveHistory() {
+      set((s) => {
+        s.saveHistoryOpen = false
+        s.saveHistoryScriptId = null
+        s.saveHistoryEntries = []
+      })
+    },
+    // Restoring rewrites the script's real file on disk (backing up
+    // whatever was there first, so this is itself always undoable the same
+    // way) and swaps this instance's in-memory copy for the result — a
+    // pushUndo first means an accidental restore can also just be Ctrl+Z'd
+    // without needing to go back into history again.
+    async restoreFromSaveHistory(id, file) {
+      get().pushUndo(id)
+      const restored = await window.bijou.restoreFromHistory(id, file)
+      set((s) => {
+        const idx = s.scripts.findIndex((sc) => sc.id === id)
+        if (idx >= 0) s.scripts[idx] = restored
+        s.diskUpdatedAt[id] = restored.updatedAt
+        s.saveHistoryOpen = false
+        s.saveHistoryScriptId = null
+        s.saveHistoryEntries = []
+      })
+      get().flashSaved('Restored')
     },
 
     flashSaved(text) {

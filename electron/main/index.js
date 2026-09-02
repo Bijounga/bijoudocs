@@ -112,14 +112,17 @@ function registerIpc() {
     return fileStore.loadAllScripts()
   })
 
-  ipcMain.handle('scripts:save', (_e, script, expectedUpdatedAt) => {
-    return fileStore.saveScript(script, expectedUpdatedAt)
+  ipcMain.handle('scripts:save', (_e, script, expectedUpdatedAt, opts) => {
+    return fileStore.saveScript(script, expectedUpdatedAt, opts)
   })
 
   ipcMain.handle('scripts:delete', (_e, id) => {
     fileStore.deleteScript(id)
     return true
   })
+
+  ipcMain.handle('scripts:saveHistory', (_e, id) => fileStore.listSaveHistory(id))
+  ipcMain.handle('scripts:restoreFromHistory', (_e, id, file) => fileStore.restoreFromHistory(id, file))
 
   ipcMain.handle('scripts:newBlank', (_e, title) => {
     return newBlankScript(title)
@@ -142,9 +145,7 @@ function registerIpc() {
     const newDir = filePaths[0]
     const oldDir = fileStore.getDocsDir()
     fileStore.migrateStorageDir(oldDir, newDir)
-    const settings = fileStore.loadSettings()
-    settings.storageDir = newDir
-    fileStore.saveSettings(settings)
+    fileStore.saveSettings({ storageDir: newDir })
     return { canceled: false, dir: newDir }
   })
 
@@ -152,10 +153,12 @@ function registerIpc() {
     const oldDir = fileStore.getDocsDir()
     const newDir = fileStore.defaultDocsDir()
     fileStore.migrateStorageDir(oldDir, newDir)
-    const settings = fileStore.loadSettings()
-    delete settings.storageDir
-    fileStore.saveSettings(settings)
+    fileStore.saveSettings({ storageDir: undefined })
     return { dir: newDir }
+  })
+
+  ipcMain.handle('scripts:revealInFolder', (_e, id) => {
+    shell.showItemInFolder(fileStore.scriptFilePath(id))
   })
 
   ipcMain.handle('dialog:exportFile', async (_e, { defaultName, content, filters }) => {

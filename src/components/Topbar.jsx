@@ -2,6 +2,7 @@ import React from 'react'
 import { useStore } from '../state/store.js'
 import Icon from './icons.jsx'
 import VersionBadge from './VersionBadge.jsx'
+import SaveStatus from './SaveStatus.jsx'
 import SectionJumpMenu from './SectionJumpMenu.jsx'
 import LineSearchMenu from './LineSearchMenu.jsx'
 import { formatTC, scriptTotalStats, dueDateInfo, totalWordCountAll } from '../lib/timecode.js'
@@ -43,6 +44,8 @@ export default function Topbar({ script }) {
   const toggleMapSplit = useStore((s) => s.toggleMapSplit)
   const noteColor = useStore((s) => s.noteColor)
   const setNoteColor = useStore((s) => s.setNoteColor)
+  const forceSave = useStore((s) => s.forceSave)
+  const openSaveHistory = useStore((s) => s.openSaveHistory)
 
   if (!script) {
     return (
@@ -79,6 +82,13 @@ export default function Topbar({ script }) {
         onBlur={() => commitScriptTitle(script.id)}
       />
       <span className="saved-flash" style={{ display: savedFlash ? 'inline' : 'none' }}>{savedFlashText}</span>
+      <SaveStatus />
+      <button className="icon-btn" onClick={() => forceSave(script.id)} title="Save right now, and drop a checkpoint in the history">
+        Save now
+      </button>
+      <button className="icon-btn" onClick={() => openSaveHistory(script.id)} title="Browse and restore earlier saved versions">
+        History
+      </button>
       <span
         style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-faint)', whiteSpace: 'nowrap' }}
         title="Estimated runtime and spoken word count for the whole script"
