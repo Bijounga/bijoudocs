@@ -7,7 +7,7 @@ import LineText from './LineText.jsx'
 import TagMenu from './TagMenu.jsx'
 import NoteBox from './NoteBox.jsx'
 import TakesMenu from './TakesMenu.jsx'
-import { caretAtStart, focusLineAtOffset, focusLineEnd, splitHtmlAtCaret } from '../../state/lineRefs.js'
+import { blankLineBreakBeforeCaret, caretAtStart, focusLineAtOffset, focusLineEnd, splitHtmlAtCaret } from '../../state/lineRefs.js'
 import { handleHorizontalNav, handleVerticalNav } from '../../lib/navigation.js'
 import { beginLineDragSelect } from '../../state/dragSelect.js'
 import { useDropIndicator } from '../../hooks/useDropIndicator.js'
@@ -93,6 +93,19 @@ export default function LineRow({ scriptId, sectionId, line, index, siblingCount
       return
     }
     if (e.key === 'Backspace') {
+      // A blank soft-wrapped line *within* this line's own text (a <br>
+      // pair from Shift+Enter) isn't a line-boundary at all, so none of
+      // the whole-line checks below ever see it — left alone, the browser's
+      // native backspace-in-contenteditable behavior takes over here and
+      // welds the two real lines of text together instead of just closing
+      // the blank-line gap. Handled explicitly so it's not at the mercy of
+      // whatever the browser's default happens to do.
+      const blankBreak = blankLineBreakBeforeCaret(el)
+      if (blankBreak) {
+        e.preventDefault()
+        blankBreak.remove()
+        return
+      }
       const isEmpty = el.textContent.trim() === ''
       if (line.indent > 0 && caretAtStart(el)) {
         e.preventDefault()

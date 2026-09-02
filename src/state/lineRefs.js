@@ -90,6 +90,34 @@ export function caretAtStart(el) {
   return t.toString().length === 0
 }
 
+// If the caret sits right at the start of a soft-wrapped visual line (a
+// <br> within one line's own rich text, e.g. from Shift+Enter) that's
+// preceded by ANOTHER <br> — i.e. a blank line — returns the <br>
+// immediately before the caret (removing it collapses just the blank
+// line, leaving the other <br> as the boundary between the two real
+// lines of text). Returns null for every other caret position, including
+// a normal single-<br> boundary between two lines of real text, which
+// should keep native backspace behavior untouched.
+export function blankLineBreakBeforeCaret(el) {
+  const sel = window.getSelection()
+  if (!sel.rangeCount) return null
+  const range = sel.getRangeAt(0)
+  if (!range.collapsed) return null
+  const { startContainer, startOffset } = range
+  if (!el.contains(startContainer)) return null
+  let before
+  if (startContainer.nodeType === 3) {
+    if (startOffset > 0) return null
+    before = startContainer.previousSibling
+  } else {
+    if (startOffset === 0) return null
+    before = startContainer.childNodes[startOffset - 1]
+  }
+  if (!before || before.nodeName !== 'BR') return null
+  const beforeThat = before.previousSibling
+  return beforeThat && beforeThat.nodeName === 'BR' ? before : null
+}
+
 export function caretAtEnd(el) {
   const sel = window.getSelection()
   if (!sel.rangeCount) return false

@@ -91,6 +91,7 @@ export const useStore = create(
 
     contextMenu: null,
     lastMisspelling: null,
+    lastSpellcheckRaw: null,
     mapViewOpen: false,
     mapSplitOpen: false,
     outlineViewOpen: false,
@@ -220,6 +221,11 @@ export const useStore = create(
     // this always reflects the *current* click, never a stale one.
     setLastMisspelling(info) {
       set((s) => {
+        // Kept separately from lastMisspelling (which only ever holds a
+        // real misspelling, and is temporary diagnostic to confirm the
+        // spellcheck:info IPC event is actually arriving at all — see
+        // ContextMenu.jsx's debugItem.
+        s.lastSpellcheckRaw = info || null
         s.lastMisspelling = info && info.misspelledWord ? info : null
       })
     },

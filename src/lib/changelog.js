@@ -41,6 +41,10 @@ export const CHANGELOG = {
   '0.5.24': [
     'Fixed a real bug: rebinding a keyboard shortcut never actually saved — it silently reset back to default on every relaunch, not just after an update',
     'Fixed backspacing at the start of a sentence with a blank line above it: it now just closes the gap, instead of welding the sentence onto the blank line and running them together'
+  ],
+  '0.5.25': [
+    'Actually fixed the blank-line backspace bug this time — the previous fix targeted the wrong kind of blank line (between two separate lines, not a line break inside one)',
+    'Still chasing why spellcheck suggestions aren\'t showing up on right-click — added a temporary debug line at the top of the right-click menu to help track it down, safe to ignore'
   ]
 }
 

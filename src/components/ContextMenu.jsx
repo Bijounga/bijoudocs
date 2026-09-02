@@ -6,6 +6,7 @@ export default function ContextMenu() {
   const menu = useStore((s) => s.contextMenu)
   const closeContextMenu = useStore((s) => s.closeContextMenu)
   const lastMisspelling = useStore((s) => s.lastMisspelling)
+  const lastSpellcheckRaw = useStore((s) => s.lastSpellcheckRaw)
   const deleteLine = useStore((s) => s.deleteLine)
   const duplicateLine = useStore((s) => s.duplicateLine)
   const openTagMenu = useStore((s) => s.openTagMenu)
@@ -95,7 +96,18 @@ export default function ContextMenu() {
           { separator: true }
         ]
       : []
+    // Temporary — suggestions aren't showing up in real use despite this
+    // all checking out in isolation, so surface the raw IPC state right in
+    // the menu (unconditionally, not just when a suggestion would show)
+    // instead of guessing blind. Remove once that's sorted out.
+    const debugItem = {
+      label: 'spellcheck debug: ' + (lastSpellcheckRaw ? JSON.stringify(lastSpellcheckRaw) : 'no event received yet'),
+      disabled: true,
+      onClick: () => {}
+    }
     items = [
+      debugItem,
+      { separator: true },
       ...spellItems,
       { label: 'Tag…', onClick: act(() => openTagMenu(key)) },
       { label: line && line.noteOpen ? 'Close note' : 'Add note', onClick: act(() => toggleLineNote(menu.scriptId, menu.sectionId, menu.lineId)) },
