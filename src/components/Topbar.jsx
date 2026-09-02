@@ -81,7 +81,7 @@ export default function Topbar({ script }) {
         onChange={(e) => setScriptTitle(script.id, e.target.value)}
         onBlur={() => commitScriptTitle(script.id)}
       />
-      <span className="saved-flash" style={{ display: savedFlash ? 'inline' : 'none' }}>{savedFlashText}</span>
+      <span className="saved-flash" style={{ visibility: savedFlash ? 'visible' : 'hidden' }}>{savedFlashText}</span>
       <SaveStatus />
       <button className="icon-btn" onClick={() => forceSave(script.id)} title="Save right now, and drop a checkpoint in the history">
         Save now

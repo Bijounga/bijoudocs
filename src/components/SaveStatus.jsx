@@ -19,12 +19,17 @@ export default function SaveStatus() {
     return () => clearInterval(id)
   }, [])
 
-  let label = null
+  let label = ''
   if (saveStatus === 'pending') label = 'Saving…'
   else if (saveStatus === 'error') label = 'Save failed'
   else if (saveStatus === 'saved' && lastSavedAt) label = 'Saved ' + formatRelative(lastSavedAt)
-  if (!label) return null
 
+  // Always renders the span, even with empty text — returning null before
+  // the first save of a session meant this element didn't exist in the
+  // layout at all yet, so the *first* save (going from "not rendered" to
+  // "rendered at min-width: 92px") jumped the toolbar exactly like the
+  // bug this component was built to fix. Reserving the box from the start
+  // means only its text ever changes, never its presence.
   return (
     <span
       className={'save-status' + (saveStatus === 'error' ? ' error' : '')}

@@ -9,6 +9,7 @@ import EditorMain from './components/editor/EditorMain.jsx'
 import DiffModal from './components/DiffModal.jsx'
 import WhatsNewModal from './components/WhatsNewModal.jsx'
 import SaveHistoryPanel from './components/SaveHistoryPanel.jsx'
+import SpellcheckDebugOverlay from './components/SpellcheckDebugOverlay.jsx'
 import TeleprompterView from './components/TeleprompterView.jsx'
 import ContextMenu from './components/ContextMenu.jsx'
 import UpdateBanner from './components/UpdateBanner.jsx'
@@ -169,6 +170,7 @@ export default function App() {
       <DiffModal />
       <WhatsNewModal />
       <SaveHistoryPanel />
+      <SpellcheckDebugOverlay />
       {script && <TeleprompterView script={script} />}
       <ContextMenu />
       {script && <SaveConflictBanner scriptId={script.id} />}

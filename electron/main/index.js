@@ -81,7 +81,19 @@ function createWindow() {
   // cursor; every other right-click is untouched and still goes through
   // the app's own menu exactly as before.
   win.webContents.on('context-menu', (_e, params) => {
-    if (isDev) console.log('[spellcheck] context-menu fired, misspelledWord=', JSON.stringify(params.misspelledWord), 'suggestions=', params.dictionarySuggestions)
+    // Temporary, on-screen only (never printed/logged anywhere) — the
+    // native spellcheck menu below has been reported not to appear, and
+    // this event can't be triggered by test automation at all (it's driven
+    // by real OS mouse input), so this is the only way left to see what
+    // Electron is actually reporting for a real right-click. Remove once
+    // that's confirmed fixed.
+    win.webContents.send('spellcheck:debug', {
+      misspelledWord: params.misspelledWord,
+      suggestions: params.dictionarySuggestions,
+      isEditable: params.isEditable,
+      x: params.x,
+      y: params.y
+    })
     if (!params.misspelledWord) return
     // The app's own React-driven menu may have already opened for this same
     // right-click (its handler doesn't know about spellcheck) — tell the

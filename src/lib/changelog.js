@@ -27,6 +27,10 @@ export const CHANGELOG = {
     'Fixed the save-status text jumping the toolbar around every time it updated',
     'Checklist, bookmarks, timestamps, and pinned panels now remember whether you left them open or closed',
     'Improved spellcheck suggestion setup — still tracking down one report that it doesn\'t show on right-click yet'
+  ],
+  '0.5.21': [
+    'Actually fixed the save-status toolbar jumping this time — the previous fix only covered one of two things that were shifting it',
+    'A small red debug box will appear in the corner after any right-click, temporarily, to help track down the spellcheck suggestions issue — safe to ignore or dismiss, nothing is sent anywhere'
   ]
 }
 

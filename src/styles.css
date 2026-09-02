@@ -140,6 +140,11 @@ textarea {
   color: var(--cyan);
   opacity: 0.85;
   flex: 0 0 auto;
+  display: inline-block;
+  width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .save-status {
   font-family: var(--mono);
@@ -2038,6 +2043,39 @@ textarea {
   font-size: 14px;
   line-height: 1.8;
   white-space: pre-wrap;
+}
+.spellcheck-debug-overlay {
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  z-index: 500;
+  background: #2a0e0e;
+  border: 1px solid var(--danger);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: #ffd8d8;
+  max-width: 360px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+.spellcheck-debug-title {
+  font-weight: 700;
+  color: var(--danger);
+  margin-bottom: 6px;
+}
+.spellcheck-debug-overlay div {
+  margin-bottom: 2px;
+  word-break: break-all;
+}
+.spellcheck-debug-close {
+  margin-top: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #ffd8d8;
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 10.5px;
 }
 .whats-new-modal {
   max-width: 480px;
