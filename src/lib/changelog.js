@@ -50,6 +50,9 @@ export const CHANGELOG = {
     'Possible fix for the spellcheck suggestions bug — Electron needed an explicit flag to actually report misspelled words, not just underline them. Kept the debug line for one more round in case there\'s more to it',
     'New: split view for the Outline tab too, same idea as the mind map — see the script and the flattened outline side by side',
     'Fixed Mac updates leaving behind a growing pile of old installer files in Downloads — each update now cleans up the previous one\'s leftover .dmg first'
+  ],
+  '0.5.27': [
+    'The zoom controls now affect the Outline tab too, not just the script'
   ]
 }
 

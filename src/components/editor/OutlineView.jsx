@@ -8,6 +8,7 @@ function isIdeaNode(node) {
 }
 
 export default function OutlineView({ scriptId, script }) {
+  const zoom = useStore((s) => s.zoom)
   const ensureMapNodes = useStore((s) => s.ensureMapNodes)
   const pushUndo = useStore((s) => s.pushUndo)
   const setSectionHeading = useStore((s) => s.setSectionHeading)
@@ -45,7 +46,7 @@ export default function OutlineView({ scriptId, script }) {
           other connected chains, then anything not yet connected.
         </div>
       </div>
-      <div className="outline-list">
+      <div className="outline-list" style={{ zoom }}>
         {ordered.length === 0 && <div className="filter-empty">No sections or idea nodes yet.</div>}
         {ordered.map((id, i) => {
           const node = nodes[id]
