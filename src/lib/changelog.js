@@ -45,6 +45,11 @@ export const CHANGELOG = {
   '0.5.25': [
     'Actually fixed the blank-line backspace bug this time — the previous fix targeted the wrong kind of blank line (between two separate lines, not a line break inside one)',
     'Still chasing why spellcheck suggestions aren\'t showing up on right-click — added a temporary debug line at the top of the right-click menu to help track it down, safe to ignore'
+  ],
+  '0.5.26': [
+    'Possible fix for the spellcheck suggestions bug — Electron needed an explicit flag to actually report misspelled words, not just underline them. Kept the debug line for one more round in case there\'s more to it',
+    'New: split view for the Outline tab too, same idea as the mind map — see the script and the flattened outline side by side',
+    'Fixed Mac updates leaving behind a growing pile of old installer files in Downloads — each update now cleans up the previous one\'s leftover .dmg first'
   ]
 }
 

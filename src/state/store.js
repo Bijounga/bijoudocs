@@ -95,6 +95,7 @@ export const useStore = create(
     mapViewOpen: false,
     mapSplitOpen: false,
     outlineViewOpen: false,
+    outlineSplitOpen: false,
     whatsNewOpen: false,
     whatsNewVersion: null,
     whatsNewEntries: [],
@@ -1945,6 +1946,11 @@ export const useStore = create(
       set((s) => {
         s.outlineViewOpen = !s.outlineViewOpen
         if (s.outlineViewOpen) s.mapViewOpen = false
+      })
+    },
+    toggleOutlineSplit() {
+      set((s) => {
+        s.outlineSplitOpen = !s.outlineSplitOpen
       })
     },
     setSectionBeatSummary(scriptId, sectionId, text) {

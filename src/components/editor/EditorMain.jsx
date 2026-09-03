@@ -23,6 +23,7 @@ export default function EditorMain({ scriptId, script }) {
   const mapViewOpen = useStore((s) => s.mapViewOpen)
   const mapSplitOpen = useStore((s) => s.mapSplitOpen)
   const outlineViewOpen = useStore((s) => s.outlineViewOpen)
+  const outlineSplitOpen = useStore((s) => s.outlineSplitOpen)
   const leftMarginOpen = useStore((s) => s.leftMarginOpen)
   const toggleLeftMargin = useStore((s) => s.toggleLeftMargin)
   const rightMarginOpen = useStore((s) => s.rightMarginOpen)
@@ -40,7 +41,7 @@ export default function EditorMain({ scriptId, script }) {
     if (activeTabId && activeTabId !== 'all' && singleIdx < 0) setActiveTab(scriptId, 'all')
   }, [activeTabId, singleIdx, scriptId, setActiveTab])
 
-  if (outlineViewOpen) {
+  if (outlineViewOpen && !outlineSplitOpen) {
     return <OutlineView scriptId={scriptId} script={script} />
   }
 
@@ -97,6 +98,15 @@ export default function EditorMain({ scriptId, script }) {
       <div className="main editor-split">
         <div className="editor-split-pane">{editor}</div>
         <MapView scriptId={scriptId} script={script} />
+      </div>
+    )
+  }
+
+  if (outlineViewOpen && outlineSplitOpen) {
+    return (
+      <div className="main editor-split">
+        <div className="editor-split-pane">{editor}</div>
+        <OutlineView scriptId={scriptId} script={script} />
       </div>
     )
   }

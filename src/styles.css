@@ -2088,7 +2088,8 @@ textarea {
   overflow-y: auto;
   border-right: 1px solid var(--line);
 }
-.editor-split > .map-main {
+.editor-split > .map-main,
+.editor-split > .outline-main {
   flex: 1 1 50%;
   min-width: 0;
 }

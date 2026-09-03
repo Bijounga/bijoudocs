@@ -53,7 +53,15 @@ function createWindow() {
     icon: path.join(__dirname, '../../build/icon.ico'),
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.js'),
-      sandbox: false
+      sandbox: false,
+      // Without this explicit flag, Electron's context-menu event doesn't
+      // reliably populate params.misspelledWord/dictionarySuggestions on
+      // every platform/version — it's supposed to default on, but real
+      // apps (including Claude Code's own desktop app, per a near-identical
+      // bug report) have hit the exact same "underlines show, but the
+      // context-menu event never carries spellcheck data" symptom until
+      // this was set explicitly.
+      spellcheck: true
     }
   })
 
@@ -269,6 +277,21 @@ app.whenReady().then(() => {
     const fileName = `BijouDocs-${version}-universal.dmg`
     const url = `https://github.com/Bijounga/bijoudocs/releases/download/v${version}/${fileName}`
     const destPath = path.join(app.getPath('downloads'), fileName)
+    // Every past manual update left its downloaded .dmg sitting in
+    // Downloads forever (this flow never cleaned up after itself) — a real
+    // ~185MB-per-version pileup, on top of each one's Finder volume never
+    // getting ejected. Clear out any earlier BijouDocs installer .dmg
+    // before fetching the new one, so this stops compounding — this
+    // instance is about to become the newest one anyway, and Finder still
+    // has whatever it already mounted open regardless of the source file.
+    try {
+      const downloadsDir = app.getPath('downloads')
+      fs.readdirSync(downloadsDir)
+        .filter((f) => /^BijouDocs-.+-universal\.dmg$/.test(f) && f !== fileName)
+        .forEach((f) => fs.unlinkSync(path.join(downloadsDir, f)))
+    } catch (err) {
+      // Best-effort cleanup — a failure here shouldn't block the update itself.
+    }
     win.webContents.send('update:status', { state: 'manual-downloading', version })
     try {
       await downloadFile(url, destPath)
