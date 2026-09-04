@@ -64,6 +64,10 @@ export const CHANGELOG = {
     'New search box on the Outline tab',
     'Outline text boxes now grow with what you write, instead of needing to be manually resized',
     'A closed/collapsed section no longer reads out its lines in the Teleprompter — its title still shows, greyed out, so it\'s clear it was skipped on purpose'
+  ],
+  '0.5.30': [
+    'New chapter nodes for the mind map — a label + a number (e.g. "The Desert" #1) that group everything connected to them into their own named section in the Outline tab, without needing to connect to each other',
+    'New right-click items and keybinds to select everything connected to a node — after it, before it, or both directions at once — handy for grabbing a whole thread to move or delete'
   ]
 }
 

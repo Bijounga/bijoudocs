@@ -5,10 +5,20 @@ import { sectionsHaveContent } from '../../lib/model.js'
 import Icon from '../icons.jsx'
 import MapNode, { NODE_WIDTH } from './MapNode.jsx'
 import IdeaNode from './IdeaNode.jsx'
+import ChapterNode from './ChapterNode.jsx'
 import { computeMainThread } from '../../lib/mapGraph.js'
 
 function isIdeaNode(node) {
   return !!node && node.type === 'idea'
+}
+function isChapterNode(node) {
+  return !!node && node.type === 'chapter'
+}
+// A "real" section-backed node is anything with no explicit type at all —
+// idea and chapter nodes both live purely in mapLayout.nodes and always
+// carry their own `type`.
+function isSectionNode(node) {
+  return !!node && !node.type
 }
 
 const NODE_H = 80 // nominal card height for edge-anchor math — cards vary a little with content, close enough for connector lines
@@ -87,6 +97,10 @@ export default function MapView({ scriptId, script }) {
   const openContextMenu = useStore((s) => s.openContextMenu)
   const addIdeaNode = useStore((s) => s.addIdeaNode)
   const addConnectedIdeaNodeFromMap = useStore((s) => s.addConnectedIdeaNodeFromMap)
+  const addChapterNode = useStore((s) => s.addChapterNode)
+  const selectConnectedNodes = useStore((s) => s.selectConnectedNodes)
+  const mapSelectRequest = useStore((s) => s.mapSelectRequest)
+  const clearMapSelectRequest = useStore((s) => s.clearMapSelectRequest)
   const deleteMapSelection = useStore((s) => s.deleteMapSelection)
   const duplicateSection = useStore((s) => s.duplicateSection)
   const duplicateSections = useStore((s) => s.duplicateSections)
@@ -124,6 +138,16 @@ export default function MapView({ scriptId, script }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scriptId, script.sections.length])
 
+  // Applies a selection computed by ContextMenu.jsx's "select connected
+  // nodes" items (which can't reach this component's own local state
+  // directly) — see mapSelectRequest in store.js.
+  useEffect(() => {
+    if (mapSelectRequest && mapSelectRequest.scriptId === scriptId) {
+      setSelectedNodeIds(mapSelectRequest.ids)
+      clearMapSelectRequest()
+    }
+  }, [mapSelectRequest, scriptId, clearMapSelectRequest])
+
   useEffect(() => {
     if (!ideaMenuOpen) return
     function onDocMouseDown(e) {
@@ -139,8 +163,8 @@ export default function MapView({ scriptId, script }) {
   function deleteSelection(ids) {
     if (!ids.length) return
     const nodes = script.mapLayout.nodes
-    const sectionIds = ids.filter((id) => !isIdeaNode(nodes[id]))
-    const ideaIds = ids.filter((id) => isIdeaNode(nodes[id]))
+    const sectionIds = ids.filter((id) => isSectionNode(nodes[id]))
+    const ideaIds = ids.filter((id) => !isSectionNode(nodes[id]))
     const targetSections = sectionIds.map((id) => script.sections.find((s) => s.id === id)).filter(Boolean)
     const needsConfirm = sectionIds.length > 0 && sectionsHaveContent(targetSections)
     const msg =
@@ -222,7 +246,10 @@ export default function MapView({ scriptId, script }) {
       if (!isEditingText && combo === 'ctrl+c' && validSelectedNodeIds.length) {
         e.preventDefault()
         const nodes = script.mapLayout.nodes
-        mapClipboardRef.current = validSelectedNodeIds.map((id) => ({ id, type: isIdeaNode(nodes[id]) ? 'idea' : 'section' }))
+        // Chapter nodes duplicate through the same generic path as idea
+        // nodes (duplicateIdeaNode just clones whatever's there regardless
+        // of type) — only real sections need the dedicated section path.
+        mapClipboardRef.current = validSelectedNodeIds.map((id) => ({ id, type: isSectionNode(nodes[id]) ? 'section' : 'idea' }))
         return
       }
       if (!isEditingText && combo === 'ctrl+v' && mapClipboardRef.current.length) {
@@ -235,8 +262,8 @@ export default function MapView({ scriptId, script }) {
       if (!isEditingText && combo === st.keybinds.duplicate && validSelectedNodeIds.length) {
         e.preventDefault()
         const nodes = script.mapLayout.nodes
-        const sectionIds = validSelectedNodeIds.filter((id) => !isIdeaNode(nodes[id]))
-        const ideaIds = validSelectedNodeIds.filter((id) => isIdeaNode(nodes[id]))
+        const sectionIds = validSelectedNodeIds.filter((id) => isSectionNode(nodes[id]))
+        const ideaIds = validSelectedNodeIds.filter((id) => !isSectionNode(nodes[id]))
         const newIds = [
           ...(sectionIds.length ? duplicateSections(scriptId, sectionIds) : []),
           ...ideaIds.map((id) => duplicateIdeaNode(scriptId, id)).filter(Boolean)
@@ -246,6 +273,18 @@ export default function MapView({ scriptId, script }) {
       if (!isEditingText && combo === st.keybinds.mapLinkNodes && validSelectedNodeIds.length >= 2) {
         e.preventDefault()
         linkMapNodesInOrder(scriptId, validSelectedNodeIds)
+      }
+      if (!isEditingText && combo === st.keybinds.mapSelectDownstream && validSelectedNodeIds.length) {
+        e.preventDefault()
+        setSelectedNodeIds(selectConnectedNodes(scriptId, validSelectedNodeIds, 'forward'))
+      }
+      if (!isEditingText && combo === st.keybinds.mapSelectUpstream && validSelectedNodeIds.length) {
+        e.preventDefault()
+        setSelectedNodeIds(selectConnectedNodes(scriptId, validSelectedNodeIds, 'backward'))
+      }
+      if (!isEditingText && combo === st.keybinds.mapSelectConnected && validSelectedNodeIds.length) {
+        e.preventDefault()
+        setSelectedNodeIds(selectConnectedNodes(scriptId, validSelectedNodeIds, 'both'))
       }
     }
     function onKeyUp(e) {
@@ -505,6 +544,14 @@ export default function MapView({ scriptId, script }) {
     setIdeaMenuOpen(false)
   }
 
+  function handleAddChapterNode() {
+    if (!canvasRef.current) return
+    const rect = canvasRef.current.getBoundingClientRect()
+    const world = screenToWorld(rect.left + rect.width / 2, rect.top + rect.height / 2)
+    const newId = addChapterNode(scriptId, world.x - NODE_WIDTH / 2, world.y - NODE_H / 2)
+    if (newId) setSelectedNodeIds([newId])
+  }
+
   function handleAddInDirection(fromId, dir) {
     if (isIdeaNode(script.mapLayout.nodes[fromId])) {
       addConnectedIdeaNodeFromMap(scriptId, fromId, dir)
@@ -566,6 +613,9 @@ export default function MapView({ scriptId, script }) {
             />
           )}
         </div>
+        <button className="icon-btn" onClick={handleAddChapterNode} title="Add a chapter node — a group header for the Outline tab">
+          <Icon name="layers" size={13} /> Add chapter
+        </button>
         <button
           className={'icon-btn' + (script.mapLayout.hideSummaries ? ' active' : '')}
           onClick={() => toggleMapHideSummaries(scriptId)}
@@ -709,6 +759,31 @@ export default function MapView({ scriptId, script }) {
                   isSelected={validSelectedNodeIds.includes(id)}
                   hideSummaries={script.mapLayout.hideSummaries}
                   order={order.get(id)}
+                  threadEndDir={threadEndDirection(id, nodes, script.mapLayout.edges)}
+                  connectedSides={connectedSides}
+                  onNodeMouseDown={handleNodeMouseDown}
+                  onConnectorMouseDown={handleConnectorMouseDown}
+                  onAddInDirection={handleAddInDirection}
+                  onContextMenu={handleNodeContextMenu}
+                />
+              )
+            })}
+          {Object.entries(nodes)
+            .filter(([, n]) => isChapterNode(n))
+            .map(([id, node]) => {
+              const connectedSides = new Set(
+                script.mapLayout.edges
+                  .filter((edge) => edge.from === id || edge.to === id)
+                  .map((edge) => anchorSideForNode(edge, id, nodes))
+                  .filter(Boolean)
+              )
+              return (
+                <ChapterNode
+                  key={id}
+                  scriptId={scriptId}
+                  id={id}
+                  node={node}
+                  isSelected={validSelectedNodeIds.includes(id)}
                   threadEndDir={threadEndDirection(id, nodes, script.mapLayout.edges)}
                   connectedSides={connectedSides}
                   onNodeMouseDown={handleNodeMouseDown}

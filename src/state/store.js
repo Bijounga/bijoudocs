@@ -92,6 +92,11 @@ export const useStore = create(
     contextMenu: null,
     lastMisspelling: null,
     lastSpellcheckRaw: null,
+    // One-shot bridge from ContextMenu.jsx (a globally-mounted singleton
+    // with no direct access to MapView's own local selectedNodeIds state)
+    // into MapView — set by requestMapSelection, consumed and cleared by
+    // MapView's own effect. Never read/written anywhere else.
+    mapSelectRequest: null,
     mapViewOpen: false,
     mapSplitOpen: false,
     outlineViewOpen: false,
@@ -2173,6 +2178,94 @@ export const useStore = create(
       })
       get().scheduleSave(scriptId, { flash: false })
     },
+
+    // ---------- mind-map chapter nodes (group headers, not real sections) ----------
+    // A label + a number, e.g. "The Desert" #1 and a separate, unconnected
+    // "The Desert" #2 elsewhere on the map — deliberately NOT required to
+    // connect to each other. Grouping into the Outline is entirely by
+    // (label, number), not by any edge between chapter nodes themselves;
+    // a chapter's *members* are still whatever's connected to it via the
+    // normal edge mechanism, same as any other thread (see
+    // flattenMapOrder in lib/mapGraph.js).
+    addChapterNode(scriptId, x, y) {
+      get().pushUndo(scriptId)
+      let newId = null
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        if (!script) return
+        newId = uid()
+        script.mapLayout.nodes[newId] = { x, y, collapsed: false, type: 'chapter', label: '', number: 1 }
+        script.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+      return newId
+    },
+    setChapterNodeLabel(scriptId, nodeId, label) {
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        const node = script && script.mapLayout.nodes[nodeId]
+        if (node) node.label = label
+      })
+    },
+    commitChapterNodeLabel(scriptId) {
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        if (script) script.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+    },
+    setChapterNodeNumber(scriptId, nodeId, number) {
+      get().pushUndo(scriptId)
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        const node = script && script.mapLayout.nodes[nodeId]
+        if (node) node.number = number
+        if (script) script.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+    },
+
+    // Selects every node reachable from `seedIds`, following edges only
+    // 'forward' (from->to), only 'backward' (to->from), or 'both' — the
+    // right-click / keybind "select everything connected after/before/
+    // around this node" actions. Always includes the seeds themselves, so
+    // the result can be deleted or dragged as one group immediately.
+    selectConnectedNodes(scriptId, seedIds, direction) {
+      const script = get().scripts.find((sc) => sc.id === scriptId)
+      if (!script || !seedIds.length) return seedIds || []
+      const edges = script.mapLayout.edges
+      const visited = new Set(seedIds)
+      const queue = [...seedIds]
+      while (queue.length) {
+        const current = queue.shift()
+        edges.forEach((e) => {
+          const neighbors = []
+          if ((direction === 'forward' || direction === 'both') && e.from === current) neighbors.push(e.to)
+          if ((direction === 'backward' || direction === 'both') && e.to === current) neighbors.push(e.from)
+          neighbors.forEach((n) => {
+            if (!visited.has(n) && script.mapLayout.nodes[n]) {
+              visited.add(n)
+              queue.push(n)
+            }
+          })
+        })
+      }
+      return Array.from(visited)
+    },
+    // Lets ContextMenu.jsx (which has no direct access to MapView's own
+    // local selectedNodeIds) ask MapView to apply a computed selection —
+    // see mapSelectRequest above.
+    requestMapSelection(scriptId, ids) {
+      set((s) => {
+        s.mapSelectRequest = { scriptId, ids, token: uid() }
+      })
+    },
+    clearMapSelectRequest() {
+      set((s) => {
+        s.mapSelectRequest = null
+      })
+    },
+
     // Connects a multi-node map selection into one directed chain, in
     // whatever order they're currently selected — one keypress instead of
     // dragging N-1 edges by hand. Skips any consecutive pair that's already

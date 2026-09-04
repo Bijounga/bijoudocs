@@ -23,7 +23,10 @@ export const DEFAULT_KEYBINDS = {
   mapToggleSummaries: 'ctrl+shift+y',
   mapAddIdeaNode: 'ctrl+shift+i',
   duplicate: 'ctrl+d',
-  mapLinkNodes: 'ctrl+shift+e'
+  mapLinkNodes: 'ctrl+shift+e',
+  mapSelectDownstream: 'ctrl+shift+.',
+  mapSelectUpstream: 'ctrl+shift+,',
+  mapSelectConnected: 'ctrl+shift+/'
 }
 
 export const SHORTCUT_META = [
@@ -67,6 +70,21 @@ export const SHORTCUT_META = [
     id: 'mapLinkNodes',
     label: 'Link selected mind-map nodes',
     desc: 'With 2+ nodes selected on the mind map, connects them into one chain in selection order — one press instead of dragging each edge by hand.'
+  },
+  {
+    id: 'mapSelectDownstream',
+    label: 'Select everything after this node',
+    desc: 'With a mind-map node selected, extends the selection to everything reachable by following its outgoing connections — handy before deleting or moving a whole downstream thread.'
+  },
+  {
+    id: 'mapSelectUpstream',
+    label: 'Select everything before this node',
+    desc: 'With a mind-map node selected, extends the selection to everything reachable by following its incoming connections, upstream.'
+  },
+  {
+    id: 'mapSelectConnected',
+    label: 'Select everything connected to this node',
+    desc: 'With a mind-map node selected, extends the selection to everything reachable in either direction — the whole connected thread it\'s part of.'
   }
 ]
 
