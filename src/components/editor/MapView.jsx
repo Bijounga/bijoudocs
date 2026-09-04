@@ -646,7 +646,7 @@ export default function MapView({ scriptId, script }) {
           <svg className="map-edges-svg">
             <defs>
               <marker id="map-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-                <path d="M0,0 L10,5 L0,10 z" fill="var(--line-soft)" />
+                <path d="M0,0 L10,5 L0,10 z" fill="var(--ink-faint)" />
               </marker>
               <marker id="map-arrow-lit" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
                 <path d="M0,0 L10,5 L0,10 z" fill="var(--cyan)" />

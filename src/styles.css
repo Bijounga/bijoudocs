@@ -2161,7 +2161,11 @@ textarea {
   pointer-events: none;
 }
 .map-edge {
-  stroke: var(--line-soft);
+  /* Not --line-soft — that's the same color as the canvas's own dot-grid
+     background, so an unlit connection was nearly invisible against it.
+     --ink-faint actually reads as a real line, just dimmer than the lit
+     (cyan) main thread. */
+  stroke: var(--ink-faint);
   stroke-width: 2;
   fill: none;
 }

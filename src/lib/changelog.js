@@ -74,6 +74,9 @@ export const CHANGELOG = {
   ],
   '0.5.32': [
     'Chapter sections in the Outline now show a small marker between each numbered instance (#1, #2, #3…), and a closing marker once the whole chapter\'s content ends'
+  ],
+  '0.5.33': [
+    'Fixed a real visibility bug on the mind map: connections not part of the highlighted main thread were nearly invisible — they were using the exact same color as the canvas\'s own background dots'
   ]
 }
 
