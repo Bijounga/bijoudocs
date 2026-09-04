@@ -77,6 +77,10 @@ export const CHANGELOG = {
   ],
   '0.5.33': [
     'Fixed a real visibility bug on the mind map: connections not part of the highlighted main thread were nearly invisible — they were using the exact same color as the canvas\'s own background dots'
+  ],
+  '0.5.34': [
+    'New "Resume" button in the toolbar, plus a keybind, that jumps straight to your resume point — the script\'s if you\'re in the script, the Outline\'s if you\'re in the Outline',
+    'New keybind to mark a resume point too, so you don\'t need the right-click menu or the bookmark icon — works on the line your cursor is in, or whichever Outline item you\'re editing'
   ]
 }
 

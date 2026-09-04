@@ -50,6 +50,9 @@ export default function Topbar({ script }) {
   const setNoteColor = useStore((s) => s.setNoteColor)
   const forceSave = useStore((s) => s.forceSave)
   const openSaveHistory = useStore((s) => s.openSaveHistory)
+  const jumpToResumeLine = useStore((s) => s.jumpToResumeLine)
+  const jumpToResumeOutlineNode = useStore((s) => s.jumpToResumeOutlineNode)
+  const keybinds = useStore((s) => s.keybinds)
 
   if (!script) {
     return (
@@ -198,6 +201,20 @@ export default function Topbar({ script }) {
           <Icon name="split" size={13} />
         </button>
       )}
+      <button
+        className="icon-btn"
+        disabled={outlineViewOpen ? !script.resumeOutlineNodeId : !script.resumeLineKey}
+        onClick={() => (outlineViewOpen ? jumpToResumeOutlineNode(script.id) : jumpToResumeLine(script.id))}
+        title={
+          'Jump to your resume point (' +
+          keybinds.jumpToResumePoint +
+          ') — right-click a line, or the bookmark icon on an Outline item, to set one (' +
+          keybinds.markResumePoint +
+          ')'
+        }
+      >
+        <Icon name="bookmark" size={13} /> Resume
+      </button>
     </div>
   )
 }

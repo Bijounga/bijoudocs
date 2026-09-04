@@ -76,6 +76,7 @@ export const useStore = create(
     lineSearchHighlight: 0,
     jumpHighlightId: null,
     jumpHighlightLineKey: null,
+    jumpOutlineHighlightId: null,
 
     checkpointDraftOpen: false,
     compareSelection: [],
@@ -1279,6 +1280,29 @@ export const useStore = create(
       setTimeout(() => {
         set((s) => {
           s.jumpHighlightLineKey = null
+        })
+      }, 1200)
+    },
+    // Scrolls straight to the script's resume-point line (see
+    // toggleResumeLine) — a no-op if none is set, so the keybind/button
+    // calling this is always safe to press regardless of state.
+    jumpToResumeLine(scriptId) {
+      const script = get().scripts.find((sc) => sc.id === scriptId)
+      if (!script || !script.resumeLineKey) return
+      const [secId, lineId] = script.resumeLineKey.split(':')
+      get().jumpToLine(scriptId, secId, lineId)
+    },
+    // Outline equivalent — no real "line" to reuse jumpToLine's machinery
+    // for, so this is its own small flash-highlight, same 1.2s timing.
+    jumpToResumeOutlineNode(scriptId) {
+      const script = get().scripts.find((sc) => sc.id === scriptId)
+      if (!script || !script.resumeOutlineNodeId) return
+      set((s) => {
+        s.jumpOutlineHighlightId = script.resumeOutlineNodeId
+      })
+      setTimeout(() => {
+        set((s) => {
+          s.jumpOutlineHighlightId = null
         })
       }, 1200)
     },

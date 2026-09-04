@@ -76,6 +76,7 @@ export function useGlobalKeydown() {
       const activeLineKey = active && active.dataset ? active.dataset.lineKey : null
       const activeHeadingFor = active && active.dataset ? active.dataset.headingFor : null
       const activeNoteKey = active && active.dataset ? active.dataset.noteKey : null
+      const activeNodeId = active && active.dataset ? active.dataset.nodeId : null
       const editing = !!(
         active &&
         (activeLineKey || active.tagName === 'TEXTAREA' || (active.tagName === 'INPUT' && active.type === 'text'))
@@ -306,6 +307,34 @@ export function useGlobalKeydown() {
         const [noteSecId, noteLineId] = activeNoteKey.split(':')
         st.toggleLineNote(script.id, noteSecId, noteLineId)
         focusLineEnd(activeNoteKey)
+        return
+      }
+
+      // Both resume-point actions work from either the script (a focused
+      // line) or the Outline (a focused item's title/text field, tagged
+      // with data-node-id) — checked here, before the script-only gate
+      // below, since the Outline case never has an activeLineKey at all.
+      if (combo === st.keybinds.markResumePoint) {
+        if (activeLineKey) {
+          e.preventDefault()
+          const [markSecId, markLineId] = activeLineKey.split(':')
+          st.toggleResumeLine(script.id, markSecId, markLineId)
+          return
+        }
+        if (activeNodeId) {
+          e.preventDefault()
+          st.toggleResumeOutlineNode(script.id, activeNodeId)
+          return
+        }
+      }
+      if (combo === st.keybinds.jumpToResumePoint) {
+        e.preventDefault()
+        if (st.outlineViewOpen) {
+          st.jumpToResumeOutlineNode(script.id)
+        } else {
+          if (st.mapViewOpen) st.toggleMapView()
+          st.jumpToResumeLine(script.id)
+        }
         return
       }
 

@@ -26,7 +26,9 @@ export const DEFAULT_KEYBINDS = {
   mapLinkNodes: 'ctrl+shift+e',
   mapSelectDownstream: 'ctrl+shift+.',
   mapSelectUpstream: 'ctrl+shift+,',
-  mapSelectConnected: 'ctrl+shift+/'
+  mapSelectConnected: 'ctrl+shift+/',
+  markResumePoint: 'ctrl+shift+p',
+  jumpToResumePoint: 'ctrl+shift+o'
 }
 
 export const SHORTCUT_META = [
@@ -85,6 +87,16 @@ export const SHORTCUT_META = [
     id: 'mapSelectConnected',
     label: 'Select everything connected to this node',
     desc: 'With a mind-map node selected, extends the selection to everything reachable in either direction — the whole connected thread it\'s part of.'
+  },
+  {
+    id: 'markResumePoint',
+    label: 'Mark as resume point',
+    desc: 'Marks the line your cursor is in (in the script) or the item you\'re editing (in the Outline) as where you left off — press again on the same one to clear it.'
+  },
+  {
+    id: 'jumpToResumePoint',
+    label: 'Jump to resume point',
+    desc: 'Scrolls straight to your resume point — the script\'s if you\'re in the script, the Outline\'s if you\'re in the Outline.'
   }
 ]
 

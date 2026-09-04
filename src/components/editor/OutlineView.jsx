@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useStore } from '../../state/store.js'
 import { flattenMapOrder } from '../../lib/mapGraph.js'
 import { sectionsHaveContent } from '../../lib/model.js'
@@ -26,12 +26,25 @@ export default function OutlineView({ scriptId, script }) {
   const toggleMapView = useStore((s) => s.toggleMapView)
   const deleteOutlineNode = useStore((s) => s.deleteOutlineNode)
   const toggleResumeOutlineNode = useStore((s) => s.toggleResumeOutlineNode)
+  const jumpOutlineHighlightId = useStore((s) => s.jumpOutlineHighlightId)
   const [query, setQuery] = useState('')
+  const listRef = useRef(null)
 
   useEffect(() => {
     ensureMapNodes(scriptId)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scriptId, script.sections.length])
+
+  // Jump-to-resume-point (keybind/button) sets this — scroll it into view
+  // the moment it's set, same as LineRow's own jump-flash effect. Scoped
+  // to this view's own list, not a bare document.querySelector, since the
+  // underlying editor can still have a same-shaped element mounted behind
+  // whatever's currently showing.
+  useEffect(() => {
+    if (!jumpOutlineHighlightId || !listRef.current) return
+    const el = listRef.current.querySelector('[data-item-id="' + jumpOutlineHighlightId + '"]')
+    if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  }, [jumpOutlineHighlightId])
 
   const nodes = script.mapLayout.nodes
   const { ordered, dividers } = flattenMapOrder(script.mapLayout)
@@ -97,7 +110,7 @@ export default function OutlineView({ scriptId, script }) {
           other connected chains, then anything not yet connected.
         </div>
       </div>
-      <div className="outline-list" style={{ zoom }}>
+      <div className="outline-list" style={{ zoom }} ref={listRef}>
         {(ordered.length === 0 || (q && !anyMatch)) && (
           <div className="filter-empty">{q ? 'No matches.' : 'No sections or idea nodes yet.'}</div>
         )}
@@ -110,7 +123,10 @@ export default function OutlineView({ scriptId, script }) {
             return (
               <React.Fragment key={id}>
                 {dividersHere.map((d, di) => renderDivider(d, di))}
-                <div className={'outline-item' + (script.resumeOutlineNodeId === id ? ' resume-point' : '')}>
+                <div
+                  className={'outline-item' + (script.resumeOutlineNodeId === id ? ' resume-point' : '') + (jumpOutlineHighlightId === id ? ' jump-flash' : '')}
+                  data-item-id={id}
+                >
                   <span className="outline-item-num">{i + 1}</span>
                   <div className="outline-item-body">
                     <div className="outline-item-head">
@@ -119,6 +135,7 @@ export default function OutlineView({ scriptId, script }) {
                         placeholder="Untitled idea"
                         value={node.title}
                         style={node.color ? { color: node.color } : undefined}
+                        data-node-id={id}
                         onFocus={() => pushUndo(scriptId)}
                         onChange={(e) => setIdeaNodeTitle(scriptId, id, e.target.value)}
                         onBlur={() => commitIdeaNodeTitle(scriptId)}
@@ -147,6 +164,7 @@ export default function OutlineView({ scriptId, script }) {
                       className="outline-item-text"
                       placeholder="Idea text…"
                       value={node.text}
+                      data-node-id={id}
                       onFocus={() => pushUndo(scriptId)}
                       onChange={(e) => setIdeaNodeText(scriptId, id, e.target.value)}
                       onBlur={() => commitIdeaNodeText(scriptId)}
@@ -162,7 +180,10 @@ export default function OutlineView({ scriptId, script }) {
           return (
             <React.Fragment key={id}>
               {dividersHere.map((d, di) => renderDivider(d, di))}
-              <div className={'outline-item' + (script.resumeOutlineNodeId === id ? ' resume-point' : '')}>
+              <div
+                className={'outline-item' + (script.resumeOutlineNodeId === id ? ' resume-point' : '') + (jumpOutlineHighlightId === id ? ' jump-flash' : '')}
+                data-item-id={id}
+              >
                 <span className="outline-item-num">{i + 1}</span>
                 <div className="outline-item-body">
                   <div className="outline-item-head">
@@ -171,6 +192,7 @@ export default function OutlineView({ scriptId, script }) {
                       placeholder="Untitled section"
                       value={sec.heading}
                       style={sec.titleColor ? { color: sec.titleColor } : undefined}
+                      data-node-id={id}
                       onFocus={() => pushUndo(scriptId)}
                       onChange={(e) => setSectionHeading(scriptId, id, e.target.value)}
                       onBlur={() => commitSectionHeading(scriptId, id)}
@@ -203,6 +225,7 @@ export default function OutlineView({ scriptId, script }) {
                     className="outline-item-text"
                     placeholder="One-line summary for this beat…"
                     value={sec.beatSummary}
+                    data-node-id={id}
                     onFocus={() => pushUndo(scriptId)}
                     onChange={(e) => setSectionBeatSummary(scriptId, id, e.target.value)}
                     onBlur={() => commitSectionBeatSummary(scriptId, id)}
