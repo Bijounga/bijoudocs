@@ -2110,6 +2110,22 @@ textarea {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.outline-search {
+  flex: 0 0 200px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+.outline-search::placeholder {
+  color: var(--ink-faint);
+}
+.outline-search:focus {
+  outline: none;
+  border-color: var(--cyan);
+}
 .outline-hint {
   font-size: 11px;
   color: var(--ink-faint);
@@ -2229,6 +2245,8 @@ textarea {
   gap: 6px;
 }
 .map-node-heading {
+  flex: 1;
+  min-width: 0;
   overflow-wrap: break-word;
 }
 .map-node-heading-input {
@@ -2575,8 +2593,11 @@ textarea {
   font-size: 13px;
   line-height: 1.55;
   padding: 8px 10px;
-  resize: vertical;
+  resize: none;
+  field-sizing: content;
   min-height: 44px;
+  max-height: 400px;
+  overflow-y: auto;
   cursor: text;
 }
 .outline-item-text:focus {
@@ -2812,6 +2833,13 @@ textarea {
 }
 .tp-section {
   margin-bottom: 46px;
+}
+.tp-section-collapsed {
+  margin-bottom: 20px;
+}
+.tp-section-label-collapsed {
+  color: var(--ink-faint);
+  opacity: 0.5;
 }
 .tp-section-label {
   font-family: var(--mono);

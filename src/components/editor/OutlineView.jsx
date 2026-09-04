@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useStore } from '../../state/store.js'
 import { flattenMapOrder } from '../../lib/mapGraph.js'
 import { sectionsHaveContent } from '../../lib/model.js'
@@ -25,6 +25,7 @@ export default function OutlineView({ scriptId, script }) {
   const toggleOutlineView = useStore((s) => s.toggleOutlineView)
   const toggleMapView = useStore((s) => s.toggleMapView)
   const deleteOutlineNode = useStore((s) => s.deleteOutlineNode)
+  const [query, setQuery] = useState('')
 
   useEffect(() => {
     ensureMapNodes(scriptId)
@@ -33,6 +34,20 @@ export default function OutlineView({ scriptId, script }) {
 
   const nodes = script.mapLayout.nodes
   const { ordered, connectedCount } = flattenMapOrder(script.mapLayout)
+  const q = query.trim().toLowerCase()
+  function matchesQuery(title, text) {
+    if (!q) return true
+    return (title || '').toLowerCase().includes(q) || (text || '').toLowerCase().includes(q)
+  }
+  const anyMatch =
+    !q ||
+    ordered.some((id) => {
+      const node = nodes[id]
+      if (!node) return false
+      if (isIdeaNode(node)) return matchesQuery(node.title, node.text)
+      const sec = script.sections.find((se) => se.id === id)
+      return sec && matchesQuery(sec.heading, sec.beatSummary)
+    })
 
   function openSection(id) {
     openSectionTab(scriptId, id)
@@ -52,18 +67,28 @@ export default function OutlineView({ scriptId, script }) {
   return (
     <div className="main outline-main">
       <div className="map-toolbar">
+        <input
+          className="outline-search"
+          type="text"
+          placeholder="Search the outline…"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
         <div className="outline-hint">
           A flattened, editable list of everything on the mind map — sections follow the main thread (if you've set one), then any
           other connected chains, then anything not yet connected.
         </div>
       </div>
       <div className="outline-list" style={{ zoom }}>
-        {ordered.length === 0 && <div className="filter-empty">No sections or idea nodes yet.</div>}
+        {(ordered.length === 0 || (q && !anyMatch)) && (
+          <div className="filter-empty">{q ? 'No matches.' : 'No sections or idea nodes yet.'}</div>
+        )}
         {ordered.map((id, i) => {
           const node = nodes[id]
           if (!node) return null
           const showDivider = i === connectedCount && connectedCount > 0 && connectedCount < ordered.length
           if (isIdeaNode(node)) {
+            if (!matchesQuery(node.title, node.text)) return null
             return (
               <React.Fragment key={id}>
                 {showDivider && <div className="outline-divider">Not yet connected to anything else</div>}
@@ -107,6 +132,7 @@ export default function OutlineView({ scriptId, script }) {
           }
           const sec = script.sections.find((se) => se.id === id)
           if (!sec) return null
+          if (!matchesQuery(sec.heading, sec.beatSummary)) return null
           return (
             <React.Fragment key={id}>
               {showDivider && <div className="outline-divider">Not yet connected to anything else</div>}

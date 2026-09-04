@@ -57,6 +57,13 @@ export const CHANGELOG = {
   '0.5.28': [
     'Mind-map node cards now grow to fit a long title instead of truncating it',
     'You can now delete a node right from the Outline tab — if it was connected to something before and after it, those two get auto-connected so the thread stays continuous'
+  ],
+  '0.5.29': [
+    'Actually fixed the mind-map title cut-off this time — a real CSS bug (a flexbox default that quietly refuses to shrink text) was still overriding the last fix',
+    'New "Recenter" button on the mind map — fits every node on screen at once if you\'ve panned or zoomed away and lost your place',
+    'New search box on the Outline tab',
+    'Outline text boxes now grow with what you write, instead of needing to be manually resized',
+    'A closed/collapsed section no longer reads out its lines in the Teleprompter — its title still shows, greyed out, so it\'s clear it was skipped on purpose'
   ]
 }
 

@@ -88,6 +88,17 @@ export default function TeleprompterView({ script }) {
         <div className="teleprompter-inner" style={{ fontSize }}>
           <div className="tp-title">{script.title}</div>
           {script.sections.map((sec) => {
+            // A collapsed section is the writer saying "not now" — skip its
+            // spoken lines here too, same as it's hidden in the normal
+            // editor's mind map, but still show a small greyed marker so
+            // it's clear something was deliberately skipped, not missing.
+            if (sec.collapsed) {
+              return (
+                <div className="tp-section tp-section-collapsed" key={sec.id}>
+                  <div className="tp-section-label tp-section-label-collapsed">{sec.heading}</div>
+                </div>
+              )
+            }
             const visibleLines = sec.lines.filter((l) => {
               if (l.struck) return false
               if (!stripHtmlToText(l.text).trim()) return false

@@ -296,6 +296,31 @@ export default function MapView({ scriptId, script }) {
     zoomBy(rect.left + rect.width / 2, rect.top + rect.height / 2, factor)
   }
 
+  // Fits every node on screen at once, centered — a single button that
+  // recovers from "I panned/zoomed away and can't find my way back,"
+  // rather than requiring a minimap just to reorient.
+  function recenterView() {
+    if (!canvasRef.current) return
+    const rect = canvasRef.current.getBoundingClientRect()
+    const nodeList = Object.values(script.mapLayout.nodes)
+    if (!nodeList.length) {
+      zoomRef.current = 1
+      setZoom(1)
+      setPan({ x: rect.width / 2, y: rect.height / 2 })
+      return
+    }
+    const minX = Math.min(...nodeList.map((n) => n.x))
+    const minY = Math.min(...nodeList.map((n) => n.y))
+    const maxX = Math.max(...nodeList.map((n) => n.x + NODE_WIDTH))
+    const maxY = Math.max(...nodeList.map((n) => n.y + NODE_H))
+    const padding = 60
+    const fitZoom = Math.min((rect.width - padding * 2) / (maxX - minX), (rect.height - padding * 2) / (maxY - minY))
+    const clamped = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, isFinite(fitZoom) && fitZoom > 0 ? fitZoom : 1))
+    zoomRef.current = clamped
+    setZoom(clamped)
+    setPan({ x: rect.width / 2 - ((minX + maxX) / 2) * clamped, y: rect.height / 2 - ((minY + maxY) / 2) * clamped })
+  }
+
   function handleWheel(e) {
     e.preventDefault()
     if (e.ctrlKey || e.metaKey) {
@@ -553,6 +578,9 @@ export default function MapView({ scriptId, script }) {
           <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-faint)', minWidth: 34, textAlign: 'center' }}>{Math.round(zoom * 100)}%</span>
           <button className="icon-btn" style={{ border: 'none', padding: '7px 9px' }} onClick={() => zoomByCenter(1.2)}>+</button>
         </div>
+        <button className="icon-btn" onClick={recenterView} title="Fit every node on screen, centered">
+          <Icon name="focus" size={13} /> Recenter
+        </button>
         <div className="map-hint">
           Drag to select · right-click for options · Ctrl+C/V to duplicate · click or pull a connected dot to disconnect it
         </div>
