@@ -14,6 +14,7 @@ export default function ContextMenu() {
   const toggleLineDone = useStore((s) => s.toggleLineDone)
   const toggleStruckForLines = useStore((s) => s.toggleStruckForLines)
   const toggleLineBookmark = useStore((s) => s.toggleLineBookmark)
+  const toggleResumeLine = useStore((s) => s.toggleResumeLine)
   const copyLineToClipboard = useStore((s) => s.copyLineToClipboard)
   const flashSaved = useStore((s) => s.flashSaved)
   const deleteSection = useStore((s) => s.deleteSection)
@@ -118,6 +119,10 @@ export default function ContextMenu() {
         : null,
       { label: line && line.struck ? 'Unstrike' : 'Strike through', onClick: act(() => toggleStruckForLines(menu.scriptId, [key])) },
       { label: line && line.bookmarked ? 'Remove bookmark' : 'Bookmark', onClick: act(() => toggleLineBookmark(menu.scriptId, menu.sectionId, menu.lineId)) },
+      {
+        label: script.resumeLineKey === key ? 'Clear resume point' : 'Mark as resume point',
+        onClick: act(() => toggleResumeLine(menu.scriptId, menu.sectionId, menu.lineId))
+      },
       { label: 'Duplicate', onClick: act(() => duplicateLine(menu.scriptId, menu.sectionId, menu.lineId)) },
       {
         label: 'Copy',

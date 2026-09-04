@@ -53,8 +53,17 @@ export default function TeleprompterView({ script }) {
     return () => clearInterval(id)
   }, [autoScroll, speed])
 
+  // Jumps straight to the "where I left off" line (set via right-click in
+  // the script) instead of always starting at the top — falls back to top
+  // if nothing's marked, or the marked line isn't actually visible here
+  // (struck, silent-category, or its section is collapsed).
   useEffect(() => {
-    if (teleprompterOpen && scrollRef.current) scrollRef.current.scrollTop = 0
+    if (!teleprompterOpen || !scrollRef.current) return
+    const key = script.resumeLineKey
+    const target = key && scrollRef.current.querySelector('[data-line-key="' + key + '"]')
+    if (target) target.scrollIntoView({ block: 'center' })
+    else scrollRef.current.scrollTop = 0
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teleprompterOpen])
 
   if (!teleprompterOpen) return null
@@ -113,10 +122,12 @@ export default function TeleprompterView({ script }) {
                 {visibleLines.map((l) => {
                   const cat = l.categoryId ? catInfo(l.categoryId) : null
                   const isNote = cat && cat.spoken === false && cat.teleprompterNote
+                  const isResumePoint = script.resumeLineKey === sec.id + ':' + l.id
                   return (
                     <p
                       key={l.id}
-                      className={isNote ? 'tp-line-note' : undefined}
+                      data-line-key={sec.id + ':' + l.id}
+                      className={(isNote ? 'tp-line-note' : '') + (isResumePoint ? ' tp-resume-point' : '')}
                       dangerouslySetInnerHTML={{ __html: l.text || '' }}
                     />
                   )

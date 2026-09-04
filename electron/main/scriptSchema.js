@@ -51,6 +51,12 @@ function migrateScript(raw, { forceNewId = false } = {}) {
   script.categories = Array.isArray(script.categories) && script.categories.length ? script.categories : defaultCategories()
   script.checkpoints = Array.isArray(script.checkpoints) ? script.checkpoints : []
   script.pinnedSectionIds = Array.isArray(script.pinnedSectionIds) ? script.pinnedSectionIds : []
+  // "Where I left off" — set manually (right-click a line, or an item in
+  // the Outline tab), one of each since the two views work at different
+  // granularity (a specific line in the script vs. a whole section/idea
+  // node in the flattened outline).
+  script.resumeLineKey = typeof script.resumeLineKey === 'string' ? script.resumeLineKey : null
+  script.resumeOutlineNodeId = typeof script.resumeOutlineNodeId === 'string' ? script.resumeOutlineNodeId : null
   const rawMap = raw.mapLayout && typeof raw.mapLayout === 'object' ? raw.mapLayout : {}
   script.mapLayout = {
     nodes: rawMap.nodes && typeof rawMap.nodes === 'object' ? rawMap.nodes : {},

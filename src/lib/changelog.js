@@ -68,6 +68,9 @@ export const CHANGELOG = {
   '0.5.30': [
     'New chapter nodes for the mind map — a label + a number (e.g. "The Desert" #1) that group everything connected to them into their own named section in the Outline tab, without needing to connect to each other',
     'New right-click items and keybinds to select everything connected to a node — after it, before it, or both directions at once — handy for grabbing a whole thread to move or delete'
+  ],
+  '0.5.31': [
+    'New "resume point" marker — right-click a line in the script (or use the bookmark icon on an Outline item) to mark where you left off. The script one shows up in the Teleprompter too, jumping straight to it on open instead of always starting at the top'
   ]
 }
 

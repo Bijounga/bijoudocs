@@ -25,6 +25,7 @@ export default function OutlineView({ scriptId, script }) {
   const toggleOutlineView = useStore((s) => s.toggleOutlineView)
   const toggleMapView = useStore((s) => s.toggleMapView)
   const deleteOutlineNode = useStore((s) => s.deleteOutlineNode)
+  const toggleResumeOutlineNode = useStore((s) => s.toggleResumeOutlineNode)
   const [query, setQuery] = useState('')
 
   useEffect(() => {
@@ -104,7 +105,7 @@ export default function OutlineView({ scriptId, script }) {
                     {label || 'Not yet connected to anything else'}
                   </div>
                 ))}
-                <div className="outline-item">
+                <div className={'outline-item' + (script.resumeOutlineNodeId === id ? ' resume-point' : '')}>
                   <span className="outline-item-num">{i + 1}</span>
                   <div className="outline-item-body">
                     <div className="outline-item-head">
@@ -117,6 +118,14 @@ export default function OutlineView({ scriptId, script }) {
                         onChange={(e) => setIdeaNodeTitle(scriptId, id, e.target.value)}
                         onBlur={() => commitIdeaNodeTitle(scriptId)}
                       />
+                      <button
+                        className={'icon-btn' + (script.resumeOutlineNodeId === id ? ' active' : '')}
+                        style={{ padding: '4px 8px' }}
+                        onClick={() => toggleResumeOutlineNode(scriptId, id)}
+                        title={script.resumeOutlineNodeId === id ? 'Clear resume point' : 'Mark as resume point'}
+                      >
+                        <Icon name="bookmark" size={12} filled={script.resumeOutlineNodeId === id} />
+                      </button>
                       <button className="icon-btn" style={{ padding: '4px 8px' }} onClick={toggleMapView} title="View on the map">
                         <Icon name="map" size={12} />
                       </button>
@@ -152,7 +161,7 @@ export default function OutlineView({ scriptId, script }) {
                   {label || 'Not yet connected to anything else'}
                 </div>
               ))}
-              <div className="outline-item">
+              <div className={'outline-item' + (script.resumeOutlineNodeId === id ? ' resume-point' : '')}>
                 <span className="outline-item-num">{i + 1}</span>
                 <div className="outline-item-body">
                   <div className="outline-item-head">
@@ -166,6 +175,14 @@ export default function OutlineView({ scriptId, script }) {
                       onBlur={() => commitSectionHeading(scriptId, id)}
                     />
                     {sec.done && <Icon name="check" size={12} className="map-node-done" />}
+                    <button
+                      className={'icon-btn' + (script.resumeOutlineNodeId === id ? ' active' : '')}
+                      style={{ padding: '4px 8px' }}
+                      onClick={() => toggleResumeOutlineNode(scriptId, id)}
+                      title={script.resumeOutlineNodeId === id ? 'Clear resume point' : 'Mark as resume point'}
+                    >
+                      <Icon name="bookmark" size={12} filled={script.resumeOutlineNodeId === id} />
+                    </button>
                     <button className="icon-btn" style={{ padding: '4px 8px' }} onClick={() => openSection(id)} title="Open this section">
                       <Icon name="tabopen" size={12} />
                     </button>

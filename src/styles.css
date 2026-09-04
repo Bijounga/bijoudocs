@@ -1091,6 +1091,11 @@ textarea {
 .line.selected {
   background: rgba(79, 209, 197, 0.09);
 }
+.line.resume-point {
+  border-left-color: #F2A65A;
+  border-left-width: 3px;
+  padding-left: 13px;
+}
 .line.struck .line-text {
   text-decoration: line-through;
   opacity: 0.55;
@@ -2604,6 +2609,11 @@ textarea {
   padding: 12px 0;
   border-bottom: 1px solid var(--line-soft);
 }
+.outline-item.resume-point {
+  border-left: 3px solid #F2A65A;
+  padding-left: 8px;
+  margin-left: -11px;
+}
 .outline-item-num {
   flex: 0 0 auto;
   width: 22px;
@@ -2892,6 +2902,11 @@ textarea {
 }
 .tp-section-collapsed {
   margin-bottom: 20px;
+}
+.tp-resume-point {
+  border-left: 3px solid #F2A65A;
+  padding-left: 12px;
+  margin-left: -15px;
 }
 .tp-section-label-collapsed {
   color: var(--ink-faint);

@@ -38,6 +38,10 @@ export default function LineRow({ scriptId, sectionId, line, index, siblingCount
   const clearLineSelection = useStore((s) => s.clearLineSelection)
   const openContextMenu = useStore((s) => s.openContextMenu)
   const toggleLineBookmark = useStore((s) => s.toggleLineBookmark)
+  const resumeLineKey = useStore((s) => {
+    const script = s.scripts.find((sc) => sc.id === scriptId)
+    return script && script.resumeLineKey
+  })
   const takesMenuFor = useStore((s) => s.takesMenuFor)
   const openTakesMenu = useStore((s) => s.openTakesMenu)
 
@@ -161,6 +165,7 @@ export default function LineRow({ scriptId, sectionId, line, index, siblingCount
         (line.struck ? ' struck' : '') +
         (flash ? ' jump-flash' : '') +
         (selected ? ' selected' : '') +
+        (resumeLineKey === key ? ' resume-point' : '') +
         (dropIndicator.edge ? ' drop-indicator-' + dropIndicator.edge : '')
       }
       style={style}

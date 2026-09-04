@@ -872,6 +872,29 @@ export const useStore = create(
       })
       get().scheduleSave(scriptId, { flash: false })
     },
+    // "Where I left off" in the script itself, line-granularity — separate
+    // from the Outline's own resumeOutlineNodeId since the two views work
+    // at different granularity (a specific line vs. a whole outline item).
+    // Toggles: marking the already-marked line clears it.
+    toggleResumeLine(scriptId, sectionId, lineId) {
+      const key = sectionId + ':' + lineId
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        if (!script) return
+        script.resumeLineKey = script.resumeLineKey === key ? null : key
+        script.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+    },
+    toggleResumeOutlineNode(scriptId, nodeId) {
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        if (!script) return
+        script.resumeOutlineNodeId = script.resumeOutlineNodeId === nodeId ? null : nodeId
+        script.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+    },
 
     indentLine(scriptId, sectionId, lineId, dir) {
       set((s) => {
