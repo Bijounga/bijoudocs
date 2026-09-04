@@ -111,17 +111,32 @@ export function flattenMapOrder(mapLayout) {
     })
   // Same-label instances (e.g. "The Desert" #1 and #2) share ONE header —
   // they're already sorted adjacent by label above, so a new header is
-  // only needed when the label actually changes, not per instance.
-  let lastLabel = null
+  // only needed when the label actually changes, not per instance. Within
+  // a group, a small "#N" marker closes out each instance before the next
+  // one's members start, and a slightly bigger one closes the whole group
+  // once its last instance is done (whether that's because a new label
+  // started or chapters ran out entirely).
+  let currentLabel = null
+  let currentLabelDisplay = null
+  let currentNumber = null
+  function closeCurrentGroup() {
+    if (currentLabel !== null) dividers.push({ index: ordered.length, label: 'End of ' + currentLabelDisplay, kind: 'groupEnd' })
+  }
   chapterIds.forEach((id) => {
     if (visited.has(id)) return
     const label = nodes[id].label || 'Untitled chapter'
-    if (label.toLowerCase() !== lastLabel) {
-      dividers.push({ index: ordered.length, label })
-      lastLabel = label.toLowerCase()
+    if (label.toLowerCase() !== currentLabel) {
+      closeCurrentGroup()
+      dividers.push({ index: ordered.length, label, kind: 'header' })
+      currentLabel = label.toLowerCase()
+      currentLabelDisplay = label
+    } else {
+      dividers.push({ index: ordered.length, label: '#' + currentNumber, kind: 'subEnd' })
     }
     walkChapterMembers(id)
+    currentNumber = nodes[id].number
   })
+  closeCurrentGroup()
 
   if (mainThreadId && nodes[mainThreadId] && !visited.has(mainThreadId)) walk(mainThreadId)
 
@@ -149,7 +164,7 @@ export function flattenMapOrder(mapLayout) {
     .filter((id) => !visited.has(id))
     .sort((a, b) => nodes[a].y - nodes[b].y || nodes[a].x - nodes[b].x)
 
-  if (stray.length && connectedCount > 0) dividers.push({ index: connectedCount, label: null })
+  if (stray.length && connectedCount > 0) dividers.push({ index: connectedCount, label: null, kind: 'divider' })
 
   return { ordered: [...ordered, ...stray], dividers }
 }

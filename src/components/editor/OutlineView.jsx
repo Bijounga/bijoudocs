@@ -35,14 +35,23 @@ export default function OutlineView({ scriptId, script }) {
 
   const nodes = script.mapLayout.nodes
   const { ordered, dividers } = flattenMapOrder(script.mapLayout)
-  // Multiple dividers can land on the same index (e.g. two chapters in a
-  // row with nothing under the first one yet), so group by index rather
-  // than overwrite.
+  // Multiple dividers can land on the same index (e.g. a chapter ending
+  // right where the next one begins), so group by index rather than
+  // overwrite.
   const dividersByIndex = new Map()
   dividers.forEach((d) => {
     if (!dividersByIndex.has(d.index)) dividersByIndex.set(d.index, [])
-    dividersByIndex.get(d.index).push(d.label)
+    dividersByIndex.get(d.index).push(d)
   })
+  const dividerClass = { header: 'outline-chapter-header', subEnd: 'outline-sub-end', groupEnd: 'outline-group-end', divider: 'outline-divider' }
+  function renderDivider(d, key) {
+    const text = d.label || 'Not yet connected to anything else'
+    return (
+      <div key={key} className={dividerClass[d.kind] || 'outline-divider'}>
+        {d.kind === 'subEnd' ? <span>{text}</span> : text}
+      </div>
+    )
+  }
   const q = query.trim().toLowerCase()
   function matchesQuery(title, text) {
     if (!q) return true
@@ -100,11 +109,7 @@ export default function OutlineView({ scriptId, script }) {
             if (!matchesQuery(node.title, node.text)) return null
             return (
               <React.Fragment key={id}>
-                {dividersHere.map((label, di) => (
-                  <div key={di} className={label ? 'outline-chapter-header' : 'outline-divider'}>
-                    {label || 'Not yet connected to anything else'}
-                  </div>
-                ))}
+                {dividersHere.map((d, di) => renderDivider(d, di))}
                 <div className={'outline-item' + (script.resumeOutlineNodeId === id ? ' resume-point' : '')}>
                   <span className="outline-item-num">{i + 1}</span>
                   <div className="outline-item-body">
@@ -156,11 +161,7 @@ export default function OutlineView({ scriptId, script }) {
           if (!matchesQuery(sec.heading, sec.beatSummary)) return null
           return (
             <React.Fragment key={id}>
-              {dividersHere.map((label, di) => (
-                <div key={di} className={label ? 'outline-chapter-header' : 'outline-divider'}>
-                  {label || 'Not yet connected to anything else'}
-                </div>
-              ))}
+              {dividersHere.map((d, di) => renderDivider(d, di))}
               <div className={'outline-item' + (script.resumeOutlineNodeId === id ? ' resume-point' : '')}>
                 <span className="outline-item-num">{i + 1}</span>
                 <div className="outline-item-body">
@@ -211,11 +212,7 @@ export default function OutlineView({ scriptId, script }) {
             </React.Fragment>
           )
         })}
-        {(dividersByIndex.get(ordered.length) || []).map((label, di) => (
-          <div key={'trail-' + di} className={label ? 'outline-chapter-header' : 'outline-divider'}>
-            {label || 'Not yet connected to anything else'}
-          </div>
-        ))}
+        {(dividersByIndex.get(ordered.length) || []).map((d, di) => renderDivider(d, 'trail-' + di))}
       </div>
     </div>
   )

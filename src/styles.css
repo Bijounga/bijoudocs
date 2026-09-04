@@ -2599,6 +2599,44 @@ textarea {
   border-top: 2px solid var(--cyan);
   padding-top: 14px;
 }
+/* Marks the boundary between one numbered chapter instance and the next
+   within the same group (e.g. between "The Desert" #1's items and #2's) —
+   deliberately much quieter than the header/group-end, since it's just an
+   internal seam, not a real section change. */
+.outline-sub-end {
+  margin: 14px 0;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+  text-align: center;
+  position: relative;
+}
+.outline-sub-end::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  border-top: 1px dashed var(--line-soft);
+  z-index: 0;
+}
+.outline-sub-end span {
+  position: relative;
+  background: var(--bg);
+  padding: 0 8px;
+}
+.outline-group-end {
+  margin: 12px 0 22px;
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--cyan);
+  opacity: 0.7;
+  border-bottom: 2px solid var(--cyan);
+  padding-bottom: 12px;
+}
 .outline-item + .outline-chapter-header,
 .outline-item + .outline-divider {
   margin-top: 22px;

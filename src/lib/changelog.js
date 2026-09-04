@@ -71,6 +71,9 @@ export const CHANGELOG = {
   ],
   '0.5.31': [
     'New "resume point" marker — right-click a line in the script (or use the bookmark icon on an Outline item) to mark where you left off. The script one shows up in the Teleprompter too, jumping straight to it on open instead of always starting at the top'
+  ],
+  '0.5.32': [
+    'Chapter sections in the Outline now show a small marker between each numbered instance (#1, #2, #3…), and a closing marker once the whole chapter\'s content ends'
   ]
 }
 
