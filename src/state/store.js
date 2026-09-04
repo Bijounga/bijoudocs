@@ -2304,6 +2304,44 @@ export const useStore = create(
       })
       get().scheduleSave(scriptId, { flash: false })
     },
+    // Deletes a single node from the Outline tab. Unlike deleteMapSelection
+    // above (which just removes the node, leaving any thread through it
+    // broken), this bridges around the gap first — every node that had an
+    // edge INTO the deleted one gets connected directly to every node it
+    // had an edge OUT to, so a chain the node was part of stays one
+    // continuous thread instead of splitting in two. A node with only
+    // incoming or only outgoing edges (the start/end of a thread) has
+    // nothing to bridge, so it's just removed same as before.
+    deleteOutlineNode(scriptId, nodeId) {
+      get().pushUndo(scriptId)
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        if (!script) return
+        const edges = script.mapLayout.edges
+        const incoming = edges.filter((e) => e.to === nodeId).map((e) => e.from)
+        const outgoing = edges.filter((e) => e.from === nodeId).map((e) => e.to)
+        const isIdea = script.mapLayout.nodes[nodeId] && script.mapLayout.nodes[nodeId].type === 'idea'
+        if (isIdea) {
+          delete script.mapLayout.nodes[nodeId]
+        } else {
+          script.sections = script.sections.filter((se) => se.id !== nodeId)
+          if (script.sections.length === 0) script.sections.push(mkSection('New section', [mkLine('', null)]))
+          script.pinnedSectionIds = script.pinnedSectionIds.filter((id) => id !== nodeId)
+          delete script.mapLayout.nodes[nodeId]
+        }
+        script.mapLayout.edges = script.mapLayout.edges.filter((e) => e.from !== nodeId && e.to !== nodeId)
+        incoming.forEach((prevId) => {
+          outgoing.forEach((nextId) => {
+            if (prevId === nextId || !script.mapLayout.nodes[prevId] || !script.mapLayout.nodes[nextId]) return
+            const exists = script.mapLayout.edges.some((e) => e.from === prevId && e.to === nextId)
+            if (!exists) script.mapLayout.edges.push({ id: uid(), from: prevId, to: nextId })
+          })
+        })
+        if (script.mapLayout.mainThreadId === nodeId) script.mapLayout.mainThreadId = null
+        script.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+    },
     duplicateIdeaNode(scriptId, nodeId) {
       get().pushUndo(scriptId)
       let newId = null

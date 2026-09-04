@@ -53,6 +53,10 @@ export const CHANGELOG = {
   ],
   '0.5.27': [
     'The zoom controls now affect the Outline tab too, not just the script'
+  ],
+  '0.5.28': [
+    'Mind-map node cards now grow to fit a long title instead of truncating it',
+    'You can now delete a node right from the Outline tab — if it was connected to something before and after it, those two get auto-connected so the thread stays continuous'
   ]
 }
 

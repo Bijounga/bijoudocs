@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react'
 import { useStore } from '../../state/store.js'
 import { flattenMapOrder } from '../../lib/mapGraph.js'
+import { sectionsHaveContent } from '../../lib/model.js'
 import Icon from '../icons.jsx'
 
 function isIdeaNode(node) {
@@ -23,6 +24,7 @@ export default function OutlineView({ scriptId, script }) {
   const setActiveTab = useStore((s) => s.setActiveTab)
   const toggleOutlineView = useStore((s) => s.toggleOutlineView)
   const toggleMapView = useStore((s) => s.toggleMapView)
+  const deleteOutlineNode = useStore((s) => s.deleteOutlineNode)
 
   useEffect(() => {
     ensureMapNodes(scriptId)
@@ -36,6 +38,15 @@ export default function OutlineView({ scriptId, script }) {
     openSectionTab(scriptId, id)
     setActiveTab(scriptId, id)
     toggleOutlineView()
+  }
+
+  function deleteIdea(id) {
+    deleteOutlineNode(scriptId, id)
+  }
+
+  function deleteSectionNode(id, sec) {
+    if (sectionsHaveContent([sec]) && !window.confirm('Delete "' + sec.heading + '"? This removes its lines and checkpoints permanently.')) return
+    deleteOutlineNode(scriptId, id)
   }
 
   return (
@@ -71,6 +82,14 @@ export default function OutlineView({ scriptId, script }) {
                       />
                       <button className="icon-btn" style={{ padding: '4px 8px' }} onClick={toggleMapView} title="View on the map">
                         <Icon name="map" size={12} />
+                      </button>
+                      <button
+                        className="icon-btn"
+                        style={{ padding: '4px 8px' }}
+                        onClick={() => deleteIdea(id)}
+                        title="Delete this node"
+                      >
+                        <Icon name="trash" size={12} />
                       </button>
                     </div>
                     <textarea
@@ -110,6 +129,14 @@ export default function OutlineView({ scriptId, script }) {
                     </button>
                     <button className="icon-btn" style={{ padding: '4px 8px' }} onClick={toggleMapView} title="View on the map">
                       <Icon name="map" size={12} />
+                    </button>
+                    <button
+                      className="icon-btn"
+                      style={{ padding: '4px 8px' }}
+                      onClick={() => deleteSectionNode(id, sec)}
+                      title="Delete this section"
+                    >
+                      <Icon name="trash" size={12} />
                     </button>
                   </div>
                   <textarea

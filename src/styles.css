@@ -2229,9 +2229,7 @@ textarea {
   gap: 6px;
 }
 .map-node-heading {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: break-word;
 }
 .map-node-heading-input {
   flex: 1;
