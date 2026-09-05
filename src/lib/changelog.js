@@ -88,6 +88,9 @@ export const CHANGELOG = {
   '0.5.36': [
     'New synonym lookup — select a word (or just put your cursor in one) and find synonyms via a new line button, a keybind, or "Find synonyms" in the right-click menu. Click a result to swap it in',
     'Needs an internet connection — it looks words up online, nothing is bundled offline'
+  ],
+  '0.5.37': [
+    'Fixed "Find synonyms" in the right-click menu looking up the wrong word — it now correctly uses whatever you had selected, instead of sometimes falling back to the first word in the line'
   ]
 }
 

@@ -1,7 +1,6 @@
 import React, { useLayoutEffect, useRef, useState } from 'react'
 import { useStore } from '../state/store.js'
 import { findLine, sectionsHaveContent } from '../lib/model.js'
-import { captureWordSelection, saveSynonymSelection } from '../state/lineRefs.js'
 
 export default function ContextMenu() {
   const menu = useStore((s) => s.contextMenu)
@@ -115,16 +114,14 @@ export default function ContextMenu() {
       { separator: true },
       ...spellItems,
       { label: 'Tag…', onClick: act(() => openTagMenu(key)) },
-      {
-        label: 'Find synonyms',
-        onClick: act(() => {
-          const captured = captureWordSelection(key)
-          if (captured) {
-            saveSynonymSelection(key, captured.range)
-            openSynonymMenu(key, captured.word)
-          }
-        })
-      },
+      // The word (and its Range, for the later replace) were already
+      // captured back when this menu opened — LineRow.jsx's onContextMenu
+      // handler does it synchronously on the real right-click, since the
+      // selection can't be trusted to survive intact all the way to this
+      // click (confirmed: it doesn't, in real use).
+      menu.synonymWord
+        ? { label: 'Find synonyms', onClick: act(() => openSynonymMenu(key, menu.synonymWord)) }
+        : null,
       { label: line && line.noteOpen ? 'Close note' : 'Add note', onClick: act(() => toggleLineNote(menu.scriptId, menu.sectionId, menu.lineId)) },
       line && line.categoryId
         ? { label: line.done ? 'Mark not done' : 'Mark done', onClick: act(() => toggleLineDone(menu.scriptId, menu.sectionId, menu.lineId)) }

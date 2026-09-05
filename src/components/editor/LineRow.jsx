@@ -193,7 +193,26 @@ export default function LineRow({ scriptId, sectionId, line, index, siblingCount
       data-line-id={line.id}
       onContextMenu={(e) => {
         e.preventDefault()
-        openContextMenu({ type: 'line', scriptId, sectionId, lineId: line.id, x: e.clientX, y: e.clientY })
+        // Captured right here, synchronously, rather than lazily when
+        // "Find synonyms" is actually clicked — by then the selection can
+        // no longer be trusted. Confirmed this with a real user report:
+        // selecting a word and using the keybind (captured immediately on
+        // keydown) worked, but the same word via the right-click menu
+        // resolved to the first word in the line instead — the real
+        // right-click here evidently doesn't leave the line's selection
+        // intact all the way through to a later menu-item click the way a
+        // synthetic/manual test made it look like it would.
+        const captured = captureWordSelection(key)
+        if (captured) saveSynonymSelection(key, captured.range)
+        openContextMenu({
+          type: 'line',
+          scriptId,
+          sectionId,
+          lineId: line.id,
+          x: e.clientX,
+          y: e.clientY,
+          synonymWord: captured ? captured.word : null
+        })
       }}
       onDragOver={(e) => {
         dropIndicator.onDragOver(e, (ev) => ev.dataTransfer.types.includes('application/x-line') || ev.dataTransfer.types.includes('application/x-checkitem'))
