@@ -39,6 +39,8 @@ export default function App() {
   const closeContextMenu = useStore((s) => s.closeContextMenu)
   const takesMenuFor = useStore((s) => s.takesMenuFor)
   const closeTakesMenu = useStore((s) => s.closeTakesMenu)
+  const synonymMenuFor = useStore((s) => s.synonymMenuFor)
+  const closeSynonymMenu = useStore((s) => s.closeSynonymMenu)
   const setUpdateStatus = useStore((s) => s.setUpdateStatus)
   const setLastMisspelling = useStore((s) => s.setLastMisspelling)
 
@@ -97,6 +99,17 @@ export default function App() {
     document.addEventListener('mousedown', onDocClick)
     return () => document.removeEventListener('mousedown', onDocClick)
   }, [takesMenuFor, closeTakesMenu])
+
+  useEffect(() => {
+    if (!synonymMenuFor) return
+    function onDocClick(e) {
+      if (!e.target.closest('.synonym-menu') && !e.target.closest('.line-btn') && !e.target.closest('.context-menu')) {
+        closeSynonymMenu()
+      }
+    }
+    document.addEventListener('mousedown', onDocClick)
+    return () => document.removeEventListener('mousedown', onDocClick)
+  }, [synonymMenuFor, closeSynonymMenu])
 
   useEffect(() => {
     if (!sectionJumpOpen) return

@@ -28,7 +28,8 @@ export const DEFAULT_KEYBINDS = {
   mapSelectUpstream: 'ctrl+shift+,',
   mapSelectConnected: 'ctrl+shift+/',
   markResumePoint: 'ctrl+shift+p',
-  jumpToResumePoint: 'ctrl+shift+o'
+  jumpToResumePoint: 'ctrl+shift+o',
+  findSynonyms: 'ctrl+shift+w'
 }
 
 export const SHORTCUT_META = [
@@ -97,6 +98,11 @@ export const SHORTCUT_META = [
     id: 'jumpToResumePoint',
     label: 'Jump to resume point',
     desc: 'Scrolls straight to your resume point — the script\'s if you\'re in the script, the Outline\'s if you\'re in the Outline.'
+  },
+  {
+    id: 'findSynonyms',
+    label: 'Find synonyms',
+    desc: 'Looks up synonyms for the selected text, or the word your cursor is in — click one to swap it in.'
   }
 ]
 

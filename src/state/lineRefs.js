@@ -176,3 +176,59 @@ if (typeof document !== 'undefined') {
 export function wasOutlineLastFocused() {
   return lastFocusWasOutline
 }
+
+// Finds the word to look up synonyms for in a given line: whatever's
+// currently selected, or (nothing selected — just a caret) the word the
+// caret is sitting in, expanded via the Selection API's own word-boundary
+// logic rather than a hand-rolled regex. Also focuses the line first, so
+// this can be called straight from a keybind with no prior click there.
+export function captureWordSelection(key) {
+  const el = getLineEl(key)
+  if (!el) return null
+  el.focus()
+  const sel = window.getSelection()
+  if ((!sel.rangeCount || sel.getRangeAt(0).collapsed) && typeof sel.modify === 'function') {
+    sel.modify('move', 'backward', 'word')
+    sel.modify('extend', 'forward', 'word')
+    // Chromium's forward-word extend lands at the START of the next word,
+    // not the end of this one — it swallows the space between them into
+    // the selection. Left alone, replacing "happy" would eat the space
+    // and leave "joyfulsentence." Shrink back past any trailing
+    // whitespace (only in this auto-expanded case — a selection the user
+    // made themselves is left exactly as they made it).
+    let guard = 0
+    while (sel.rangeCount && /\s$/.test(sel.getRangeAt(0).toString()) && guard < 5) {
+      sel.modify('extend', 'backward', 'character')
+      guard++
+    }
+  }
+  if (!sel.rangeCount || sel.getRangeAt(0).collapsed) return null
+  const range = sel.getRangeAt(0)
+  const word = range.toString().trim()
+  if (!word) return null
+  return { word, range: range.cloneRange() }
+}
+
+// Holds the live Range a synonym lookup was triggered from, so clicking a
+// result in the popup (which happens well after the triggering keydown or
+// right-click) can restore exactly that selection before replacing it —
+// document.execCommand('insertText', ...) only ever acts on the CURRENT
+// selection, which would otherwise have moved on by click time. Plain
+// module state, not the Zustand store, matching getLineEl/setLineRef
+// above — a live DOM Range isn't serializable app state.
+let savedSynonymRange = null
+let savedSynonymLineKey = null
+export function saveSynonymSelection(key, range) {
+  savedSynonymLineKey = key
+  savedSynonymRange = range
+}
+// One-shot: returns the saved range for this exact line (null if it was
+// for a different line, or nothing's saved) and clears it either way, so
+// a stale range can never get reused for a later, unrelated pick.
+export function consumeSynonymSelection(key) {
+  if (savedSynonymLineKey !== key) return null
+  const r = savedSynonymRange
+  savedSynonymRange = null
+  savedSynonymLineKey = null
+  return r
+}

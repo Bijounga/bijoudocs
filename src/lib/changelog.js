@@ -84,6 +84,10 @@ export const CHANGELOG = {
   ],
   '0.5.35': [
     'Fixed the Resume button/keybind in split view (script + Outline side by side) — it now jumps to whichever side you were actually working in, instead of always assuming the Outline'
+  ],
+  '0.5.36': [
+    'New synonym lookup — select a word (or just put your cursor in one) and find synonyms via a new line button, a keybind, or "Find synonyms" in the right-click menu. Click a result to swap it in',
+    'Needs an internet connection — it looks words up online, nothing is bundled offline'
   ]
 }
 

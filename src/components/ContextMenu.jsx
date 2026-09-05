@@ -1,6 +1,7 @@
 import React, { useLayoutEffect, useRef, useState } from 'react'
 import { useStore } from '../state/store.js'
 import { findLine, sectionsHaveContent } from '../lib/model.js'
+import { captureWordSelection, saveSynonymSelection } from '../state/lineRefs.js'
 
 export default function ContextMenu() {
   const menu = useStore((s) => s.contextMenu)
@@ -37,6 +38,7 @@ export default function ContextMenu() {
   const addWordToDictionary = useStore((s) => s.addWordToDictionary)
   const selectConnectedNodes = useStore((s) => s.selectConnectedNodes)
   const requestMapSelection = useStore((s) => s.requestMapSelection)
+  const openSynonymMenu = useStore((s) => s.openSynonymMenu)
 
   const ref = useRef(null)
   const [pos, setPos] = useState(null)
@@ -113,6 +115,16 @@ export default function ContextMenu() {
       { separator: true },
       ...spellItems,
       { label: 'Tag…', onClick: act(() => openTagMenu(key)) },
+      {
+        label: 'Find synonyms',
+        onClick: act(() => {
+          const captured = captureWordSelection(key)
+          if (captured) {
+            saveSynonymSelection(key, captured.range)
+            openSynonymMenu(key, captured.word)
+          }
+        })
+      },
       { label: line && line.noteOpen ? 'Close note' : 'Add note', onClick: act(() => toggleLineNote(menu.scriptId, menu.sectionId, menu.lineId)) },
       line && line.categoryId
         ? { label: line.done ? 'Mark not done' : 'Mark done', onClick: act(() => toggleLineDone(menu.scriptId, menu.sectionId, menu.lineId)) }

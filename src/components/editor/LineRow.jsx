@@ -7,7 +7,16 @@ import LineText from './LineText.jsx'
 import TagMenu from './TagMenu.jsx'
 import NoteBox from './NoteBox.jsx'
 import TakesMenu from './TakesMenu.jsx'
-import { blankLineBreakBeforeCaret, caretAtStart, focusLineAtOffset, focusLineEnd, splitHtmlAtCaret } from '../../state/lineRefs.js'
+import SynonymMenu from './SynonymMenu.jsx'
+import {
+  blankLineBreakBeforeCaret,
+  captureWordSelection,
+  caretAtStart,
+  focusLineAtOffset,
+  focusLineEnd,
+  saveSynonymSelection,
+  splitHtmlAtCaret
+} from '../../state/lineRefs.js'
 import { handleHorizontalNav, handleVerticalNav } from '../../lib/navigation.js'
 import { beginLineDragSelect } from '../../state/dragSelect.js'
 import { useDropIndicator } from '../../hooks/useDropIndicator.js'
@@ -44,12 +53,23 @@ export default function LineRow({ scriptId, sectionId, line, index, siblingCount
   })
   const takesMenuFor = useStore((s) => s.takesMenuFor)
   const openTakesMenu = useStore((s) => s.openTakesMenu)
+  const synonymMenuFor = useStore((s) => s.synonymMenuFor)
+  const openSynonymMenu = useStore((s) => s.openSynonymMenu)
+  const keybinds = useStore((s) => s.keybinds)
 
   const key = sectionId + ':' + line.id
   const cat = line.categoryId ? catInfo({ categories }, line.categoryId) : null
   const showCheck = !!cat
   const menuOpen = openTagMenuFor === key
   const takesOpen = takesMenuFor === key
+  const synonymOpen = synonymMenuFor === key
+
+  function handleFindSynonyms() {
+    const captured = captureWordSelection(key)
+    if (!captured) return
+    saveSynonymSelection(key, captured.range)
+    openSynonymMenu(key, captured.word)
+  }
   const flash = jumpHighlightLineKey === key
   const selected = selectedLines && selectedLines.includes(key)
 
@@ -255,6 +275,9 @@ export default function LineRow({ scriptId, sectionId, line, index, siblingCount
           <button className="line-btn" onClick={() => openTagMenu(key)} title="Tag">
             <Icon name="tag" />
           </button>
+          <button className="line-btn" onClick={handleFindSynonyms} title={'Find synonyms (' + keybinds.findSynonyms + ')'}>
+            <Icon name="search" />
+          </button>
           <button
             className={'line-btn note-trigger' + (line.note ? ' has-note' : '')}
             onClick={() => toggleLineNote(scriptId, sectionId, line.id)}
@@ -274,6 +297,7 @@ export default function LineRow({ scriptId, sectionId, line, index, siblingCount
       </div>
       {menuOpen && <TagMenu scriptId={scriptId} sectionId={sectionId} line={line} categories={categories} />}
       {takesOpen && <TakesMenu scriptId={scriptId} sectionId={sectionId} line={line} />}
+      {synonymOpen && <SynonymMenu scriptId={scriptId} sectionId={sectionId} lineId={line.id} />}
       {line.note && !line.noteOpen && (
         <div
           className="note-preview"

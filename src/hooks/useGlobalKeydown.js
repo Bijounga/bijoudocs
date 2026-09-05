@@ -1,7 +1,14 @@
 import { useEffect } from 'react'
 import { useStore } from '../state/store.js'
 import { comboFromEvent, COLOR_PALETTE } from '../lib/keybinds.js'
-import { focusLineEnd, getLineEl, placeCaretEnd, wasOutlineLastFocused } from '../state/lineRefs.js'
+import {
+  captureWordSelection,
+  focusLineEnd,
+  getLineEl,
+  placeCaretEnd,
+  saveSynonymSelection,
+  wasOutlineLastFocused
+} from '../state/lineRefs.js'
 
 let colorCycleIndex = 0
 
@@ -448,6 +455,15 @@ export function useGlobalKeydown() {
       if (combo === st.keybinds.bookmark) {
         e.preventDefault()
         st.toggleLineBookmark(script.id, secId, lineId)
+        return
+      }
+      if (combo === st.keybinds.findSynonyms) {
+        e.preventDefault()
+        const captured = captureWordSelection(activeLineKey)
+        if (captured) {
+          saveSynonymSelection(activeLineKey, captured.range)
+          st.openSynonymMenu(activeLineKey, captured.word)
+        }
         return
       }
     }

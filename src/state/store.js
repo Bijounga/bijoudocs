@@ -9,6 +9,7 @@ import { DEFAULT_KEYBINDS } from '../lib/keybinds.js'
 import { buildNavList } from '../lib/navigation.js'
 import { totalWordCountAll } from '../lib/timecode.js'
 import { CHANGELOG, changelogSince } from '../lib/changelog.js'
+import { fetchSynonyms } from '../lib/synonyms.js'
 
 const MAX_UNDO = 60
 const saveTimers = {}
@@ -56,6 +57,11 @@ export const useStore = create(
     filterCategory: null,
     librarySearch: '',
     openTagMenuFor: null,
+    synonymMenuFor: null,
+    synonymMenuWord: '',
+    synonymMenuResults: [],
+    synonymMenuLoading: false,
+    synonymMenuError: null,
     tagMenuHighlight: 0,
     catAddDraft: false,
     savedFlash: false,
@@ -1122,6 +1128,44 @@ export const useStore = create(
     closeTagMenu() {
       set((s) => {
         s.openTagMenuFor = null
+      })
+    },
+
+    // ---------- synonym lookup ----------
+    // `word` is already known at call time (captured from the live
+    // selection right when the lookup was triggered — see
+    // captureWordSelection in lineRefs.js) — this just handles showing
+    // the popup and fetching. The `key` guard on both resolve branches
+    // stops a slow/late-arriving fetch from clobbering the menu if the
+    // user closed it and opened a different one before it came back.
+    openSynonymMenu(key, word) {
+      set((s) => {
+        s.synonymMenuFor = key
+        s.synonymMenuWord = word
+        s.synonymMenuResults = []
+        s.synonymMenuLoading = true
+        s.synonymMenuError = null
+      })
+      fetchSynonyms(word).then(
+        (results) => {
+          set((s) => {
+            if (s.synonymMenuFor !== key) return
+            s.synonymMenuResults = results
+            s.synonymMenuLoading = false
+          })
+        },
+        () => {
+          set((s) => {
+            if (s.synonymMenuFor !== key) return
+            s.synonymMenuError = "Couldn't look that up — check your connection."
+            s.synonymMenuLoading = false
+          })
+        }
+      )
+    },
+    closeSynonymMenu() {
+      set((s) => {
+        s.synonymMenuFor = null
       })
     },
     setTagMenuHighlight(i) {
