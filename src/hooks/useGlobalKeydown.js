@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useStore } from '../state/store.js'
 import { comboFromEvent, COLOR_PALETTE } from '../lib/keybinds.js'
-import { focusLineEnd, getLineEl, placeCaretEnd } from '../state/lineRefs.js'
+import { focusLineEnd, getLineEl, placeCaretEnd, wasOutlineLastFocused } from '../state/lineRefs.js'
 
 let colorCycleIndex = 0
 
@@ -329,7 +329,11 @@ export function useGlobalKeydown() {
       }
       if (combo === st.keybinds.jumpToResumePoint) {
         e.preventDefault()
-        if (st.outlineViewOpen) {
+        // Split mode (script + Outline side by side) leaves outlineViewOpen
+        // true regardless of which side the user's actually working in —
+        // disambiguate by whichever pane was last really focused.
+        const isOutline = st.outlineViewOpen && (!st.outlineSplitOpen || wasOutlineLastFocused() !== false)
+        if (isOutline) {
           st.jumpToResumeOutlineNode(script.id)
         } else {
           if (st.mapViewOpen) st.toggleMapView()

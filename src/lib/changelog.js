@@ -81,6 +81,9 @@ export const CHANGELOG = {
   '0.5.34': [
     'New "Resume" button in the toolbar, plus a keybind, that jumps straight to your resume point — the script\'s if you\'re in the script, the Outline\'s if you\'re in the Outline',
     'New keybind to mark a resume point too, so you don\'t need the right-click menu or the bookmark icon — works on the line your cursor is in, or whichever Outline item you\'re editing'
+  ],
+  '0.5.35': [
+    'Fixed the Resume button/keybind in split view (script + Outline side by side) — it now jumps to whichever side you were actually working in, instead of always assuming the Outline'
   ]
 }
 

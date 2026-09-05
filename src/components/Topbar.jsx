@@ -6,6 +6,7 @@ import SaveStatus from './SaveStatus.jsx'
 import SectionJumpMenu from './SectionJumpMenu.jsx'
 import LineSearchMenu from './LineSearchMenu.jsx'
 import { formatTC, scriptTotalStats, dueDateInfo, totalWordCountAll } from '../lib/timecode.js'
+import { wasOutlineLastFocused } from '../state/lineRefs.js'
 
 export default function Topbar({ script }) {
   const setScriptTitle = useStore((s) => s.setScriptTitle)
@@ -65,6 +66,16 @@ export default function Topbar({ script }) {
 
   const canUndo = undoScriptId === script.id && undoStack.length > 0
   const canRedo = undoScriptId === script.id && redoStack.length > 0
+  // In split mode, outlineViewOpen alone can't tell which side the resume
+  // action should target — disambiguate by whichever pane was last really
+  // focused (see wasOutlineLastFocused's own comment for why this can't
+  // just be a live activeElement check at click time).
+  function resumeJumpIsOutline() {
+    if (!outlineViewOpen) return false
+    if (!outlineSplitOpen) return true
+    const last = wasOutlineLastFocused()
+    return last === null ? true : last
+  }
   const { totalSeconds, totalWords } = scriptTotalStats(script)
 
   const due = dueDateInfo(script.dueDate)
@@ -203,8 +214,8 @@ export default function Topbar({ script }) {
       )}
       <button
         className="icon-btn"
-        disabled={outlineViewOpen ? !script.resumeOutlineNodeId : !script.resumeLineKey}
-        onClick={() => (outlineViewOpen ? jumpToResumeOutlineNode(script.id) : jumpToResumeLine(script.id))}
+        disabled={resumeJumpIsOutline() ? !script.resumeOutlineNodeId : !script.resumeLineKey}
+        onClick={() => (resumeJumpIsOutline() ? jumpToResumeOutlineNode(script.id) : jumpToResumeLine(script.id))}
         title={
           'Jump to your resume point (' +
           keybinds.jumpToResumePoint +

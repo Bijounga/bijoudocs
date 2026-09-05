@@ -151,3 +151,28 @@ export function focusLineAtOffset(key, offset) {
     }
   }, 0)
 }
+
+// Tracks which side of a script+Outline split view was last actually
+// worked in, for disambiguating "jump/mark resume point" there —
+// outlineViewOpen alone stays true the whole time split mode is on,
+// regardless of which side the user's actually clicked into. A plain
+// live `document.activeElement` check at click/keydown time doesn't
+// work for the Topbar button specifically: clicking a <button> shifts
+// focus to the button itself as part of the click's own default action,
+// so by the time an onClick handler runs, activeElement is already the
+// button, not whatever pane the user was just in. This listens for real
+// focus entering either pane and remembers it, ignoring focus landing
+// anywhere else (toolbar, sidebar, inspector, modals) — including the
+// Resume button's own focus-on-click, so that doesn't overwrite it.
+let lastFocusWasOutline = null
+if (typeof document !== 'undefined') {
+  document.addEventListener('focusin', (e) => {
+    const t = e.target
+    if (!t || !t.closest) return
+    if (t.closest('.outline-main')) lastFocusWasOutline = true
+    else if (t.closest('.editor-wrap')) lastFocusWasOutline = false
+  })
+}
+export function wasOutlineLastFocused() {
+  return lastFocusWasOutline
+}
