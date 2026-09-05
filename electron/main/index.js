@@ -77,21 +77,6 @@ function createWindow() {
     return { action: 'deny' }
   })
 
-  // A separate native menu popped from here (an earlier approach) never
-  // reliably appeared for the user despite the underlying event firing
-  // correctly — instead of a second, competing menu, spelling suggestions
-  // are folded directly into the app's own right-click menu (see
-  // ContextMenu.jsx). This just forwards what Electron reports for every
-  // right-click — misspelledWord empty/undefined when the word under the
-  // cursor is fine, so the renderer always reflects the *current* click,
-  // never a stale suggestion left over from a previous one.
-  win.webContents.on('context-menu', (_e, params) => {
-    win.webContents.send('spellcheck:info', {
-      misspelledWord: params.misspelledWord || null,
-      suggestions: params.dictionarySuggestions || []
-    })
-  })
-
   if (isDev && process.env['ELECTRON_RENDERER_URL']) {
     win.loadURL(process.env['ELECTRON_RENDERER_URL'])
   } else {
@@ -118,15 +103,14 @@ function registerIpc() {
   ipcMain.handle('scripts:saveHistory', (_e, id) => fileStore.listSaveHistory(id))
   ipcMain.handle('scripts:restoreFromHistory', (_e, id, file) => fileStore.restoreFromHistory(id, file))
 
-  // Both act on whatever's still selected/focused from the right-click
-  // that produced the suggestion — the same mechanism a native spellcheck
-  // menu's own suggestion items would call. Registered once here (not
-  // inside createWindow, which can run again on macOS dock-reactivate) and
-  // resolved against whichever window is actually focused at click time.
-  ipcMain.handle('spellcheck:replace', (_e, word) => {
-    const win = BrowserWindow.getFocusedWindow()
-    if (win) win.webContents.replaceMisspelling(word)
-  })
+  // Tells Chromium's real spellchecker to stop flagging this word (the
+  // inline red-squiggly detection, which works fine on its own) — the word
+  // itself comes from our own captured selection now, not from the native
+  // context-menu event's data (see feedback memory: that event never
+  // reliably delivered anything in real use, across several attempts).
+  // Registered once here (not inside createWindow, which can run again on
+  // macOS dock-reactivate) and resolved against whichever window is
+  // actually focused at click time.
   ipcMain.handle('spellcheck:addToDictionary', (_e, word) => {
     const win = BrowserWindow.getFocusedWindow()
     if (win) win.webContents.session.addWordToSpellCheckerDictionary(word)

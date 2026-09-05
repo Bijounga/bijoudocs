@@ -42,7 +42,6 @@ export default function App() {
   const synonymMenuFor = useStore((s) => s.synonymMenuFor)
   const closeSynonymMenu = useStore((s) => s.closeSynonymMenu)
   const setUpdateStatus = useStore((s) => s.setUpdateStatus)
-  const setLastMisspelling = useStore((s) => s.setLastMisspelling)
 
   useGlobalKeydown()
 
@@ -53,10 +52,6 @@ export default function App() {
   useEffect(() => {
     if (window.bijou.onUpdateStatus) window.bijou.onUpdateStatus(setUpdateStatus)
   }, [setUpdateStatus])
-
-  useEffect(() => {
-    if (window.bijou.onSpellcheckInfo) window.bijou.onSpellcheckInfo(setLastMisspelling)
-  }, [setLastMisspelling])
 
   useEffect(() => {
     document.documentElement.style.setProperty('--note-color', noteColor)

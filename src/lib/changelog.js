@@ -91,6 +91,10 @@ export const CHANGELOG = {
   ],
   '0.5.37': [
     'Fixed "Find synonyms" in the right-click menu looking up the wrong word — it now correctly uses whatever you had selected, instead of sometimes falling back to the first word in the line'
+  ],
+  '0.5.38': [
+    'Fixed spelling suggestions never showing up on right-click — they were relying on an Electron mechanism that turned out to never reliably deliver them. Now looked up the same way as synonyms, over the internet, so this actually works',
+    'Also needs an internet connection now, same as synonym lookup — the red squiggly underlines themselves are unaffected and still work offline'
   ]
 }
 

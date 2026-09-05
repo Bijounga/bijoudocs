@@ -10,6 +10,7 @@ import { buildNavList } from '../lib/navigation.js'
 import { totalWordCountAll } from '../lib/timecode.js'
 import { CHANGELOG, changelogSince } from '../lib/changelog.js'
 import { fetchSynonyms } from '../lib/synonyms.js'
+import { checkSpelling } from '../lib/spellcheck.js'
 
 const MAX_UNDO = 60
 const saveTimers = {}
@@ -97,8 +98,18 @@ export const useStore = create(
     rebindingActionKey: null,
 
     contextMenu: null,
-    lastMisspelling: null,
-    lastSpellcheckRaw: null,
+    // Spellcheck-via-internet state (see checkSpelling in lib/spellcheck.js)
+    // — Electron's native context-menu event never reliably delivered
+    // misspelledWord/dictionarySuggestions in real use across several
+    // attempts, so this is checked ourselves via a real API instead, keyed
+    // the same way synonymMenuFor is (a "for" key guards against a slow/
+    // late response clobbering a since-closed or since-reopened check).
+    spellCheckFor: null,
+    spellCheckWord: '',
+    spellCheckLoading: false,
+    spellCheckMisspelled: false,
+    spellCheckSuggestions: [],
+    spellCheckError: null,
     // One-shot bridge from ContextMenu.jsx (a globally-mounted singleton
     // with no direct access to MapView's own local selectedNodeIds state)
     // into MapView — set by requestMapSelection, consumed and cleared by
@@ -228,30 +239,49 @@ export const useStore = create(
     revealScriptInFolder(id) {
       window.bijou.revealInFolder(id)
     },
-    // Suggestions/misspelledWord for the word under the cursor at the last
-    // real right-click — Electron reports this per-click regardless of
-    // whether it's actually misspelled (null/empty when it's fine), so
-    // this always reflects the *current* click, never a stale one.
-    setLastMisspelling(info) {
+    // Checked ourselves via a real spellcheck API (lib/spellcheck.js) —
+    // the word itself is already known at call time, captured from the
+    // real right-click the same way synonym lookups are (see
+    // captureWordSelection in lineRefs.js). The `key` guard on the
+    // resolve stops a slow/late-arriving check from clobbering the menu
+    // if the user closed it and right-clicked somewhere else before it
+    // came back.
+    runSpellCheck(key, word) {
       set((s) => {
-        // Kept separately from lastMisspelling (which only ever holds a
-        // real misspelling, and is temporary diagnostic to confirm the
-        // spellcheck:info IPC event is actually arriving at all — see
-        // ContextMenu.jsx's debugItem.
-        s.lastSpellcheckRaw = info || null
-        s.lastMisspelling = info && info.misspelledWord ? info : null
+        s.spellCheckFor = key
+        s.spellCheckWord = word
+        s.spellCheckLoading = true
+        s.spellCheckMisspelled = false
+        s.spellCheckSuggestions = []
+        s.spellCheckError = null
       })
+      checkSpelling(word).then(
+        (result) => {
+          set((s) => {
+            if (s.spellCheckFor !== key) return
+            s.spellCheckMisspelled = result.misspelled
+            s.spellCheckSuggestions = result.suggestions
+            s.spellCheckLoading = false
+          })
+        },
+        () => {
+          set((s) => {
+            if (s.spellCheckFor !== key) return
+            s.spellCheckError = "Couldn't check spelling — check your connection."
+            s.spellCheckLoading = false
+          })
+        }
+      )
     },
-    replaceMisspelling(word) {
-      window.bijou.replaceMisspelling(word)
+    closeSpellCheck() {
       set((s) => {
-        s.lastMisspelling = null
+        s.spellCheckFor = null
       })
     },
     addWordToDictionary(word) {
       window.bijou.addWordToDictionary(word)
       set((s) => {
-        s.lastMisspelling = null
+        s.spellCheckFor = null
       })
     },
     setUpdateStatus(payload) {

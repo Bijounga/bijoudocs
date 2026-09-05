@@ -19,8 +19,6 @@ const api = {
   chooseStorageDir: () => ipcRenderer.invoke('settings:chooseStorageDir'),
   resetStorageDir: () => ipcRenderer.invoke('settings:resetStorageDir'),
   onUpdateStatus: (cb) => ipcRenderer.on('update:status', (_e, payload) => cb(payload)),
-  onSpellcheckInfo: (cb) => ipcRenderer.on('spellcheck:info', (_e, payload) => cb(payload)),
-  replaceMisspelling: (word) => ipcRenderer.invoke('spellcheck:replace', word),
   addWordToDictionary: (word) => ipcRenderer.invoke('spellcheck:addToDictionary', word),
   installUpdateNow: () => ipcRenderer.invoke('update:installNow'),
   checkForUpdatesNow: () => ipcRenderer.invoke('update:checkNow'),

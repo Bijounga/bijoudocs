@@ -14,7 +14,7 @@ import {
   caretAtStart,
   focusLineAtOffset,
   focusLineEnd,
-  saveSynonymSelection,
+  saveWordReplaceSelection,
   splitHtmlAtCaret
 } from '../../state/lineRefs.js'
 import { handleHorizontalNav, handleVerticalNav } from '../../lib/navigation.js'
@@ -55,6 +55,7 @@ export default function LineRow({ scriptId, sectionId, line, index, siblingCount
   const openTakesMenu = useStore((s) => s.openTakesMenu)
   const synonymMenuFor = useStore((s) => s.synonymMenuFor)
   const openSynonymMenu = useStore((s) => s.openSynonymMenu)
+  const runSpellCheck = useStore((s) => s.runSpellCheck)
   const keybinds = useStore((s) => s.keybinds)
 
   const key = sectionId + ':' + line.id
@@ -67,7 +68,7 @@ export default function LineRow({ scriptId, sectionId, line, index, siblingCount
   function handleFindSynonyms() {
     const captured = captureWordSelection(key)
     if (!captured) return
-    saveSynonymSelection(key, captured.range)
+    saveWordReplaceSelection(key, captured.range)
     openSynonymMenu(key, captured.word)
   }
   const flash = jumpHighlightLineKey === key
@@ -203,7 +204,12 @@ export default function LineRow({ scriptId, sectionId, line, index, siblingCount
         // intact all the way through to a later menu-item click the way a
         // synthetic/manual test made it look like it would.
         const captured = captureWordSelection(key)
-        if (captured) saveSynonymSelection(key, captured.range)
+        if (captured) {
+          saveWordReplaceSelection(key, captured.range)
+          // Same reasoning as the synonym capture just above — checked
+          // right here, on the real right-click, not lazily later.
+          runSpellCheck(key, captured.word)
+        }
         openContextMenu({
           type: 'line',
           scriptId,

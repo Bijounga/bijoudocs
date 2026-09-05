@@ -1,6 +1,6 @@
 import React from 'react'
 import { useStore } from '../../state/store.js'
-import { consumeSynonymSelection, getLineEl } from '../../state/lineRefs.js'
+import { replaceCapturedSelection } from '../../state/lineRefs.js'
 
 // Anchored the same way TagMenu is — a plain absolutely-positioned popup
 // inside the line's own `.line` (position: relative) container, opened by
@@ -22,16 +22,8 @@ export default function SynonymMenu({ scriptId, sectionId, lineId }) {
 
   function pick(synonym) {
     pushUndo(scriptId)
-    const range = consumeSynonymSelection(key)
-    const el = getLineEl(key)
     closeSynonymMenu()
-    if (!el || !range) return
-    el.focus()
-    const sel = window.getSelection()
-    sel.removeAllRanges()
-    sel.addRange(range)
-    document.execCommand('insertText', false, synonym)
-    commitLineText(scriptId, sectionId, lineId, el.innerHTML)
+    replaceCapturedSelection(key, synonym, commitLineText, scriptId, sectionId, lineId)
   }
 
   return (

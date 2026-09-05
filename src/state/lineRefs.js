@@ -209,26 +209,46 @@ export function captureWordSelection(key) {
   return { word, range: range.cloneRange() }
 }
 
-// Holds the live Range a synonym lookup was triggered from, so clicking a
-// result in the popup (which happens well after the triggering keydown or
-// right-click) can restore exactly that selection before replacing it —
-// document.execCommand('insertText', ...) only ever acts on the CURRENT
-// selection, which would otherwise have moved on by click time. Plain
-// module state, not the Zustand store, matching getLineEl/setLineRef
-// above — a live DOM Range isn't serializable app state.
-let savedSynonymRange = null
-let savedSynonymLineKey = null
-export function saveSynonymSelection(key, range) {
-  savedSynonymLineKey = key
-  savedSynonymRange = range
+// Holds the live Range a word-replace action (synonym lookup, spellcheck)
+// was triggered from, so clicking a result later (well after the
+// triggering keydown or right-click) can restore exactly that selection
+// before replacing it — document.execCommand('insertText', ...) only
+// ever acts on the CURRENT selection, which would otherwise have moved on
+// by click time. Plain module state, not the Zustand store, matching
+// getLineEl/setLineRef above — a live DOM Range isn't serializable app
+// state. Shared by both features since only one such popup is ever open
+// on a given line at a time anyway.
+let savedReplaceRange = null
+let savedReplaceLineKey = null
+export function saveWordReplaceSelection(key, range) {
+  savedReplaceLineKey = key
+  savedReplaceRange = range
 }
 // One-shot: returns the saved range for this exact line (null if it was
 // for a different line, or nothing's saved) and clears it either way, so
 // a stale range can never get reused for a later, unrelated pick.
-export function consumeSynonymSelection(key) {
-  if (savedSynonymLineKey !== key) return null
-  const r = savedSynonymRange
-  savedSynonymRange = null
-  savedSynonymLineKey = null
+export function consumeWordReplaceSelection(key) {
+  if (savedReplaceLineKey !== key) return null
+  const r = savedReplaceRange
+  savedReplaceRange = null
+  savedReplaceLineKey = null
   return r
+}
+
+// Restores the saved range and swaps its text for `newText`, then commits
+// the line — the actual "replace" step for both synonym picks and
+// spellcheck corrections. Returns false (no-op) if there's nothing valid
+// to restore, e.g. the popup was left open long enough that its saved
+// range no longer applies.
+export function replaceCapturedSelection(key, newText, commitLineText, scriptId, sectionId, lineId) {
+  const range = consumeWordReplaceSelection(key)
+  const el = getLineEl(key)
+  if (!el || !range) return false
+  el.focus()
+  const sel = window.getSelection()
+  sel.removeAllRanges()
+  sel.addRange(range)
+  document.execCommand('insertText', false, newText)
+  commitLineText(scriptId, sectionId, lineId, el.innerHTML)
+  return true
 }

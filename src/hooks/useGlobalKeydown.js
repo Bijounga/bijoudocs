@@ -6,7 +6,7 @@ import {
   focusLineEnd,
   getLineEl,
   placeCaretEnd,
-  saveSynonymSelection,
+  saveWordReplaceSelection,
   wasOutlineLastFocused
 } from '../state/lineRefs.js'
 
@@ -461,7 +461,7 @@ export function useGlobalKeydown() {
         e.preventDefault()
         const captured = captureWordSelection(activeLineKey)
         if (captured) {
-          saveSynonymSelection(activeLineKey, captured.range)
+          saveWordReplaceSelection(activeLineKey, captured.range)
           st.openSynonymMenu(activeLineKey, captured.word)
         }
         return

@@ -1,12 +1,19 @@
 import React, { useLayoutEffect, useRef, useState } from 'react'
 import { useStore } from '../state/store.js'
 import { findLine, sectionsHaveContent } from '../lib/model.js'
+import { replaceCapturedSelection } from '../state/lineRefs.js'
 
 export default function ContextMenu() {
   const menu = useStore((s) => s.contextMenu)
   const closeContextMenu = useStore((s) => s.closeContextMenu)
-  const lastMisspelling = useStore((s) => s.lastMisspelling)
-  const lastSpellcheckRaw = useStore((s) => s.lastSpellcheckRaw)
+  const spellCheckFor = useStore((s) => s.spellCheckFor)
+  const spellCheckWord = useStore((s) => s.spellCheckWord)
+  const spellCheckLoading = useStore((s) => s.spellCheckLoading)
+  const spellCheckMisspelled = useStore((s) => s.spellCheckMisspelled)
+  const spellCheckSuggestions = useStore((s) => s.spellCheckSuggestions)
+  const spellCheckError = useStore((s) => s.spellCheckError)
+  const commitLineText = useStore((s) => s.commitLineText)
+  const pushUndo = useStore((s) => s.pushUndo)
   const deleteLine = useStore((s) => s.deleteLine)
   const duplicateLine = useStore((s) => s.duplicateLine)
   const openTagMenu = useStore((s) => s.openTagMenu)
@@ -33,7 +40,6 @@ export default function ContextMenu() {
   const deleteScript = useStore((s) => s.deleteScript)
   const revealScriptInFolder = useStore((s) => s.revealScriptInFolder)
   const chooseStorageDir = useStore((s) => s.chooseStorageDir)
-  const replaceMisspelling = useStore((s) => s.replaceMisspelling)
   const addWordToDictionary = useStore((s) => s.addWordToDictionary)
   const selectConnectedNodes = useStore((s) => s.selectConnectedNodes)
   const requestMapSelection = useStore((s) => s.requestMapSelection)
@@ -86,32 +92,38 @@ export default function ContextMenu() {
     const key = menu.sectionId + ':' + menu.lineId
     const found = findLine(script, key)
     const line = found && found.line
-    // Folded directly into this menu rather than a separate native one —
-    // see electron/main/index.js's context-menu handler for why. Only
-    // meaningful the instant this menu opens on an actually-misspelled
-    // word; lastMisspelling is cleared/refreshed on every real right-click,
-    // so it can't show suggestions left over from a previous one.
-    const spellItems = lastMisspelling
-      ? [
-          ...(lastMisspelling.suggestions.length
-            ? lastMisspelling.suggestions.map((s) => ({ label: s, suggestion: true, onClick: act(() => replaceMisspelling(s)) }))
-            : [{ label: 'No suggestions', disabled: true, onClick: () => {} }]),
-          { label: 'Add "' + lastMisspelling.misspelledWord + '" to dictionary', onClick: act(() => addWordToDictionary(lastMisspelling.misspelledWord)) },
-          { separator: true }
-        ]
-      : []
-    // Temporary — suggestions aren't showing up in real use despite this
-    // all checking out in isolation, so surface the raw IPC state right in
-    // the menu (unconditionally, not just when a suggestion would show)
-    // instead of guessing blind. Remove once that's sorted out.
-    const debugItem = {
-      label: 'spellcheck debug: ' + (lastSpellcheckRaw ? JSON.stringify(lastSpellcheckRaw) : 'no event received yet'),
-      disabled: true,
-      onClick: () => {}
-    }
+    // Checked via LanguageTool's free API instead of Electron's native
+    // context-menu event, which never reliably delivered a misspelled
+    // word/suggestions in real use — see src/lib/spellcheck.js. The word
+    // (and its Range, for the later replace) was already captured back
+    // when this menu opened, in LineRow.jsx's onContextMenu handler, which
+    // also kicked off the lookup keyed to this same `key` — only render it
+    // once that lookup's result is actually for this line, so a stale
+    // result from a previous right-click can never show here.
+    const spellItems =
+      spellCheckFor === key
+        ? spellCheckLoading
+          ? [{ label: 'Checking spelling…', disabled: true, onClick: () => {} }, { separator: true }]
+          : spellCheckError
+            ? [{ label: spellCheckError, disabled: true, onClick: () => {} }, { separator: true }]
+            : spellCheckMisspelled
+              ? [
+                  ...(spellCheckSuggestions.length
+                    ? spellCheckSuggestions.map((s) => ({
+                        label: s,
+                        suggestion: true,
+                        onClick: act(() => {
+                          pushUndo(menu.scriptId)
+                          replaceCapturedSelection(key, s, commitLineText, menu.scriptId, menu.sectionId, menu.lineId)
+                        })
+                      }))
+                    : [{ label: 'No suggestions', disabled: true, onClick: () => {} }]),
+                  { label: 'Add "' + spellCheckWord + '" to dictionary', onClick: act(() => addWordToDictionary(spellCheckWord)) },
+                  { separator: true }
+                ]
+              : []
+        : []
     items = [
-      debugItem,
-      { separator: true },
       ...spellItems,
       { label: 'Tag…', onClick: act(() => openTagMenu(key)) },
       // The word (and its Range, for the later replace) were already
