@@ -18,7 +18,126 @@
   --note-color: #f2a65a;
   --mono: 'JetBrains Mono', Menlo, monospace;
   --sans: 'Inter', -apple-system, sans-serif;
+  /* Optional "page" background for the script column itself — off by
+     default (falls back to var(--bg), i.e. blends into the canvas like
+     today) unless the Theme tab's "Page contrast" toggle turns it on, see
+     [data-editor-contrast='on'] .editor-wrap below. Deliberately its own
+     token per theme rather than a color-mix() formula off --bg/--panel —
+     dark themes want it *darker* than bg for depth, light ones *lighter*,
+     and that direction isn't derivable from one generic formula. */
+  --editor-page: #0d0e12;
 }
+
+/* Themes swap the same set of tokens the app already builds every color
+   from (the :root block above is the default "Dark" theme) — applied via
+   a data-theme attribute on <html>, set in App.jsx from the store's
+   `theme` setting. The Teleprompter (and modal backdrop scrims/box-shadows
+   elsewhere) deliberately stay dark regardless of theme — a bright reading
+   view during filming isn't what any of these are for. */
+:root[data-theme='light'] {
+  /* Softer than a straight "invert the dark theme" pass — nothing here is
+     pure white. A dark-first app has almost every surface reading as
+     --panel, so if that's a stark #fff the whole window turns into one
+     enormous glaring page; keeping bg/panel/panel-2/panel-3 close in tone
+     (all soft warm grays, like the real macOS window-chrome/sidebar/
+     content relationship) is what actually reads as "calm light UI"
+     rather than "system dialog inverted." */
+  --bg: #e5e5e7;
+  --panel: #f7f7f8;
+  --panel-2: #ececee;
+  --panel-3: #e0e0e3;
+  --ink: #1d1d1f;
+  --ink-dim: #6e6e73;
+  --ink-faint: #8e8e93;
+  --line: #d0d0d3;
+  --line-soft: #dedee1;
+  /* Darker/more saturated than Apple's own UI-chrome versions of these
+     hues — those are tuned for icons and large controls, not small text,
+     and read too pale at real body-text sizes against this light a
+     background (checked against WCAG contrast, not just eyeballed). */
+  --cyan: #005bb8;
+  --amber: #8f4f00;
+  --pink: #d6174a;
+  --danger: #c41e1e;
+  --green: #1e7a35;
+  --editor-page: #ffffff;
+}
+/* A real aged-parchment palette (light) — old paper, sepia ink, wax-seal
+   red, brass gold — as opposed to "fantasy" below, which is a dim dark
+   tavern/dungeon look instead. Both are medieval-flavored, deliberately
+   in different registers. */
+:root[data-theme='fable'] {
+  --bg: #b9a26c;
+  --panel: #e8d9ab;
+  --panel-2: #ddc998;
+  --panel-3: #d0ba85;
+  --ink: #3b2a17;
+  --ink-dim: #6b4f30;
+  --ink-faint: #8a6d47;
+  --line: #8f7248;
+  --line-soft: #c0a877;
+  --cyan: #9c2b2b;
+  --amber: #6e4d10;
+  --pink: #7a3b52;
+  --danger: #7a1f1f;
+  --green: #4a6329;
+  --editor-page: #f2e6c4;
+}
+:root[data-theme='fantasy'] {
+  --bg: #1a120b;
+  --panel: #241a10;
+  --panel-2: #2c2013;
+  --panel-3: #362818;
+  --ink: #f0e0c0;
+  --ink-dim: #c3a878;
+  --ink-faint: #8a7154;
+  --line: #4a3823;
+  --line-soft: #362a1a;
+  --cyan: #d4af37;
+  --amber: #e08a2e;
+  --pink: #d15a78;
+  --danger: #e0663f;
+  --green: #6b8f4e;
+  --editor-page: #120c07;
+}
+:root[data-theme='highContrast'] {
+  --bg: #000000;
+  --panel: #0d0d0d;
+  --panel-2: #161616;
+  --panel-3: #1f1f1f;
+  --ink: #ffffff;
+  --ink-dim: #e0e0e0;
+  --ink-faint: #b0b0b0;
+  --line: #999999;
+  --line-soft: #4d4d4d;
+  --cyan: #00e5ff;
+  --amber: #ffb300;
+  --pink: #ff4da6;
+  --danger: #ff1a1a;
+  --green: #00e676;
+  /* Can't go darker than pure black (--bg is already #000) — a slightly
+     raised, lighter surface reads as the more legible "more contrast"
+     direction here instead. */
+  --editor-page: #141414;
+}
+:root[data-theme='monochrome'] {
+  --bg: #16171a;
+  --panel: #1c1d21;
+  --panel-2: #212226;
+  --panel-3: #292a2f;
+  --ink: #eaeaea;
+  --ink-dim: #a3a3a3;
+  --ink-faint: #6b6b6b;
+  --line: #303136;
+  --line-soft: #26272b;
+  --cyan: #e8e8e8;
+  --amber: #b8b8b8;
+  --pink: #999999;
+  --danger: #d0d0d0;
+  --green: #909090;
+  --editor-page: #0f1013;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -40,7 +159,7 @@ body {
   flex-direction: column;
 }
 ::selection {
-  background: rgba(79, 209, 197, 0.25);
+  background: color-mix(in srgb, var(--cyan) 25%, transparent);
 }
 button {
   font-family: var(--sans);
@@ -200,7 +319,7 @@ textarea {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--pink);
-  background: rgba(212, 111, 176, 0.15);
+  background: color-mix(in srgb, var(--pink) 15%, transparent);
   border-radius: 3px;
   padding: 1px 5px;
 }
@@ -279,7 +398,7 @@ textarea {
   color: var(--ink);
 }
 .icon-btn.active {
-  background: rgba(79, 209, 197, 0.12);
+  background: color-mix(in srgb, var(--cyan) 12%, transparent);
   border-color: var(--cyan);
   color: var(--cyan);
 }
@@ -317,7 +436,7 @@ textarea {
 .tab-chip.active {
   border-color: var(--cyan);
   color: var(--cyan);
-  background: rgba(79, 209, 197, 0.1);
+  background: color-mix(in srgb, var(--cyan) 10%, transparent);
 }
 .tab-close {
   width: 16px;
@@ -437,10 +556,10 @@ textarea {
   background: var(--panel-3);
 }
 .timeline-segment.done {
-  background: rgba(79, 209, 197, 0.14);
+  background: color-mix(in srgb, var(--cyan) 14%, transparent);
 }
 .timeline-segment.done:hover {
-  background: rgba(79, 209, 197, 0.24);
+  background: color-mix(in srgb, var(--cyan) 24%, transparent);
 }
 .timeline-segment.done .timeline-segment-label {
   color: var(--cyan);
@@ -652,6 +771,15 @@ textarea {
   margin: 0 auto;
   padding: 28px 32px 80px;
 }
+/* "Page contrast" toggle (Theme tab, on by default) — gives the script
+   column its own background instead of blending into the canvas behind
+   it, like a page sitting on a desk. Turning it off reproduces exactly
+   the original flat look (editor-wrap has no background of its own). */
+[data-editor-contrast='on'] .editor-wrap {
+  background: var(--editor-page);
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
 .editor-wrap.focus-wide {
   max-width: 820px;
 }
@@ -691,7 +819,7 @@ textarea {
   left: -3px;
 }
 .margin-resize-handle:hover {
-  background: rgba(79, 209, 197, 0.25);
+  background: color-mix(in srgb, var(--cyan) 25%, transparent);
 }
 .margin-panel {
   flex: 0 0 auto;
@@ -775,7 +903,7 @@ textarea {
   transition: background 0.1s;
 }
 .pinned-drop.drag-over {
-  background: rgba(79, 209, 197, 0.08);
+  background: color-mix(in srgb, var(--cyan) 8%, transparent);
   outline: 1px dashed var(--cyan);
 }
 .pinned-drop-hint {
@@ -905,7 +1033,7 @@ textarea {
   border-bottom: 1px solid var(--line-soft);
 }
 .section-block.selected {
-  background: rgba(79, 209, 197, 0.06);
+  background: color-mix(in srgb, var(--cyan) 6%, transparent);
   border-radius: 8px;
 }
 .section-head {
@@ -1029,7 +1157,7 @@ textarea {
 .sec-icon-btn.drag-target {
   opacity: 1;
   color: var(--amber);
-  background: rgba(242, 166, 90, 0.16);
+  background: color-mix(in srgb, var(--amber) 16%, transparent);
   outline: 1px dashed var(--amber);
 }
 .sec-icon-btn:has(.sec-icon-badge) {
@@ -1067,7 +1195,7 @@ textarea {
   height: 2px;
   background: var(--cyan);
   border-radius: 1px;
-  box-shadow: 0 0 6px rgba(79, 209, 197, 0.7);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--cyan) 70%, transparent);
   pointer-events: none;
   z-index: 5;
 }
@@ -1089,10 +1217,10 @@ textarea {
   border-left-color: var(--tag-color, var(--line-soft));
 }
 .line.selected {
-  background: rgba(79, 209, 197, 0.09);
+  background: color-mix(in srgb, var(--cyan) 9%, transparent);
 }
 .line.resume-point {
-  border-left-color: #F2A65A;
+  border-left-color: var(--amber);
   border-left-width: 3px;
   padding-left: 13px;
 }
@@ -1143,7 +1271,7 @@ textarea {
 .line-text b,
 .line-text strong {
   font-weight: 700;
-  color: #fff;
+  color: var(--ink);
 }
 .line-text i,
 .line-text em {
@@ -1430,6 +1558,62 @@ textarea {
   overflow-y: auto;
   padding: 14px;
 }
+.theme-contrast-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--ink-dim);
+  margin-bottom: 14px;
+  cursor: pointer;
+}
+.theme-contrast-row input {
+  margin-top: 2px;
+  flex: 0 0 auto;
+}
+.theme-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  text-align: left;
+}
+.theme-row:hover {
+  border-color: var(--ink-faint);
+}
+.theme-row.active {
+  border-color: var(--cyan);
+}
+.theme-swatches {
+  display: flex;
+  flex: 0 0 auto;
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+.theme-swatch {
+  width: 12px;
+  height: 24px;
+}
+.theme-row-label {
+  flex: 1;
+  font-size: 12.5px;
+  color: var(--ink-dim);
+}
+.theme-row.active .theme-row-label {
+  color: var(--ink);
+}
+.theme-row-check {
+  color: var(--cyan);
+  flex: 0 0 auto;
+}
 .cat-row {
   display: flex;
   align-items: center;
@@ -1637,7 +1821,7 @@ textarea {
   padding: 10px 12px;
   background: var(--panel-2);
   border: 1px solid var(--line);
-  border-left: 2px solid rgba(242, 166, 90, 0.5);
+  border-left: 2px solid color-mix(in srgb, var(--amber) 50%, transparent);
   border-radius: 8px;
 }
 .checklist-label {
@@ -1735,7 +1919,7 @@ textarea {
 .checklist-add button {
   background: var(--amber);
   border: none;
-  color: #3a2408;
+  color: color-mix(in srgb, var(--amber) 35%, black);
   font-size: 12px;
   font-weight: 600;
   padding: 0 12px;
@@ -1776,7 +1960,7 @@ textarea {
 }
 @keyframes jumpFlash {
   0% {
-    background: rgba(79, 209, 197, 0.28);
+    background: color-mix(in srgb, var(--cyan) 28%, transparent);
   }
   100% {
     background: transparent;
@@ -1878,7 +2062,7 @@ textarea {
 .cp-draft button {
   background: var(--cyan);
   border: none;
-  color: #0c2e2a;
+  color: color-mix(in srgb, var(--cyan) 35%, black);
   font-size: 12px;
   font-weight: 600;
   padding: 0 12px;
@@ -2106,14 +2290,14 @@ textarea {
 }
 .diff-del {
   color: var(--danger);
-  background: rgba(226, 102, 91, 0.14);
+  background: color-mix(in srgb, var(--danger) 14%, transparent);
   text-decoration: line-through;
   padding: 1px 2px;
   border-radius: 3px;
 }
 .diff-add {
   color: var(--cyan);
-  background: rgba(79, 209, 197, 0.14);
+  background: color-mix(in srgb, var(--cyan) 14%, transparent);
   padding: 1px 2px;
   border-radius: 3px;
 }
@@ -2242,7 +2426,7 @@ textarea {
 .map-node {
   position: absolute;
   background: var(--panel-2);
-  border: 1px solid #3a3d48;
+  border: 1px solid var(--line);
   border-radius: 10px;
   padding: 12px 14px;
   cursor: grab;
@@ -2262,7 +2446,7 @@ textarea {
   box-shadow: 0 0 0 2px var(--cyan);
 }
 .map-selection-box {
-  fill: rgba(79, 209, 197, 0.1);
+  fill: color-mix(in srgb, var(--cyan) 10%, transparent);
   stroke: var(--cyan);
   stroke-width: 1;
   stroke-dasharray: 4 3;
@@ -2275,7 +2459,7 @@ textarea {
   height: 18px;
   border-radius: 50%;
   background: var(--cyan);
-  color: #0a2b28;
+  color: color-mix(in srgb, var(--cyan) 35%, black);
   font-family: var(--mono);
   font-size: 10px;
   font-weight: 700;
@@ -2624,6 +2808,11 @@ textarea {
   margin: 0 auto;
   width: 100%;
 }
+[data-editor-contrast='on'] .outline-list {
+  background: var(--editor-page);
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
 .outline-divider {
   margin: 22px 0 10px;
   font-family: var(--mono);
@@ -2693,7 +2882,7 @@ textarea {
   border-bottom: 1px solid var(--line-soft);
 }
 .outline-item.resume-point {
-  border-left: 3px solid #F2A65A;
+  border-left: 3px solid var(--amber);
   padding-left: 8px;
   margin-left: -11px;
 }
@@ -2954,7 +3143,7 @@ textarea {
 .tp-btn.active {
   border-color: var(--cyan);
   color: var(--cyan);
-  background: rgba(79, 209, 197, 0.12);
+  background: color-mix(in srgb, var(--cyan) 12%, transparent);
 }
 .tp-close {
   margin-left: auto;

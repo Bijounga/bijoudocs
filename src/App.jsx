@@ -20,6 +20,8 @@ export default function App() {
   const loaded = useStore((s) => s.loaded)
   const init = useStore((s) => s.init)
   const noteColor = useStore((s) => s.noteColor)
+  const theme = useStore((s) => s.theme)
+  const editorPageContrast = useStore((s) => s.editorPageContrast)
   const scripts = useStore((s) => s.scripts)
   const currentScriptId = useStore((s) => s.currentScriptId)
   const focusMode = useStore((s) => s.focusMode)
@@ -56,6 +58,14 @@ export default function App() {
   useEffect(() => {
     document.documentElement.style.setProperty('--note-color', noteColor)
   }, [noteColor])
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+  }, [theme])
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-editor-contrast', editorPageContrast ? 'on' : 'off')
+  }, [editorPageContrast])
 
   useEffect(() => installGlobalDragSelectListeners(), [])
 

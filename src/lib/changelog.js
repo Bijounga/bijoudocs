@@ -100,6 +100,11 @@ export const CHANGELOG = {
     'New Teleprompter "Notes" toggle — shows each line\'s note in small italics right underneath it, instead of having to leave the Teleprompter to check',
     'New Teleprompter width slider and left/center/right alignment buttons, so the reading column doesn\'t have to stay fixed and narrow',
     'New Teleprompter font picker — a preset list of common fonts, plus a "Load all fonts" button that (with your permission) lists every font installed on your PC'
+  ],
+  '0.5.40': [
+    'New Theme tab (in the right-hand panel, next to Keys) — 6 color themes: Dark (the original), MacBook Light, Fable (aged parchment), Earthen (a dim medieval tavern look), High Contrast, and Monochrome',
+    'New "Page contrast" toggle in the Theme tab — gives the script column (and the Outline) its own background instead of blending into the canvas, like a page sitting on a desk. On by default',
+    'Zoom level (the % in the toolbar) is now remembered — and remembered per computer, so a Mac and a PC can each keep their own'
   ]
 }
 

@@ -4,12 +4,14 @@ import CategoriesTab from './CategoriesTab.jsx'
 import SectionsTab from './SectionsTab.jsx'
 import CheckpointsTab from './CheckpointsTab.jsx'
 import ShortcutsTab from './ShortcutsTab.jsx'
+import ThemeTab from './ThemeTab.jsx'
 
 const TABS = [
   { id: 'categories', label: 'Categories' },
   { id: 'sections', label: 'Sections' },
   { id: 'checkpoints', label: 'Versions' },
-  { id: 'shortcuts', label: 'Keys' }
+  { id: 'shortcuts', label: 'Keys' },
+  { id: 'theme', label: 'Theme' }
 ]
 
 export default function Inspector({ scriptId, script }) {
@@ -36,6 +38,7 @@ export default function Inspector({ scriptId, script }) {
         {inspectorTab === 'sections' && <SectionsTab scriptId={scriptId} script={script} />}
         {inspectorTab === 'checkpoints' && <CheckpointsTab scriptId={scriptId} script={script} />}
         {inspectorTab === 'shortcuts' && <ShortcutsTab />}
+        {inspectorTab === 'theme' && <ThemeTab />}
       </div>
     </div>
   )

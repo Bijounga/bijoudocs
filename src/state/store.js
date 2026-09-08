@@ -138,6 +138,8 @@ export const useStore = create(
     leftMarginWidth: 210,
     rightMarginWidth: 210,
     noteColor: '#f2a65a',
+    theme: 'dark',
+    editorPageContrast: true,
 
     teleprompterOpen: false,
     teleprompterFontSize: 40,
@@ -172,6 +174,9 @@ export const useStore = create(
           s.diskUpdatedAt[sc.id] = sc.updatedAt
         })
         if (settings && settings.noteColor) s.noteColor = settings.noteColor
+        if (settings && settings.theme) s.theme = settings.theme
+        if (settings && typeof settings.editorPageContrast === 'boolean') s.editorPageContrast = settings.editorPageContrast
+        if (settings && typeof settings.zoom === 'number') s.zoom = settings.zoom
         if (settings && settings.leftMarginWidth) s.leftMarginWidth = settings.leftMarginWidth
         if (settings && settings.rightMarginWidth) s.rightMarginWidth = settings.rightMarginWidth
         if (settings && settings.ideaNodePresets) s.ideaNodePresets = settings.ideaNodePresets
@@ -330,6 +335,9 @@ export const useStore = create(
       const s = get()
       window.bijou.saveSettings({
         noteColor: s.noteColor,
+        theme: s.theme,
+        editorPageContrast: s.editorPageContrast,
+        zoom: s.zoom,
         leftMarginWidth: s.leftMarginWidth,
         rightMarginWidth: s.rightMarginWidth,
         leftMarginOpen: s.leftMarginOpen,
@@ -344,6 +352,18 @@ export const useStore = create(
     setNoteColor(color) {
       set((s) => {
         s.noteColor = color
+      })
+      get().saveAppSettings()
+    },
+    setTheme(theme) {
+      set((s) => {
+        s.theme = theme
+      })
+      get().saveAppSettings()
+    },
+    toggleEditorPageContrast() {
+      set((s) => {
+        s.editorPageContrast = !s.editorPageContrast
       })
       get().saveAppSettings()
     },
@@ -637,11 +657,13 @@ export const useStore = create(
       set((s) => {
         s.zoom = Math.min(1.6, Math.round((s.zoom + 0.1) * 100) / 100)
       })
+      get().saveAppSettings()
     },
     zoomOut() {
       set((s) => {
         s.zoom = Math.max(0.7, Math.round((s.zoom - 0.1) * 100) / 100)
       })
+      get().saveAppSettings()
     },
     collapseAll(scriptId) {
       set((s) => {
