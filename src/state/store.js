@@ -143,6 +143,10 @@ export const useStore = create(
     teleprompterFontSize: 40,
     teleprompterAutoScroll: false,
     teleprompterSpeed: 1,
+    teleprompterShowNotes: false,
+    teleprompterWidth: 1300,
+    teleprompterAlign: 'left',
+    teleprompterFont: '',
 
     undoStack: [],
     redoStack: [],
@@ -2050,6 +2054,26 @@ export const useStore = create(
     setTeleprompterSpeed(speed) {
       set((s) => {
         s.teleprompterSpeed = Math.max(0.25, Math.min(3, speed))
+      })
+    },
+    toggleTeleprompterShowNotes() {
+      set((s) => {
+        s.teleprompterShowNotes = !s.teleprompterShowNotes
+      })
+    },
+    setTeleprompterWidth(width) {
+      set((s) => {
+        s.teleprompterWidth = Math.max(500, Math.min(1800, width))
+      })
+    },
+    setTeleprompterAlign(align) {
+      set((s) => {
+        s.teleprompterAlign = align
+      })
+    },
+    setTeleprompterFont(font) {
+      set((s) => {
+        s.teleprompterFont = font
       })
     },
 

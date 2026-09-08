@@ -28,7 +28,10 @@ const PATHS = {
   check: '<polyline points="3,8.5 6.5,12 13,4.5"/>',
   x: '<line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/>',
   folder: '<path d="M2.5 4.5a1 1 0 011-1h3l1.3 1.6h5.2a1 1 0 011 1v6.4a1 1 0 01-1 1h-9.5a1 1 0 01-1-1z"/>',
-  split: '<rect x="2" y="3" width="5.2" height="10" rx="1"/><rect x="8.8" y="3" width="5.2" height="10" rx="1"/>'
+  split: '<rect x="2" y="3" width="5.2" height="10" rx="1"/><rect x="8.8" y="3" width="5.2" height="10" rx="1"/>',
+  alignLeft: '<line x1="2" y1="3.5" x2="14" y2="3.5"/><line x1="2" y1="7" x2="9.5" y2="7"/><line x1="2" y1="10.5" x2="14" y2="10.5"/><line x1="2" y1="14" x2="7" y2="14"/>',
+  alignCenter: '<line x1="2" y1="3.5" x2="14" y2="3.5"/><line x1="4.5" y1="7" x2="11.5" y2="7"/><line x1="2" y1="10.5" x2="14" y2="10.5"/><line x1="5.5" y1="14" x2="10.5" y2="14"/>',
+  alignRight: '<line x1="2" y1="3.5" x2="14" y2="3.5"/><line x1="6.5" y1="7" x2="14" y2="7"/><line x1="2" y1="10.5" x2="14" y2="10.5"/><line x1="9" y1="14" x2="14" y2="14"/>'
 }
 
 export default function Icon({ name, size = 14, className, filled = false }) {

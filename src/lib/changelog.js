@@ -95,6 +95,11 @@ export const CHANGELOG = {
   '0.5.38': [
     'Fixed spelling suggestions never showing up on right-click — they were relying on an Electron mechanism that turned out to never reliably deliver them. Now looked up the same way as synonyms, over the internet, so this actually works',
     'Also needs an internet connection now, same as synonym lookup — the red squiggly underlines themselves are unaffected and still work offline'
+  ],
+  '0.5.39': [
+    'New Teleprompter "Notes" toggle — shows each line\'s note in small italics right underneath it, instead of having to leave the Teleprompter to check',
+    'New Teleprompter width slider and left/center/right alignment buttons, so the reading column doesn\'t have to stay fixed and narrow',
+    'New Teleprompter font picker — a preset list of common fonts, plus a "Load all fonts" button that (with your permission) lists every font installed on your PC'
   ]
 }
 
