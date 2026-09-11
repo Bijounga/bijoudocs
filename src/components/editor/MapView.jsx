@@ -3,7 +3,7 @@ import { useStore } from '../../state/store.js'
 import { comboFromEvent } from '../../lib/keybinds.js'
 import { sectionsHaveContent } from '../../lib/model.js'
 import Icon from '../icons.jsx'
-import MapNode, { NODE_WIDTH } from './MapNode.jsx'
+import MapNode, { NODE_WIDTH, NODE_H } from './MapNode.jsx'
 import IdeaNode from './IdeaNode.jsx'
 import ChapterNode from './ChapterNode.jsx'
 import { computeMainThread } from '../../lib/mapGraph.js'
@@ -21,9 +21,21 @@ function isSectionNode(node) {
   return !!node && !node.type
 }
 
-const NODE_H = 80 // nominal card height for edge-anchor math — cards vary a little with content, close enough for connector lines
 const ZOOM_MIN = 0.25
 const ZOOM_MAX = 2
+
+// A mousedown handler that calls e.preventDefault() (to suppress native
+// text-selection-drag, see handleCanvasMouseDown/handleNodeMouseDown)
+// also suppresses the *default* focus-shift a real click would otherwise
+// do for free — so a node's title/textarea can be left "active" even
+// after clicking somewhere else entirely, and its onBlur-driven commit
+// never fires. Call this before preventDefault() to blur it ourselves.
+function blurActiveEditableField() {
+  const active = document.activeElement
+  if (active && (active.tagName === 'TEXTAREA' || active.tagName === 'INPUT' || active.isContentEditable)) {
+    active.blur()
+  }
+}
 
 function centerOf(node) {
   return { x: node.x + NODE_WIDTH / 2, y: node.y + NODE_H / 2 }
@@ -42,6 +54,27 @@ function sideAnchor(node, side) {
 // existing edges and to figure out which of a node's 4 connector dots was
 // actually meant, regardless of which one the drag started from.
 function pickSides(a, b) {
+  // Bounds-based first, not just center-to-center: once two cards are
+  // close together or overlapping (routine once several sit in a tight
+  // horizontal or vertical row — exactly what dragging nodes into a
+  // horizontal chain tends to produce), comparing centers alone can point
+  // an edge "backward." E.g. two cards a bit too close horizontally still
+  // have B's center to the right of A's, so a naive center comparison
+  // picks A's right side → B's left side — but if A's right edge has
+  // drifted past B's left edge, that line runs backward, appearing to cut
+  // through/behind the card instead of arriving at its edge. Preferring
+  // whichever axis the two cards' actual bounding boxes don't overlap on
+  // avoids that; only the true edge case — overlapping on *both* axes —
+  // falls back to the old center-based guess, since there's no anchor
+  // choice that isn't somewhat arbitrary at that point anyway.
+  const aRight = a.x + NODE_WIDTH
+  const bRight = b.x + NODE_WIDTH
+  const aBottom = a.y + NODE_H
+  const bBottom = b.y + NODE_H
+  if (aRight <= b.x) return ['right', 'left']
+  if (bRight <= a.x) return ['left', 'right']
+  if (aBottom <= b.y) return ['bottom', 'top']
+  if (bBottom <= a.y) return ['top', 'bottom']
   const ca = centerOf(a)
   const cb = centerOf(b)
   const dx = cb.x - ca.x
@@ -94,6 +127,8 @@ export default function MapView({ scriptId, script }) {
   const addMapEdge = useStore((s) => s.addMapEdge)
   const removeMapEdge = useStore((s) => s.removeMapEdge)
   const removeMapEdgesByIds = useStore((s) => s.removeMapEdgesByIds)
+  const toggleStruckForMapNodes = useStore((s) => s.toggleStruckForMapNodes)
+  const setMapViewport = useStore((s) => s.setMapViewport)
   const openContextMenu = useStore((s) => s.openContextMenu)
   const addIdeaNode = useStore((s) => s.addIdeaNode)
   const addConnectedIdeaNodeFromMap = useStore((s) => s.addConnectedIdeaNodeFromMap)
@@ -113,9 +148,9 @@ export default function MapView({ scriptId, script }) {
 
   const canvasRef = useRef(null)
   const dragRef = useRef(null) // { type: 'node'|'pan'|'connect'|'select', ... }
-  const [zoom, setZoom] = useState(1)
-  const zoomRef = useRef(1) // mirrors `zoom` synchronously — two zoomBy() calls in the same tick (e.g. a fast double-click on the +button, before React re-renders between them) would otherwise both read the same stale closured `zoom` and not compound
-  const [pan, setPan] = useState({ x: 60, y: 40 })
+  const [zoom, setZoom] = useState(script.mapLayout.viewZoom || 1)
+  const zoomRef = useRef(zoom) // mirrors `zoom` synchronously — two zoomBy() calls in the same tick (e.g. a fast double-click on the +button, before React re-renders between them) would otherwise both read the same stale closured `zoom` and not compound
+  const [pan, setPan] = useState(script.mapLayout.viewPan || { x: 60, y: 40 })
   const panRef = useRef(pan) // mirrors `pan` on every render — screenToWorld is called from the mousemove/mouseup effect below, whose closure is only refreshed when scriptId changes, so a plain closured `pan` goes stale (and connector-drag previews / rubber-band selection start pointing at the wrong spot) the moment the user pans without also changing zoom or script
   panRef.current = pan
   const [connectPreview, setConnectPreview] = useState(null) // { fromId, x, y } in world coords
@@ -137,6 +172,24 @@ export default function MapView({ scriptId, script }) {
     ensureMapNodes(scriptId)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scriptId, script.sections.length])
+
+  // Remembers the pan/zoom position per script — saved once on the way
+  // out (leaving map view, or switching to a different script while still
+  // in it), not on every pan/zoom change, which would mean a store write
+  // per mousemove while dragging. Reads the two refs above (not the
+  // `pan`/`zoom` state directly) since this cleanup closure is only
+  // refreshed when scriptId itself changes, so a closured `pan`/`zoom`
+  // would go stale the moment the user pans without switching scripts.
+  useEffect(() => {
+    const initialZoom = script.mapLayout.viewZoom || 1
+    setPan(script.mapLayout.viewPan || { x: 60, y: 40 })
+    setZoom(initialZoom)
+    zoomRef.current = initialZoom // setZoom alone won't reach it — see zoomRef's own declaration comment
+    return () => {
+      setMapViewport(scriptId, panRef.current, zoomRef.current)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scriptId])
 
   // Applies a selection computed by ContextMenu.jsx's "select connected
   // nodes" items (which can't reach this component's own local state
@@ -270,6 +323,23 @@ export default function MapView({ scriptId, script }) {
         ]
         if (newIds.length) setSelectedNodeIds(newIds)
       }
+      if (combo === st.keybinds.strike) {
+        // Falls back to whichever node's title/summary field is actually
+        // focused when nothing's click-selected — there's no way yet to
+        // strike just the selected *text* inside one (that needs these
+        // fields to become rich-text editors, like line-text already is —
+        // a bigger change on its own), so silently doing nothing while
+        // editing would make this keybind feel broken for a real, likely
+        // way someone reaches for it: select some text, hit strike.
+        // Striking the whole node instead is a real fallback, not a no-op.
+        const editingNodeId = isEditingText && active.closest && active.closest('[data-section-id]')?.dataset.sectionId
+        const targetIds = validSelectedNodeIds.length ? validSelectedNodeIds : editingNodeId ? [editingNodeId] : []
+        if (targetIds.length) {
+          e.preventDefault()
+          if (editingNodeId) active.blur()
+          toggleStruckForMapNodes(scriptId, targetIds)
+        }
+      }
       if (!isEditingText && combo === st.keybinds.mapLinkNodes && validSelectedNodeIds.length >= 2) {
         e.preventDefault()
         linkMapNodesInOrder(scriptId, validSelectedNodeIds)
@@ -388,6 +458,14 @@ export default function MapView({ scriptId, script }) {
     // text-selection-drag if nothing suppresses it — and since this drag
     // can span the *entire* visible canvas, the result looks like
     // "everything" getting highlighted at once, not just one node's title.
+    // preventDefault() here also blocks the *other* thing a real mousedown
+    // would normally do for free: shifting focus off whatever text field
+    // was being edited. Without blurring it ourselves first, a node's
+    // title/summary field stays "active" after clicking empty canvas — its
+    // onBlur commit never runs, and every selection-dependent action after
+    // that (select, duplicate, copy/paste) silently keeps acting on stale
+    // state instead of what's actually on screen.
+    blurActiveEditableField()
     e.preventDefault()
     setSelectedEdgeId(null)
     const world = screenToWorld(e.clientX, e.clientY)
@@ -406,6 +484,8 @@ export default function MapView({ scriptId, script }) {
     // move — titles/summaries start highlighting instead of just the nodes
     // sliding. Titles are already double-click-to-edit, so a plain
     // mousedown-drag on a card is never meant to select its text anyway.
+    // Blur first — see the identical comment in handleCanvasMouseDown.
+    blurActiveEditableField()
     e.preventDefault()
     const isPartOfSelection = validSelectedNodeIds.includes(sectionId) && validSelectedNodeIds.length > 1
     const groupIds = isPartOfSelection ? validSelectedNodeIds : [sectionId]
@@ -527,29 +607,44 @@ export default function MapView({ scriptId, script }) {
     jumpToSection(scriptId, sectionId, false)
   }
 
-  function handleAddSection() {
-    if (!canvasRef.current) return
+  // `at`, when given, is a world-space point (e.g. wherever the user
+  // right-clicked) to center the new node on instead of the viewport —
+  // used by the canvas right-click menu; the toolbar buttons call these
+  // with no `at` and keep the original viewport-center placement.
+  function viewportCenterWorld() {
+    if (!canvasRef.current) return null
     const rect = canvasRef.current.getBoundingClientRect()
-    const world = screenToWorld(rect.left + rect.width / 2, rect.top + rect.height / 2)
+    return screenToWorld(rect.left + rect.width / 2, rect.top + rect.height / 2)
+  }
+
+  function handleAddSection(at) {
+    const world = at || viewportCenterWorld()
+    if (!world) return
     addSectionFromMap(scriptId, world.x - NODE_WIDTH / 2, world.y - NODE_H / 2)
   }
 
-  function handleAddIdeaNode(preset) {
-    if (!canvasRef.current) return
-    const rect = canvasRef.current.getBoundingClientRect()
-    const world = screenToWorld(rect.left + rect.width / 2, rect.top + rect.height / 2)
+  function handleAddIdeaNode(preset, at) {
+    const world = at || viewportCenterWorld()
+    if (!world) return
     const opts = preset ? { title: preset.label, color: preset.color } : {}
     const newId = addIdeaNode(scriptId, world.x - NODE_WIDTH / 2, world.y - NODE_H / 2, opts)
     if (newId) setSelectedNodeIds([newId])
     setIdeaMenuOpen(false)
   }
 
-  function handleAddChapterNode() {
-    if (!canvasRef.current) return
-    const rect = canvasRef.current.getBoundingClientRect()
-    const world = screenToWorld(rect.left + rect.width / 2, rect.top + rect.height / 2)
+  function handleAddChapterNode(at) {
+    const world = at || viewportCenterWorld()
+    if (!world) return
     const newId = addChapterNode(scriptId, world.x - NODE_WIDTH / 2, world.y - NODE_H / 2)
     if (newId) setSelectedNodeIds([newId])
+  }
+
+  function handleCanvasContextMenu(e) {
+    if (e.target.closest('.map-node') || e.target.closest('.map-edge-hit')) return
+    e.preventDefault()
+    blurActiveEditableField()
+    const world = screenToWorld(e.clientX, e.clientY)
+    openContextMenu({ type: 'mapCanvas', scriptId, worldX: world.x, worldY: world.y, x: e.clientX, y: e.clientY })
   }
 
   function handleAddInDirection(fromId, dir) {
@@ -640,6 +735,7 @@ export default function MapView({ scriptId, script }) {
         ref={canvasRef}
         onWheel={handleWheel}
         onMouseDown={handleCanvasMouseDown}
+        onContextMenu={handleCanvasContextMenu}
       >
         {script.sections.length === 0 && <div className="filter-empty">No sections yet.</div>}
         <div className="map-canvas-inner" style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}>

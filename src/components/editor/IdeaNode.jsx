@@ -47,7 +47,9 @@ export default function IdeaNode({
 
   return (
     <div
-      className={'map-node idea-node' + (isLit ? ' is-lit' : '') + (isSelected ? ' is-selected' : '')}
+      className={
+        'map-node idea-node' + (isLit ? ' is-lit' : '') + (isSelected ? ' is-selected' : '') + (node.struck ? ' struck' : '')
+      }
       data-section-id={id}
       style={{ left: node.x, top: node.y, width: NODE_WIDTH, borderLeftColor: color }}
       onMouseDown={(e) => onNodeMouseDown(e, id)}

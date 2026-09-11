@@ -85,9 +85,36 @@ function isHistoryFile(f) {
   return f.includes('.conflict-') || f.includes('.snapshot-')
 }
 
+// Shared category *definitions* a user has explicitly chosen to make
+// global — deliberately kept in the same folder as the script files
+// (not Electron's per-machine userData, unlike settings.json) so it
+// syncs across machines the same way scripts already do. Each script
+// that "uses" a global category keeps its own local copy (with a
+// `globalId` pointing back here) in its own categories array — this
+// file only holds the canonical label/color, never anything per-script.
+function globalCategoriesFileName() {
+  return 'globalCategories.json'
+}
+function globalCategoriesPath() {
+  return path.join(ensureDir(), globalCategoriesFileName())
+}
+function loadGlobalCategories() {
+  try {
+    return JSON.parse(fs.readFileSync(globalCategoriesPath(), 'utf-8'))
+  } catch (err) {
+    return []
+  }
+}
+function saveGlobalCategories(list) {
+  fs.writeFileSync(globalCategoriesPath(), JSON.stringify(list, null, 2), 'utf-8')
+  return true
+}
+
 function loadAllScripts() {
   const dir = ensureDir()
-  const files = fs.readdirSync(dir).filter((f) => f.endsWith('.json') && !isHistoryFile(f))
+  const files = fs
+    .readdirSync(dir)
+    .filter((f) => f.endsWith('.json') && !isHistoryFile(f) && f !== globalCategoriesFileName())
   const scripts = []
   for (const file of files) {
     try {
@@ -236,5 +263,7 @@ export {
   saveSettings,
   listSaveHistory,
   restoreFromHistory,
-  scriptPath as scriptFilePath
+  scriptPath as scriptFilePath,
+  loadGlobalCategories,
+  saveGlobalCategories
 }

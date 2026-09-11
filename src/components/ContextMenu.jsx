@@ -2,6 +2,7 @@ import React, { useLayoutEffect, useRef, useState } from 'react'
 import { useStore } from '../state/store.js'
 import { findLine, sectionsHaveContent } from '../lib/model.js'
 import { replaceCapturedSelection } from '../state/lineRefs.js'
+import { NODE_WIDTH, NODE_H } from './editor/MapNode.jsx'
 
 export default function ContextMenu() {
   const menu = useStore((s) => s.contextMenu)
@@ -12,6 +13,8 @@ export default function ContextMenu() {
   const spellCheckMisspelled = useStore((s) => s.spellCheckMisspelled)
   const spellCheckSuggestions = useStore((s) => s.spellCheckSuggestions)
   const spellCheckError = useStore((s) => s.spellCheckError)
+  const spellCheckInDictionary = useStore((s) => s.spellCheckInDictionary)
+  const removeWordFromDictionary = useStore((s) => s.removeWordFromDictionary)
   const commitLineText = useStore((s) => s.commitLineText)
   const pushUndo = useStore((s) => s.pushUndo)
   const deleteLine = useStore((s) => s.deleteLine)
@@ -43,10 +46,16 @@ export default function ContextMenu() {
   const addWordToDictionary = useStore((s) => s.addWordToDictionary)
   const selectConnectedNodes = useStore((s) => s.selectConnectedNodes)
   const requestMapSelection = useStore((s) => s.requestMapSelection)
+  const addSectionFromMap = useStore((s) => s.addSectionFromMap)
+  const addIdeaNode = useStore((s) => s.addIdeaNode)
+  const addChapterNode = useStore((s) => s.addChapterNode)
+  const ideaNodePresets = useStore((s) => s.ideaNodePresets)
+  const toggleStruckForMapNodes = useStore((s) => s.toggleStruckForMapNodes)
   const openSynonymMenu = useStore((s) => s.openSynonymMenu)
 
   const ref = useRef(null)
   const [pos, setPos] = useState(null)
+  const [submenuOpenIndex, setSubmenuOpenIndex] = useState(null)
 
   useLayoutEffect(() => {
     if (!menu || !ref.current) {
@@ -57,6 +66,7 @@ export default function ContextMenu() {
     const x = Math.min(menu.x, window.innerWidth - rect.width - 8)
     const y = Math.min(menu.y, window.innerHeight - rect.height - 8)
     setPos({ x: Math.max(4, x), y: Math.max(4, y) })
+    setSubmenuOpenIndex(null)
   }, [menu])
 
   if (!menu) return null
@@ -106,22 +116,32 @@ export default function ContextMenu() {
           ? [{ label: 'Checking spelling…', disabled: true, onClick: () => {} }, { separator: true }]
           : spellCheckError
             ? [{ label: spellCheckError, disabled: true, onClick: () => {} }, { separator: true }]
-            : spellCheckMisspelled
-              ? [
-                  ...(spellCheckSuggestions.length
-                    ? spellCheckSuggestions.map((s) => ({
-                        label: s,
-                        suggestion: true,
-                        onClick: act(() => {
-                          pushUndo(menu.scriptId)
-                          replaceCapturedSelection(key, s, commitLineText, menu.scriptId, menu.sectionId, menu.lineId)
-                        })
-                      }))
-                    : [{ label: 'No suggestions', disabled: true, onClick: () => {} }]),
-                  { label: 'Add "' + spellCheckWord + '" to dictionary', onClick: act(() => addWordToDictionary(spellCheckWord)) },
+            : spellCheckInDictionary
+              ? // A remembered word can still legitimately come back
+                // "misspelled" from LanguageTool (it has no idea what's in
+                // the user's own local dictionary) — checked separately,
+                // so this always wins over showing suggestions for a word
+                // the user already told us is fine.
+                [
+                  { label: 'Remove "' + spellCheckWord + '" from dictionary', onClick: act(() => removeWordFromDictionary(spellCheckWord)) },
                   { separator: true }
                 ]
-              : []
+              : spellCheckMisspelled
+                ? [
+                    ...(spellCheckSuggestions.length
+                      ? spellCheckSuggestions.map((s) => ({
+                          label: s,
+                          suggestion: true,
+                          onClick: act(() => {
+                            pushUndo(menu.scriptId)
+                            replaceCapturedSelection(key, s, commitLineText, menu.scriptId, menu.sectionId, menu.lineId)
+                          })
+                        }))
+                      : [{ label: 'No suggestions', disabled: true, onClick: () => {} }]),
+                    { label: 'Add "' + spellCheckWord + '" to dictionary', onClick: act(() => addWordToDictionary(spellCheckWord)) },
+                    { separator: true }
+                  ]
+                : []
         : []
     items = [
       ...spellItems,
@@ -191,6 +211,11 @@ export default function ContextMenu() {
       { label: 'Select everything before this', onClick: act(() => requestMapSelection(menu.scriptId, selectConnectedNodes(menu.scriptId, ids, 'backward'))) },
       { label: 'Select everything connected', onClick: act(() => requestMapSelection(menu.scriptId, selectConnectedNodes(menu.scriptId, ids, 'both'))) },
       { separator: true },
+      {
+        label: ids.every((id) => nodes[id] && nodes[id].struck) ? 'Unstrike' : 'Strike through',
+        onClick: act(() => toggleStruckForMapNodes(menu.scriptId, ids))
+      },
+      { separator: true },
       ids.length > 1 ? { label: 'Align to a line', onClick: act(() => alignMapNodesToLine(menu.scriptId, ids)) } : null,
       ids.length > 1 ? { label: 'Snap to grid', onClick: act(() => snapMapNodesToGrid(menu.scriptId, ids)) } : null,
       ids.length > 1 ? { label: 'Space evenly', onClick: act(() => spaceMapNodesEvenly(menu.scriptId, ids)) } : null,
@@ -208,6 +233,24 @@ export default function ContextMenu() {
         })
       }
     ].filter(Boolean)
+  } else if (menu.type === 'mapCanvas') {
+    const x = menu.worldX - NODE_WIDTH / 2
+    const y = menu.worldY - NODE_H / 2
+    items = [
+      { label: 'Add section', onClick: act(() => addSectionFromMap(menu.scriptId, x, y)) },
+      {
+        label: 'Add idea node',
+        submenu: [
+          { label: 'Blank', swatch: 'var(--ink-faint)', onClick: act(() => addIdeaNode(menu.scriptId, x, y, {})) },
+          ...ideaNodePresets.map((p) => ({
+            label: p.label,
+            swatch: p.color,
+            onClick: act(() => addIdeaNode(menu.scriptId, x, y, { title: p.label, color: p.color }))
+          }))
+        ]
+      },
+      { label: 'Add chapter node', onClick: act(() => addChapterNode(menu.scriptId, x, y)) }
+    ]
   }
 
   return (
@@ -220,6 +263,30 @@ export default function ContextMenu() {
       {items.map((it, i) =>
         it.separator ? (
           <div key={i} className="context-menu-separator" />
+        ) : it.submenu ? (
+          <div
+            key={i}
+            className={'context-menu-item context-menu-item-parent' + (submenuOpenIndex === i ? ' active' : '')}
+            onMouseEnter={() => setSubmenuOpenIndex(i)}
+            onMouseLeave={() => setSubmenuOpenIndex((cur) => (cur === i ? null : cur))}
+          >
+            {it.label}
+            <span className="context-menu-arrow">▸</span>
+            {submenuOpenIndex === i && (
+              <div
+                className="map-idea-menu context-submenu"
+                onMouseEnter={() => setSubmenuOpenIndex(i)}
+                onMouseLeave={() => setSubmenuOpenIndex((cur) => (cur === i ? null : cur))}
+              >
+                {it.submenu.map((sub, si) => (
+                  <div key={si} className="map-idea-menu-item" onClick={sub.onClick}>
+                    <span className="map-idea-swatch" style={{ background: sub.swatch }} />
+                    {sub.label}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         ) : (
           <div
             key={i}

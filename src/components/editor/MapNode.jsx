@@ -3,6 +3,16 @@ import { useStore } from '../../state/store.js'
 import Icon from '../icons.jsx'
 
 export const NODE_WIDTH = 220
+// Nominal card height for edge-anchor/new-node-placement math — cards vary
+// with content (multi-line summaries make them taller still), so this can
+// never be exact, but it needs to be close: it's what centers a left/right
+// connector's Y position on the card, and the old value of 80 undershot a
+// real *minimal* card's rendered height (~116-134px measured directly) by
+// 45-65%, throwing that centering off enough to look visibly wrong,
+// especially for a mostly-horizontal chain (which leans on left/right
+// anchors) — a vertical chain's top/bottom anchors are far less exposed to
+// this error, since only the bottom one depends on height at all.
+export const NODE_H = 110
 
 const CONNECTOR_SIDES = ['top', 'right', 'bottom', 'left']
 
@@ -39,7 +49,13 @@ export default function MapNode({
 
   return (
     <div
-      className={'map-node' + (isMain ? ' is-main' : '') + (isLit ? ' is-lit' : '') + (isSelected ? ' is-selected' : '')}
+      className={
+        'map-node' +
+        (isMain ? ' is-main' : '') +
+        (isLit ? ' is-lit' : '') +
+        (isSelected ? ' is-selected' : '') +
+        (node.struck ? ' struck' : '')
+      }
       data-section-id={sec.id}
       style={{ left: node.x, top: node.y, width: NODE_WIDTH }}
       onMouseDown={(e) => onNodeMouseDown(e, sec.id)}

@@ -15,12 +15,14 @@ import UpdateBanner from './components/UpdateBanner.jsx'
 import SaveConflictBanner from './components/SaveConflictBanner.jsx'
 import { useGlobalKeydown } from './hooks/useGlobalKeydown.js'
 import { installGlobalDragSelectListeners } from './state/dragSelect.js'
+import { THEME_TOKENS } from './lib/themeTokens.js'
 
 export default function App() {
   const loaded = useStore((s) => s.loaded)
   const init = useStore((s) => s.init)
   const noteColor = useStore((s) => s.noteColor)
   const theme = useStore((s) => s.theme)
+  const customThemes = useStore((s) => s.customThemes)
   const editorPageContrast = useStore((s) => s.editorPageContrast)
   const scripts = useStore((s) => s.scripts)
   const currentScriptId = useStore((s) => s.currentScriptId)
@@ -59,9 +61,20 @@ export default function App() {
     document.documentElement.style.setProperty('--note-color', noteColor)
   }, [noteColor])
 
+  // A built-in theme (a plain id) is just the data-theme attribute — its
+  // colors live in styles.css. A custom one ('custom:'-prefixed) has no
+  // CSS of its own, so every token gets set inline instead; switching
+  // *away* from a custom theme has to clear those inline overrides again,
+  // or they'd keep winning over whichever built-in's stylesheet rule
+  // should apply now (inline style always beats a stylesheet selector).
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme)
-  }, [theme])
+    const custom = theme.startsWith('custom:') ? customThemes.find((t) => t.id === theme) : null
+    document.documentElement.setAttribute('data-theme', custom ? 'dark' : theme)
+    THEME_TOKENS.forEach(({ key }) => {
+      if (custom) document.documentElement.style.setProperty(key, custom.colors[key])
+      else document.documentElement.style.removeProperty(key)
+    })
+  }, [theme, customThemes])
 
   useEffect(() => {
     document.documentElement.setAttribute('data-editor-contrast', editorPageContrast ? 'on' : 'off')

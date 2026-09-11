@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useStore } from '../../state/store.js'
 import Icon from '../icons.jsx'
+import { THEME_TOKENS, DEFAULT_CUSTOM_THEME_COLORS } from '../../lib/themeTokens.js'
 
 // Swatch colors are hardcoded here (not read from CSS vars) so every theme's
 // preview renders correctly regardless of which theme is currently active —
@@ -14,11 +15,33 @@ const THEMES = [
   { id: 'monochrome', label: 'Monochrome', swatches: ['#16171a', '#1c1d21', '#eaeaea', '#e8e8e8'] }
 ]
 
+// The 4 tokens the small preview swatch strip shows, out of all 15 —
+// enough to recognize a theme at a glance without a huge row.
+const PREVIEW_KEYS = ['--bg', '--panel', '--ink', '--cyan']
+
 export default function ThemeTab() {
   const theme = useStore((s) => s.theme)
   const setTheme = useStore((s) => s.setTheme)
   const editorPageContrast = useStore((s) => s.editorPageContrast)
   const toggleEditorPageContrast = useStore((s) => s.toggleEditorPageContrast)
+  const customThemes = useStore((s) => s.customThemes)
+  const saveCustomTheme = useStore((s) => s.saveCustomTheme)
+  const updateCustomTheme = useStore((s) => s.updateCustomTheme)
+  const renameCustomTheme = useStore((s) => s.renameCustomTheme)
+  const deleteCustomTheme = useStore((s) => s.deleteCustomTheme)
+
+  const [editingId, setEditingId] = useState(null)
+  const editing = customThemes.find((t) => t.id === editingId) || null
+
+  function startNewCustomTheme() {
+    const id = saveCustomTheme('My theme', { ...DEFAULT_CUSTOM_THEME_COLORS })
+    setEditingId(id)
+  }
+
+  function deleteEditing() {
+    if (editingId) deleteCustomTheme(editingId)
+    setEditingId(null)
+  }
 
   return (
     <>
@@ -42,6 +65,62 @@ export default function ThemeTab() {
           {theme === t.id && <Icon name="check" size={14} className="theme-row-check" />}
         </button>
       ))}
+
+      {customThemes.length > 0 && <div className="insp-section-title">Your themes</div>}
+      {customThemes.map((t) => (
+        <div key={t.id} className={'theme-row theme-row-custom' + (theme === t.id ? ' active' : '')}>
+          <button className="theme-row-main" onClick={() => setTheme(t.id)}>
+            <div className="theme-swatches">
+              {PREVIEW_KEYS.map((k) => (
+                <span key={k} className="theme-swatch" style={{ background: t.colors[k] }} />
+              ))}
+            </div>
+            <span className="theme-row-label">{t.name}</span>
+            {theme === t.id && <Icon name="check" size={14} className="theme-row-check" />}
+          </button>
+          <button className="theme-row-edit" title="Edit this theme" onClick={() => setEditingId(t.id)}>
+            <Icon name="edit" size={12} />
+          </button>
+          <button
+            className="theme-row-edit"
+            title="Delete this theme"
+            onClick={() => {
+              deleteCustomTheme(t.id)
+              if (editingId === t.id) setEditingId(null)
+            }}
+          >
+            <Icon name="trash" size={12} />
+          </button>
+        </div>
+      ))}
+      <button className="cat-add-btn" onClick={startNewCustomTheme}>+ New custom theme</button>
+
+      {editing && (
+        <div className="theme-editor">
+          <input
+            className="theme-editor-name"
+            value={editing.name}
+            onChange={(e) => renameCustomTheme(editing.id, e.target.value)}
+            placeholder="Theme name"
+          />
+          {THEME_TOKENS.map(({ key, label }) => (
+            <div className="theme-editor-row" key={key}>
+              <input
+                type="color"
+                value={editing.colors[key]}
+                onChange={(e) => updateCustomTheme(editing.id, { ...editing.colors, [key]: e.target.value })}
+              />
+              <span>{label}</span>
+            </div>
+          ))}
+          <div className="theme-editor-actions">
+            <button className="cat-open-btn" onClick={() => setEditingId(null)}>Done</button>
+            <button className="cat-del" onClick={deleteEditing} title="Delete this theme">
+              Delete
+            </button>
+          </div>
+        </div>
+      )}
     </>
   )
 }

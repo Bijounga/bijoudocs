@@ -34,7 +34,7 @@ export default function ChapterNode({
 
   return (
     <div
-      className={'map-node chapter-node' + (isSelected ? ' is-selected' : '')}
+      className={'map-node chapter-node' + (isSelected ? ' is-selected' : '') + (node.struck ? ' struck' : '')}
       data-section-id={id}
       style={{ left: node.x, top: node.y, width: NODE_WIDTH }}
       onMouseDown={(e) => onNodeMouseDown(e, id)}

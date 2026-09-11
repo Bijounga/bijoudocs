@@ -20,6 +20,10 @@ const api = {
   resetStorageDir: () => ipcRenderer.invoke('settings:resetStorageDir'),
   onUpdateStatus: (cb) => ipcRenderer.on('update:status', (_e, payload) => cb(payload)),
   addWordToDictionary: (word) => ipcRenderer.invoke('spellcheck:addToDictionary', word),
+  listDictionaryWords: () => ipcRenderer.invoke('spellcheck:listDictionaryWords'),
+  removeFromDictionary: (word) => ipcRenderer.invoke('spellcheck:removeFromDictionary', word),
+  loadGlobalCategories: () => ipcRenderer.invoke('categories:loadGlobal'),
+  saveGlobalCategories: (list) => ipcRenderer.invoke('categories:saveGlobal', list),
   installUpdateNow: () => ipcRenderer.invoke('update:installNow'),
   checkForUpdatesNow: () => ipcRenderer.invoke('update:checkNow'),
   downloadManualUpdate: (version) => ipcRenderer.invoke('update:downloadManualMac', version)

@@ -16,9 +16,14 @@ export default function CategoriesTab({ scriptId, script }) {
   const catAddDraft = useStore((s) => s.catAddDraft)
   const openAddCategoryDraft = useStore((s) => s.openAddCategoryDraft)
   const confirmAddCategory = useStore((s) => s.confirmAddCategory)
+  const globalCategories = useStore((s) => s.globalCategories)
+  const promoteCategoryToGlobal = useStore((s) => s.promoteCategoryToGlobal)
+  const unlinkCategoryFromGlobal = useStore((s) => s.unlinkCategoryFromGlobal)
+  const addExistingGlobalCategoryToScript = useStore((s) => s.addExistingGlobalCategoryToScript)
 
   const [draftName, setDraftName] = useState('')
   const [draftColor, setDraftColor] = useState('#7FA9F2')
+  const [draftGlobal, setDraftGlobal] = useState(false)
 
   function counts(c) {
     let count = 0
@@ -33,10 +38,13 @@ export default function CategoriesTab({ scriptId, script }) {
   }
 
   function submitAdd() {
-    confirmAddCategory(scriptId, draftName.trim() || 'New category', draftColor)
+    confirmAddCategory(scriptId, draftName.trim() || 'New category', draftColor, draftGlobal)
     setDraftName('')
     setDraftColor('#7FA9F2')
+    setDraftGlobal(false)
   }
+
+  const unusedGlobals = globalCategories.filter((g) => !script.categories.some((c) => c.globalId === g.id))
 
   return (
     <>
@@ -61,6 +69,17 @@ export default function CategoriesTab({ scriptId, script }) {
               onBlur={() => commitCategoryLabel(scriptId)}
             />
             <span className="cat-count">{done}/{count}</span>
+            <button
+              className={'cat-spoken-btn' + (c.globalId ? ' active' : '')}
+              onClick={() => (c.globalId ? unlinkCategoryFromGlobal(scriptId, c.id) : promoteCategoryToGlobal(scriptId, c.id))}
+              title={
+                c.globalId
+                  ? 'Global — editing this updates every script using it. Click to make it local to just this script.'
+                  : 'Local to this script only. Click to make it global — shared (and editable from) every script.'
+              }
+            >
+              <Icon name="globe" size={12} />
+            </button>
             <button
               className={'cat-spoken-btn' + (c.spoken === false ? '' : ' active')}
               onClick={() => toggleCategorySpoken(scriptId, c.id)}
@@ -108,10 +127,30 @@ export default function CategoriesTab({ scriptId, script }) {
             }}
           />
           <input type="color" value={draftColor} onChange={(e) => setDraftColor(e.target.value)} />
+          <label className="cat-add-global" title="Share this category across every script instead of just this one">
+            <input type="checkbox" checked={draftGlobal} onChange={(e) => setDraftGlobal(e.target.checked)} />
+            <Icon name="globe" size={12} />
+          </label>
           <button className="cat-open-btn" onClick={submitAdd}>Add</button>
         </div>
       ) : (
         <button className="cat-add-btn" onClick={openAddCategoryDraft}>+ Add category</button>
+      )}
+      {unusedGlobals.length > 0 && (
+        <>
+          <div className="insp-section-title">Global categories not used here</div>
+          {unusedGlobals.map((g) => (
+            <button
+              key={g.id}
+              className="cat-add-global-existing"
+              onClick={() => addExistingGlobalCategoryToScript(scriptId, g.id)}
+              title={'Add "' + g.label + '" to this script'}
+            >
+              <span className="cat-swatch-dot" style={{ background: g.color }} />
+              {g.label}
+            </button>
+          ))}
+        </>
       )}
       <div className="insp-hint">
         Click the search icon to view every line tagged that way across the script. The mic icon controls whether that

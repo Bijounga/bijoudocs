@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useStore } from '../../state/store.js'
 import { SHORTCUT_META } from '../../lib/keybinds.js'
 import Icon from '../icons.jsx'
+import DictionaryPanel from './DictionaryPanel.jsx'
 
 export default function ShortcutsTab() {
   const keybinds = useStore((s) => s.keybinds)
@@ -38,6 +39,8 @@ export default function ShortcutsTab() {
           </div>
         )
       })}
+      <div className="insp-section-title">Dictionary</div>
+      <DictionaryPanel />
       <div className="insp-hint">
         Also built in, not rebindable: Ctrl+Z / Ctrl+Shift+Z undo and redo. Left/Right/Up/Down move between lines and
         section titles once your cursor hits the edge of one; Shift+Up/Down while typing extends a line selection

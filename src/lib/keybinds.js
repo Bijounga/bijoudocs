@@ -37,7 +37,7 @@ export const SHORTCUT_META = [
   { id: 'italic', label: 'Italicize selected text', desc: 'Italicizes the current selection inside a line.' },
   { id: 'underline', label: 'Underline selected text', desc: 'Underlines the current selection inside a line.' },
   { id: 'color', label: 'Color selected text', desc: 'Cycles the selection through a small color palette.' },
-  { id: 'strike', label: 'Strikethrough', desc: 'Strikes selected text, selected lines, or a whole focused section.' },
+  { id: 'strike', label: 'Strikethrough', desc: 'Strikes selected text, selected lines, a whole focused section, or selected mind-map nodes.' },
   { id: 'tagLine', label: 'Tag current line', desc: 'Opens the tag menu for the line your cursor is in. Arrows + Enter, or a number, picks a category.' },
   { id: 'clearTag', label: 'Clear tag', desc: 'Removes the category tag from the line your cursor is in.' },
   { id: 'noteLine', label: 'Note current line', desc: 'Opens (or closes) the note box for the line your cursor is in.' },

@@ -105,6 +105,15 @@ export const CHANGELOG = {
     'New Theme tab (in the right-hand panel, next to Keys) — 6 color themes: Dark (the original), MacBook Light, Fable (aged parchment), Earthen (a dim medieval tavern look), High Contrast, and Monochrome',
     'New "Page contrast" toggle in the Theme tab — gives the script column (and the Outline) its own background instead of blending into the canvas, like a page sitting on a desk. On by default',
     'Zoom level (the % in the toolbar) is now remembered — and remembered per computer, so a Mac and a PC can each keep their own'
+  ],
+  '0.5.41': [
+    'Fixed a real bug in the mind map: clicking empty canvas while editing a node\'s title or summary didn\'t actually finish editing it, which is why selecting, duplicating, or copy/pasting nodes right after could act on stale data',
+    'Fixed a real bug in the mind map: two nodes placed close together could draw their connecting line backward, cutting through the card instead of reaching its edge — most noticeable in a mostly-horizontal layout',
+    'Right-click empty space on the mind map to add a section, idea node (hover for your presets), or chapter node, right where you clicked',
+    'New strikethrough for mind-map nodes and Outline items — right-click a node (or select several) or use the same Ctrl+Shift+X as line strikethrough. Purely visual, your section\'s real content is untouched. Now also toggleable directly from the Outline',
+    'The mind map now remembers where you left off — pan and zoom position is saved per script',
+    'New "Dictionary" section in the Keys tab — see every word you\'ve added to the dictionary, and forget any of them',
+    'Right-clicking an already-remembered word now offers "Remove from dictionary" instead of "Add" — and fixed a real bug where "Add to dictionary" could silently fail to actually save the word'
   ]
 }
 

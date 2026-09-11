@@ -110,6 +110,7 @@ export const useStore = create(
     spellCheckMisspelled: false,
     spellCheckSuggestions: [],
     spellCheckError: null,
+    spellCheckInDictionary: false,
     // One-shot bridge from ContextMenu.jsx (a globally-mounted singleton
     // with no direct access to MapView's own local selectedNodeIds state)
     // into MapView — set by requestMapSelection, consumed and cleared by
@@ -140,6 +141,12 @@ export const useStore = create(
     noteColor: '#f2a65a',
     theme: 'dark',
     editorPageContrast: true,
+    // User-made themes — a theme id here is 'custom:' + this entry's own
+    // id, so `theme` can point at either a built-in (a plain id, handled
+    // via the data-theme attribute + styles.css) or one of these (handled
+    // by setting every CSS variable inline instead, in App.jsx) without
+    // the two namespaces ever colliding.
+    customThemes: [],
 
     teleprompterOpen: false,
     teleprompterFontSize: 40,
@@ -154,13 +161,18 @@ export const useStore = create(
     redoStack: [],
     undoScriptId: null,
 
+    // Shared category definitions — see fileStore.js's loadGlobalCategories
+    // for why these live in the synced scripts folder, not settings.json.
+    globalCategories: [],
+
     // ---------- persistence ----------
     async init() {
-      const [scripts, settings, storageDir, appVersion] = await Promise.all([
+      const [scripts, settings, storageDir, appVersion, globalCategories] = await Promise.all([
         window.bijou.loadAllScripts(),
         window.bijou.loadSettings(),
         window.bijou.getDocsDir(),
-        window.bijou.getAppVersion()
+        window.bijou.getAppVersion(),
+        window.bijou.loadGlobalCategories()
       ])
       const sorted = scripts.slice().sort((a, b) => b.updatedAt - a.updatedAt)
       set((s) => {
@@ -169,6 +181,7 @@ export const useStore = create(
         s.loaded = true
         s.storageDir = storageDir
         s.appVersion = appVersion
+        s.globalCategories = globalCategories || []
         s.diskUpdatedAt = {}
         scripts.forEach((sc) => {
           s.diskUpdatedAt[sc.id] = sc.updatedAt
@@ -176,6 +189,7 @@ export const useStore = create(
         if (settings && settings.noteColor) s.noteColor = settings.noteColor
         if (settings && settings.theme) s.theme = settings.theme
         if (settings && typeof settings.editorPageContrast === 'boolean') s.editorPageContrast = settings.editorPageContrast
+        if (settings && Array.isArray(settings.customThemes)) s.customThemes = settings.customThemes
         if (settings && typeof settings.zoom === 'number') s.zoom = settings.zoom
         if (settings && settings.leftMarginWidth) s.leftMarginWidth = settings.leftMarginWidth
         if (settings && settings.rightMarginWidth) s.rightMarginWidth = settings.rightMarginWidth
@@ -263,6 +277,7 @@ export const useStore = create(
         s.spellCheckMisspelled = false
         s.spellCheckSuggestions = []
         s.spellCheckError = null
+        s.spellCheckInDictionary = false
       })
       checkSpelling(word).then(
         (result) => {
@@ -281,6 +296,18 @@ export const useStore = create(
           })
         }
       )
+      // Separate from the LanguageTool check above (and never blocks it) —
+      // LanguageTool has no idea what's in the user's own local Chromium
+      // dictionary, so a remembered word can still legitimately come back
+      // "misspelled" from it. Checked independently so the menu can offer
+      // "Remove from dictionary" instead of "Add" regardless of what
+      // LanguageTool itself thinks.
+      window.bijou.listDictionaryWords().then((words) => {
+        set((s) => {
+          if (s.spellCheckFor !== key) return
+          s.spellCheckInDictionary = words.includes(word)
+        })
+      })
     },
     closeSpellCheck() {
       set((s) => {
@@ -289,6 +316,12 @@ export const useStore = create(
     },
     addWordToDictionary(word) {
       window.bijou.addWordToDictionary(word)
+      set((s) => {
+        s.spellCheckFor = null
+      })
+    },
+    removeWordFromDictionary(word) {
+      window.bijou.removeFromDictionary(word)
       set((s) => {
         s.spellCheckFor = null
       })
@@ -337,6 +370,7 @@ export const useStore = create(
         noteColor: s.noteColor,
         theme: s.theme,
         editorPageContrast: s.editorPageContrast,
+        customThemes: s.customThemes,
         zoom: s.zoom,
         leftMarginWidth: s.leftMarginWidth,
         rightMarginWidth: s.rightMarginWidth,
@@ -358,6 +392,36 @@ export const useStore = create(
     setTheme(theme) {
       set((s) => {
         s.theme = theme
+      })
+      get().saveAppSettings()
+    },
+    saveCustomTheme(name, colors) {
+      const id = 'custom:' + uid()
+      set((s) => {
+        s.customThemes.push({ id, name: name || 'My theme', colors })
+        s.theme = id
+      })
+      get().saveAppSettings()
+      return id
+    },
+    updateCustomTheme(id, colors) {
+      set((s) => {
+        const t = s.customThemes.find((ct) => ct.id === id)
+        if (t) t.colors = colors
+      })
+      get().saveAppSettings()
+    },
+    renameCustomTheme(id, name) {
+      set((s) => {
+        const t = s.customThemes.find((ct) => ct.id === id)
+        if (t) t.name = name || 'My theme'
+      })
+      get().saveAppSettings()
+    },
+    deleteCustomTheme(id) {
+      set((s) => {
+        s.customThemes = s.customThemes.filter((ct) => ct.id !== id)
+        if (s.theme === id) s.theme = 'dark'
       })
       get().saveAppSettings()
     },
@@ -568,6 +632,22 @@ export const useStore = create(
       set((s) => {
         s.currentScriptId = id
         s.filterCategory = null
+        // A globalId-linked category can have drifted from the shared
+        // definition since this script was last opened (edited from a
+        // different script that was open at the same time) — pull it
+        // fresh now rather than leaving it stale until the next relaunch.
+        const script = s.scripts.find((sc) => sc.id === id)
+        if (script) {
+          script.categories.forEach((cat) => {
+            if (!cat.globalId) return
+            const g = s.globalCategories.find((gc) => gc.id === cat.globalId)
+            if (!g) return
+            cat.label = g.label
+            cat.color = g.color
+            cat.spoken = g.spoken
+            cat.teleprompterNote = g.teleprompterNote
+          })
+        }
       })
       get().ensureDailyRollover(id)
     },
@@ -1099,33 +1179,120 @@ export const useStore = create(
         s.catAddDraft = false
       })
     },
-    confirmAddCategory(scriptId, name, color) {
+    confirmAddCategory(scriptId, name, color, isGlobal) {
       get().pushUndo(scriptId)
       set((s) => {
         const script = s.scripts.find((sc) => sc.id === scriptId)
         if (!script) return
-        script.categories.push({ id: uid(), label: name || 'New category', color: color || '#7FA9F2', spoken: true })
+        const label = name || 'New category'
+        const col = color || '#7FA9F2'
+        if (isGlobal) {
+          const globalId = uid()
+          s.globalCategories.push({ id: globalId, label, color: col, spoken: true })
+          script.categories.push({ id: uid(), globalId, label, color: col, spoken: true })
+        } else {
+          script.categories.push({ id: uid(), label, color: col, spoken: true })
+        }
         s.catAddDraft = false
       })
+      if (isGlobal) get().saveGlobalCategoriesFile()
       get().scheduleSave(scriptId, { flash: false })
+    },
+    // Links an existing script-local category to a shared definition —
+    // creates the shared entry from the local one's current label/color,
+    // future edits to either then flow through setCategoryColor/Label's
+    // globalId mirroring below.
+    promoteCategoryToGlobal(scriptId, categoryId) {
+      get().pushUndo(scriptId)
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        const cat = script && script.categories.find((c) => c.id === categoryId)
+        if (!cat || cat.globalId) return
+        const globalId = uid()
+        cat.globalId = globalId
+        s.globalCategories.push({
+          id: globalId,
+          label: cat.label,
+          color: cat.color,
+          spoken: cat.spoken !== false,
+          teleprompterNote: !!cat.teleprompterNote
+        })
+        script.updatedAt = Date.now()
+      })
+      get().saveGlobalCategoriesFile()
+      get().scheduleSave(scriptId, { flash: false })
+    },
+    // Detaches a local category from its shared definition — it keeps its
+    // current label/color but stops following future edits made elsewhere.
+    // The shared definition itself is untouched (other scripts may still
+    // use it).
+    unlinkCategoryFromGlobal(scriptId, categoryId) {
+      get().pushUndo(scriptId)
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        const cat = script && script.categories.find((c) => c.id === categoryId)
+        if (cat) delete cat.globalId
+        if (script) script.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+    },
+    // Adds a local, globalId-linked copy of an existing shared category to
+    // this script — the "use this global category here too" action.
+    addExistingGlobalCategoryToScript(scriptId, globalId) {
+      get().pushUndo(scriptId)
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        const g = s.globalCategories.find((gc) => gc.id === globalId)
+        if (!script || !g) return
+        if (script.categories.some((c) => c.globalId === globalId)) return
+        script.categories.push({
+          id: uid(),
+          globalId: g.id,
+          label: g.label,
+          color: g.color,
+          spoken: g.spoken !== false,
+          teleprompterNote: !!g.teleprompterNote
+        })
+        script.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+    },
+    saveGlobalCategoriesFile() {
+      window.bijou.saveGlobalCategories(get().globalCategories)
     },
     setCategoryColor(scriptId, categoryId, color) {
       set((s) => {
         const script = s.scripts.find((sc) => sc.id === scriptId)
         const cat = script && script.categories.find((c) => c.id === categoryId)
-        if (cat) cat.color = color
+        if (cat) {
+          cat.color = color
+          // A globalId-linked category is a live-shared definition, not a
+          // one-time copy — editing it here should update every other
+          // script that also uses it, the next time each one loads/saves.
+          if (cat.globalId) {
+            const g = s.globalCategories.find((gc) => gc.id === cat.globalId)
+            if (g) g.color = color
+          }
+        }
         if (script) script.updatedAt = Date.now()
       })
     },
     commitCategoryColor(scriptId) {
       get().pushUndo(scriptId)
+      get().saveGlobalCategoriesFile()
       get().scheduleSave(scriptId, { flash: false })
     },
     setCategoryLabel(scriptId, categoryId, label) {
       set((s) => {
         const script = s.scripts.find((sc) => sc.id === scriptId)
         const cat = script && script.categories.find((c) => c.id === categoryId)
-        if (cat) cat.label = label
+        if (cat) {
+          cat.label = label
+          if (cat.globalId) {
+            const g = s.globalCategories.find((gc) => gc.id === cat.globalId)
+            if (g) g.label = label
+          }
+        }
       })
     },
     commitCategoryLabel(scriptId) {
@@ -1133,6 +1300,7 @@ export const useStore = create(
         const script = s.scripts.find((sc) => sc.id === scriptId)
         if (script) script.updatedAt = Date.now()
       })
+      get().saveGlobalCategoriesFile()
       get().scheduleSave(scriptId)
     },
     // Whether lines tagged with this category count toward the spoken-word
@@ -1793,6 +1961,24 @@ export const useStore = create(
       })
       get().scheduleSave(scriptId, { flash: false })
     },
+    // Marks a mind-map node itself as "cut" (a card-level visual, distinct
+    // from toggleStruckForSection above, which strikes a section's actual
+    // lines) — for planning: a whole branch/idea can be crossed out on the
+    // map without touching any real script content underneath it.
+    toggleStruckForMapNodes(scriptId, nodeIds) {
+      if (!nodeIds.length) return
+      get().pushUndo(scriptId)
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        if (!script) return
+        const nodes = script.mapLayout.nodes
+        const anyUnstruck = nodeIds.some((id) => nodes[id] && !nodes[id].struck)
+        nodeIds.forEach((id) => {
+          if (nodes[id]) nodes[id].struck = anyUnstruck
+        })
+      })
+      get().scheduleSave(scriptId, { flash: false })
+    },
     toggleStruckForSection(scriptId, sectionId) {
       get().pushUndo(scriptId)
       set((s) => {
@@ -2198,6 +2384,18 @@ export const useStore = create(
         const script = s.scripts.find((sc) => sc.id === scriptId)
         if (script) script.mapLayout.hideSummaries = !script.mapLayout.hideSummaries
       })
+    },
+    // Saved once when the map view unmounts (leaving the map, or switching
+    // to a different script while still in it) — not on every pan/zoom
+    // change, which would mean a store write per mousemove while dragging.
+    setMapViewport(scriptId, pan, zoom) {
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        if (!script) return
+        script.mapLayout.viewPan = pan
+        script.mapLayout.viewZoom = zoom
+      })
+      get().scheduleSave(scriptId, { flash: false })
     },
     toggleMapNodeCollapsed(scriptId, sectionId) {
       set((s) => {

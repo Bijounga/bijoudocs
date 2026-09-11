@@ -109,12 +109,28 @@ function registerIpc() {
   // context-menu event's data (see feedback memory: that event never
   // reliably delivered anything in real use, across several attempts).
   // Registered once here (not inside createWindow, which can run again on
-  // macOS dock-reactivate) and resolved against whichever window is
-  // actually focused at click time.
+  // macOS dock-reactivate). Uses session.defaultSession directly rather
+  // than BrowserWindow.getFocusedWindow().webContents.session — this app
+  // never creates a custom session partition, so there's only ever the one
+  // session anyway, and getFocusedWindow() returning null (no *OS-level*
+  // focus on the window, a real state distinct from "the user was just
+  // interacting with it") meant this could silently no-op.
   ipcMain.handle('spellcheck:addToDictionary', (_e, word) => {
-    const win = BrowserWindow.getFocusedWindow()
-    if (win) win.webContents.session.addWordToSpellCheckerDictionary(word)
+    session.defaultSession.addWordToSpellCheckerDictionary(word)
   })
+
+  // "Remember words" management — lets the user see and un-remember
+  // specific words, not just add new ones one at a time from the
+  // right-click menu.
+  ipcMain.handle('spellcheck:listDictionaryWords', () => {
+    return session.defaultSession.listWordsInSpellCheckerDictionary()
+  })
+  ipcMain.handle('spellcheck:removeFromDictionary', (_e, word) => {
+    return session.defaultSession.removeWordFromSpellCheckerDictionary(word)
+  })
+
+  ipcMain.handle('categories:loadGlobal', () => fileStore.loadGlobalCategories())
+  ipcMain.handle('categories:saveGlobal', (_e, list) => fileStore.saveGlobalCategories(list))
 
   ipcMain.handle('scripts:newBlank', (_e, title) => {
     return newBlankScript(title)

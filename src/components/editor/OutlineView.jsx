@@ -26,6 +26,7 @@ export default function OutlineView({ scriptId, script }) {
   const toggleMapView = useStore((s) => s.toggleMapView)
   const deleteOutlineNode = useStore((s) => s.deleteOutlineNode)
   const toggleResumeOutlineNode = useStore((s) => s.toggleResumeOutlineNode)
+  const toggleStruckForMapNodes = useStore((s) => s.toggleStruckForMapNodes)
   const jumpOutlineHighlightId = useStore((s) => s.jumpOutlineHighlightId)
   const [query, setQuery] = useState('')
   const listRef = useRef(null)
@@ -124,7 +125,12 @@ export default function OutlineView({ scriptId, script }) {
               <React.Fragment key={id}>
                 {dividersHere.map((d, di) => renderDivider(d, di))}
                 <div
-                  className={'outline-item' + (script.resumeOutlineNodeId === id ? ' resume-point' : '') + (jumpOutlineHighlightId === id ? ' jump-flash' : '')}
+                  className={
+                    'outline-item' +
+                    (script.resumeOutlineNodeId === id ? ' resume-point' : '') +
+                    (jumpOutlineHighlightId === id ? ' jump-flash' : '') +
+                    (node.struck ? ' struck' : '')
+                  }
                   data-item-id={id}
                 >
                   <span className="outline-item-num">{i + 1}</span>
@@ -150,6 +156,14 @@ export default function OutlineView({ scriptId, script }) {
                       </button>
                       <button className="icon-btn" style={{ padding: '4px 8px' }} onClick={toggleMapView} title="View on the map">
                         <Icon name="map" size={12} />
+                      </button>
+                      <button
+                        className={'icon-btn' + (node.struck ? ' active' : '')}
+                        style={{ padding: '4px 8px' }}
+                        onClick={() => toggleStruckForMapNodes(scriptId, [id])}
+                        title={node.struck ? 'Unstrike' : 'Strike through'}
+                      >
+                        <Icon name="strike" size={12} />
                       </button>
                       <button
                         className="icon-btn"
@@ -211,6 +225,14 @@ export default function OutlineView({ scriptId, script }) {
                     </button>
                     <button className="icon-btn" style={{ padding: '4px 8px' }} onClick={toggleMapView} title="View on the map">
                       <Icon name="map" size={12} />
+                    </button>
+                    <button
+                      className={'icon-btn' + (node.struck ? ' active' : '')}
+                      style={{ padding: '4px 8px' }}
+                      onClick={() => toggleStruckForMapNodes(scriptId, [id])}
+                      title={node.struck ? 'Unstrike' : 'Strike through'}
+                    >
+                      <Icon name="strike" size={12} />
                     </button>
                     <button
                       className="icon-btn"
