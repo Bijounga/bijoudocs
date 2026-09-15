@@ -115,7 +115,7 @@ export const CHANGELOG = {
     'New "Dictionary" section in the Keys tab — see every word you\'ve added to the dictionary, and forget any of them',
     'Right-clicking an already-remembered word now offers "Remove from dictionary" instead of "Add" — and fixed a real bug where "Add to dictionary" could silently fail to actually save the word'
   ],
-  '0.5.42': [
+  '0.5.43': [
     'Idea nodes can now take on real flowchart shapes — rectangle, diamond, parallelogram, or rounded pill — click the shape icon in a node\'s header to change it anytime',
     'Idea node presets now bundle a shape along with their label and color, so e.g. a "Decision" preset can always come out as a yellow diamond',
     'The mind map\'s right-click "Add idea node" menu now shows each preset\'s actual shape instead of a plain dot'
