@@ -5,6 +5,7 @@ import path from 'path'
 import fs from 'fs'
 import * as fileStore from './fileStore.js'
 import { migrateScript, newBlankScript } from './scriptSchema.js'
+import * as scriptWatcher from './scriptWatcher.js'
 
 const isDev = !app.isPackaged
 const isMac = process.platform === 'darwin'
@@ -86,13 +87,15 @@ function createWindow() {
   return win
 }
 
-function registerIpc() {
+function registerIpc(win) {
   ipcMain.handle('scripts:loadAll', () => {
     return fileStore.loadAllScripts()
   })
 
   ipcMain.handle('scripts:save', (_e, script, expectedUpdatedAt, opts) => {
-    return fileStore.saveScript(script, expectedUpdatedAt, opts)
+    const result = fileStore.saveScript(script, expectedUpdatedAt, opts)
+    scriptWatcher.noteSelfWrite(script.id, result.updatedAt)
+    return result
   })
 
   ipcMain.handle('scripts:delete', (_e, id) => {
@@ -101,7 +104,11 @@ function registerIpc() {
   })
 
   ipcMain.handle('scripts:saveHistory', (_e, id) => fileStore.listSaveHistory(id))
-  ipcMain.handle('scripts:restoreFromHistory', (_e, id, file) => fileStore.restoreFromHistory(id, file))
+  ipcMain.handle('scripts:restoreFromHistory', (_e, id, file) => {
+    const restored = fileStore.restoreFromHistory(id, file)
+    scriptWatcher.noteSelfWrite(id, restored.updatedAt)
+    return restored
+  })
 
   // Tells Chromium's real spellchecker to stop flagging this word (the
   // inline red-squiggly detection, which works fine on its own) — the word
@@ -154,6 +161,7 @@ function registerIpc() {
     const oldDir = fileStore.getDocsDir()
     fileStore.migrateStorageDir(oldDir, newDir)
     fileStore.saveSettings({ storageDir: newDir })
+    scriptWatcher.startWatching(win)
     return { canceled: false, dir: newDir }
   })
 
@@ -162,6 +170,7 @@ function registerIpc() {
     const newDir = fileStore.defaultDocsDir()
     fileStore.migrateStorageDir(oldDir, newDir)
     fileStore.saveSettings({ storageDir: undefined })
+    scriptWatcher.startWatching(win)
     return { dir: newDir }
   })
 
@@ -251,8 +260,9 @@ app.whenReady().then(() => {
   } catch (err) {
     console.error('BijouDocs: spellchecker language setup failed', err)
   }
-  registerIpc()
   const win = createWindow()
+  registerIpc(win)
+  scriptWatcher.startWatching(win)
   const checkNow = setupAutoUpdater(win)
 
   ipcMain.handle('update:installNow', () => {

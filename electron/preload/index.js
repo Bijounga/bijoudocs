@@ -19,6 +19,10 @@ const api = {
   chooseStorageDir: () => ipcRenderer.invoke('settings:chooseStorageDir'),
   resetStorageDir: () => ipcRenderer.invoke('settings:resetStorageDir'),
   onUpdateStatus: (cb) => ipcRenderer.on('update:status', (_e, payload) => cb(payload)),
+  // Fired when a script's .json file changes on disk from something other
+  // than this app instance's own save — currently only the Premiere
+  // extension (premiere-extension/), which edits tags/notes/done directly.
+  onExternalScriptChange: (cb) => ipcRenderer.on('scripts:externalChange', (_e, script) => cb(script)),
   addWordToDictionary: (word) => ipcRenderer.invoke('spellcheck:addToDictionary', word),
   listDictionaryWords: () => ipcRenderer.invoke('spellcheck:listDictionaryWords'),
   removeFromDictionary: (word) => ipcRenderer.invoke('spellcheck:removeFromDictionary', word),
