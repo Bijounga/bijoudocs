@@ -6,6 +6,7 @@ import Icon from '../icons.jsx'
 import MapNode, { NODE_WIDTH, NODE_H } from './MapNode.jsx'
 import IdeaNode from './IdeaNode.jsx'
 import ChapterNode from './ChapterNode.jsx'
+import ShapePicker, { SHAPES } from './ShapePicker.jsx'
 import { computeMainThread } from '../../lib/mapGraph.js'
 
 function isIdeaNode(node) {
@@ -626,7 +627,7 @@ export default function MapView({ scriptId, script }) {
   function handleAddIdeaNode(preset, at) {
     const world = at || viewportCenterWorld()
     if (!world) return
-    const opts = preset ? { title: preset.label, color: preset.color } : {}
+    const opts = preset ? { title: preset.label, color: preset.color, shape: preset.shape } : {}
     const newId = addIdeaNode(scriptId, world.x - NODE_WIDTH / 2, world.y - NODE_H / 2, opts)
     if (newId) setSelectedNodeIds([newId])
     setIdeaMenuOpen(false)
@@ -678,12 +679,16 @@ export default function MapView({ scriptId, script }) {
           {ideaMenuOpen && (
             <div className="map-idea-menu">
               <div className="map-idea-menu-item" onClick={() => handleAddIdeaNode()}>
-                <span className="map-idea-swatch" style={{ background: 'var(--ink-faint)' }} />
+                <span className="map-idea-swatch" style={{ color: 'var(--ink-faint)' }}>
+                  <Icon name={SHAPES[0].icon} size={13} />
+                </span>
                 Blank
               </div>
               {ideaNodePresets.map((preset) => (
                 <div key={preset.id} className="map-idea-menu-item" onClick={() => handleAddIdeaNode(preset)}>
-                  <span className="map-idea-swatch" style={{ background: preset.color }} />
+                  <span className="map-idea-swatch" style={{ color: preset.color }}>
+                    <Icon name={(SHAPES.find((s) => s.id === (preset.shape || 'rectangle')) || SHAPES[0]).icon} size={13} />
+                  </span>
                   {preset.label}
                 </div>
               ))}
@@ -898,6 +903,7 @@ export default function MapView({ scriptId, script }) {
 function PresetManager({ presets, onAdd, onDelete, onUpdate, onClose }) {
   const [label, setLabel] = useState('')
   const [color, setColor] = useState('#8a8d99')
+  const [shape, setShape] = useState('rectangle')
   const ref = useRef(null)
 
   useEffect(() => {
@@ -920,6 +926,7 @@ function PresetManager({ presets, onAdd, onDelete, onUpdate, onClose }) {
             title="Change preset color"
             onChange={(e) => onUpdate(p.id, { color: e.target.value })}
           />
+          <ShapePicker value={p.shape || 'rectangle'} onChange={(s) => onUpdate(p.id, { shape: s })} />
           <input
             className="map-preset-label-input"
             style={{ flex: 1 }}
@@ -939,6 +946,7 @@ function PresetManager({ presets, onAdd, onDelete, onUpdate, onClose }) {
           onChange={(e) => setColor(e.target.value)}
           title="Preset color"
         />
+        <ShapePicker value={shape} onChange={setShape} />
         <input
           className="map-preset-add-input"
           placeholder="New preset label…"
@@ -946,7 +954,7 @@ function PresetManager({ presets, onAdd, onDelete, onUpdate, onClose }) {
           onChange={(e) => setLabel(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && label.trim()) {
-              onAdd(label.trim(), color)
+              onAdd(label.trim(), color, shape)
               setLabel('')
             }
           }}
@@ -957,7 +965,7 @@ function PresetManager({ presets, onAdd, onDelete, onUpdate, onClose }) {
           disabled={!label.trim()}
           onClick={() => {
             if (!label.trim()) return
-            onAdd(label.trim(), color)
+            onAdd(label.trim(), color, shape)
             setLabel('')
           }}
         >

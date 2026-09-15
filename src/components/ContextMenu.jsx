@@ -3,6 +3,8 @@ import { useStore } from '../state/store.js'
 import { findLine, sectionsHaveContent } from '../lib/model.js'
 import { replaceCapturedSelection } from '../state/lineRefs.js'
 import { NODE_WIDTH, NODE_H } from './editor/MapNode.jsx'
+import Icon from './icons.jsx'
+import { SHAPES } from './editor/ShapePicker.jsx'
 
 export default function ContextMenu() {
   const menu = useStore((s) => s.contextMenu)
@@ -241,11 +243,12 @@ export default function ContextMenu() {
       {
         label: 'Add idea node',
         submenu: [
-          { label: 'Blank', swatch: 'var(--ink-faint)', onClick: act(() => addIdeaNode(menu.scriptId, x, y, {})) },
+          { label: 'Blank', swatch: 'var(--ink-faint)', shape: 'rectangle', onClick: act(() => addIdeaNode(menu.scriptId, x, y, {})) },
           ...ideaNodePresets.map((p) => ({
             label: p.label,
             swatch: p.color,
-            onClick: act(() => addIdeaNode(menu.scriptId, x, y, { title: p.label, color: p.color }))
+            shape: p.shape || 'rectangle',
+            onClick: act(() => addIdeaNode(menu.scriptId, x, y, { title: p.label, color: p.color, shape: p.shape }))
           }))
         ]
       },
@@ -280,7 +283,9 @@ export default function ContextMenu() {
               >
                 {it.submenu.map((sub, si) => (
                   <div key={si} className="map-idea-menu-item" onClick={sub.onClick}>
-                    <span className="map-idea-swatch" style={{ background: sub.swatch }} />
+                    <span className="map-idea-swatch" style={{ color: sub.swatch }}>
+                      <Icon name={(SHAPES.find((s) => s.id === sub.shape) || SHAPES[0]).icon} size={13} />
+                    </span>
                     {sub.label}
                   </div>
                 ))}

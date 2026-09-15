@@ -11,6 +11,7 @@ import { totalWordCountAll } from '../lib/timecode.js'
 import { CHANGELOG, changelogSince } from '../lib/changelog.js'
 import { fetchSynonyms } from '../lib/synonyms.js'
 import { checkSpelling } from '../lib/spellcheck.js'
+import { mergeExternalScript } from '../lib/externalMerge.js'
 
 const MAX_UNDO = 60
 const saveTimers = {}
@@ -128,8 +129,8 @@ export const useStore = create(
     // nodes. Seeded with "But"/"Therefore" (the South Park writing-method
     // pair) on first use, fully user-editable after.
     ideaNodePresets: [
-      { id: 'preset-but', label: 'But', color: '#e2665b' },
-      { id: 'preset-therefore', label: 'Therefore', color: '#4fd1c5' }
+      { id: 'preset-but', label: 'But', color: '#e2665b', shape: 'rectangle' },
+      { id: 'preset-therefore', label: 'Therefore', color: '#4fd1c5', shape: 'rectangle' }
     ],
     takesMenuFor: null,
     leftMarginOpen: true,
@@ -210,6 +211,10 @@ export const useStore = create(
         if (settings && typeof settings.pinnedMarginOpen === 'boolean') s.pinnedMarginOpen = settings.pinnedMarginOpen
         s.lastSeenVersion = appVersion
       })
+      // Registered once per app launch (init() only ever runs once) — fires
+      // whenever a script's file changes on disk from outside this app
+      // instance, currently only the Premiere extension.
+      window.bijou.onExternalScriptChange((script) => get().applyExternalScriptChange(script))
       // A missing lastSeenVersion means one of two very different things:
       // either this is a genuinely brand-new install (no scripts yet —
       // showing a changelog before the user has done anything would just
@@ -443,9 +448,9 @@ export const useStore = create(
       })
       get().saveAppSettings()
     },
-    addIdeaNodePreset(label, color) {
+    addIdeaNodePreset(label, color, shape) {
       set((s) => {
-        s.ideaNodePresets.push({ id: uid(), label, color })
+        s.ideaNodePresets.push({ id: uid(), label, color, shape: shape || 'rectangle' })
       })
       get().saveAppSettings()
     },
@@ -503,6 +508,23 @@ export const useStore = create(
     forceSave(id) {
       clearTimeout(saveTimers[id])
       return get().performSave(id, { flash: true, text: 'Saved', forceSnapshot: true })
+    },
+    // A script's file changed on disk from outside this app instance —
+    // currently only the Premiere extension (premiere-extension/), tagging/
+    // noting/checking-off lines directly. See src/lib/externalMerge.js for
+    // exactly which fields this is allowed to touch (never anything an
+    // in-progress edit in this app's own editor could be holding).
+    applyExternalScriptChange(incoming) {
+      set((s) => {
+        const idx = s.scripts.findIndex((sc) => sc.id === incoming.id)
+        if (idx === -1) {
+          s.scripts.push(incoming)
+        } else {
+          mergeExternalScript(s.scripts[idx], incoming)
+        }
+        s.diskUpdatedAt[incoming.id] = incoming.updatedAt
+      })
+      if (get().currentScriptId === incoming.id) get().flashSaved('Updated from Premiere')
     },
     dismissSaveConflict(id) {
       set((s) => {
@@ -2476,7 +2498,8 @@ export const useStore = create(
           type: 'idea',
           title: opts.title || '',
           text: opts.text || '',
-          color: opts.color || null
+          color: opts.color || null,
+          shape: opts.shape || 'rectangle'
         }
         script.updatedAt = Date.now()
       })
@@ -2529,6 +2552,16 @@ export const useStore = create(
         const script = s.scripts.find((sc) => sc.id === scriptId)
         const node = script && script.mapLayout.nodes[nodeId]
         if (node) node.color = color
+        if (script) script.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+    },
+    setIdeaNodeShape(scriptId, nodeId, shape) {
+      get().pushUndo(scriptId)
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        const node = script && script.mapLayout.nodes[nodeId]
+        if (node) node.shape = shape
         if (script) script.updatedAt = Date.now()
       })
       get().scheduleSave(scriptId, { flash: false })

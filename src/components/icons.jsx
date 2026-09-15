@@ -32,6 +32,10 @@ const PATHS = {
   globe: '<circle cx="8" cy="8" r="5.5"/><ellipse cx="8" cy="8" rx="2.3" ry="5.5"/><line x1="2.5" y1="8" x2="13.5" y2="8"/>',
   edit: '<path d="M10.5 2.5l3 3-8 8-3.5 0.5 0.5-3.5z"/><line x1="9" y1="4" x2="12" y2="7"/>',
   strike: '<line x1="3.5" y1="5" x2="12.5" y2="5"/><line x1="2" y1="8" x2="14" y2="8"/><line x1="3.5" y1="11" x2="12.5" y2="11"/>',
+  shapeRectangle: '<rect x="2" y="4" width="12" height="8" rx="1.5"/>',
+  shapeDiamond: '<path d="M8 2 L14 8 L8 14 L2 8 Z"/>',
+  shapeParallelogram: '<path d="M5.5 3 L14 3 L10.5 13 L2 13 Z"/>',
+  shapePill: '<rect x="1.5" y="5" width="13" height="6" rx="3"/>',
   alignLeft: '<line x1="2" y1="3.5" x2="14" y2="3.5"/><line x1="2" y1="7" x2="9.5" y2="7"/><line x1="2" y1="10.5" x2="14" y2="10.5"/><line x1="2" y1="14" x2="7" y2="14"/>',
   alignCenter: '<line x1="2" y1="3.5" x2="14" y2="3.5"/><line x1="4.5" y1="7" x2="11.5" y2="7"/><line x1="2" y1="10.5" x2="14" y2="10.5"/><line x1="5.5" y1="14" x2="10.5" y2="14"/>',
   alignRight: '<line x1="2" y1="3.5" x2="14" y2="3.5"/><line x1="6.5" y1="7" x2="14" y2="7"/><line x1="2" y1="10.5" x2="14" y2="10.5"/><line x1="9" y1="14" x2="14" y2="14"/>'
