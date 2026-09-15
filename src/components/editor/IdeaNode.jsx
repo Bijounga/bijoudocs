@@ -31,6 +31,7 @@ export default function IdeaNode({
   const setIdeaNodeText = useStore((s) => s.setIdeaNodeText)
   const commitIdeaNodeText = useStore((s) => s.commitIdeaNodeText)
   const setIdeaNodeColor = useStore((s) => s.setIdeaNodeColor)
+  const setIdeaNodeBgColor = useStore((s) => s.setIdeaNodeBgColor)
   const setIdeaNodeShape = useStore((s) => s.setIdeaNodeShape)
   const toggleIdeaNodeTitleBold = useStore((s) => s.toggleIdeaNodeTitleBold)
   const toggleMapNodeCollapsed = useStore((s) => s.toggleMapNodeCollapsed)
@@ -39,6 +40,7 @@ export default function IdeaNode({
   const [editingTitle, setEditingTitle] = useState(false)
 
   const color = node.color || 'var(--ink-faint)'
+  const bgColor = node.bgColor || '#ffffff'
   const shape = node.shape || 'rectangle'
   // `font-weight` alone silently no-ops on a monospace stack that falls
   // back to a static, single-weight font (confirmed: 400 vs 800 rendered
@@ -63,92 +65,118 @@ export default function IdeaNode({
       }}
     >
       {order != null && <span className="map-node-order">{order}</span>}
-      <div className={'idea-node-shape-inner shape-' + shape} style={{ '--node-shape-color': color }}>
-        <div className="map-node-head idea-node-head">
-          {editingTitle ? (
-            <input
-              className="idea-node-title"
-              style={{ color, ...titleBoldStyle }}
-              placeholder="Title…"
-              value={node.title}
-              autoFocus
-              onFocus={(e) => {
-                pushUndo(scriptId)
-                e.target.select()
-              }}
-              onMouseDown={(e) => e.stopPropagation()}
-              onClick={(e) => e.stopPropagation()}
-              onChange={(e) => setIdeaNodeTitle(scriptId, id, e.target.value)}
-              onBlur={() => {
-                commitIdeaNodeTitle(scriptId)
-                setEditingTitle(false)
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === 'Escape') e.target.blur()
-              }}
-            />
-          ) : (
-            <span
-              className="idea-node-title idea-node-title-display"
-              style={{ color: node.title ? color : 'var(--ink-faint)', ...titleBoldStyle }}
-              onMouseDown={(e) => e.detail > 1 && e.stopPropagation()}
-              onDoubleClick={(e) => {
-                e.stopPropagation()
-                setEditingTitle(true)
-              }}
-            >
-              {node.title || 'Title…'}
-            </span>
-          )}
-          <button
-            className={'idea-node-bold' + (node.titleBold ? ' active' : '')}
-            title={node.titleBold ? 'Unbold title' : 'Bold title'}
-            onMouseDown={(e) => e.stopPropagation()}
-            onClick={() => toggleIdeaNodeTitleBold(scriptId, id)}
-          >
-            B
-          </button>
-          <ShapePicker value={shape} onChange={(s) => setIdeaNodeShape(scriptId, id, s)} className="idea-node-shape-picker" />
-          <input
-            type="color"
-            className="idea-node-color-input"
-            value={node.color || '#8a8d99'}
-            title="Node color"
-            onMouseDown={(e) => e.stopPropagation()}
-            onChange={(e) => setIdeaNodeColor(scriptId, id, e.target.value)}
-          />
-          <button
-            className="idea-node-delete"
-            title="Delete this node"
-            onMouseDown={(e) => e.stopPropagation()}
-            onClick={() => deleteIdeaNodes(scriptId, [id])}
-          >
-            <Icon name="x" size={11} />
-          </button>
-        </div>
-        {showText && (
-          <textarea
-            className="idea-node-text"
-            placeholder="Write the idea…"
-            value={node.text}
-            onMouseDown={(e) => e.stopPropagation()}
-            onFocus={() => pushUndo(scriptId)}
-            onChange={(e) => setIdeaNodeText(scriptId, id, e.target.value)}
-            onBlur={() => commitIdeaNodeText(scriptId)}
-          />
-        )}
-        {!hideSummaries && (
-          <div className="map-node-btns idea-node-btns">
+      <div
+        className={'idea-node-shape-inner shape-' + shape}
+        style={{ '--node-shape-color': color, '--node-bg-color': bgColor }}
+      >
+        {/* Diamond/parallelogram get a separate, purely decorative
+            clip-path'd background layer behind the content instead of
+            clipping the content itself — a real node's header (title,
+            bold, shape picker, 2 color swatches, delete) plus a variable
+            amount of body text never reliably fits inside a diamond's
+            narrow points no matter how much padding is added, and the
+            shape picker's own popover would get clipped away entirely
+            when opened. The content layer below is always a plain,
+            unclipped rectangle — never hides text or controls, whatever
+            the shape or however much is typed. */}
+        {(shape === 'diamond' || shape === 'parallelogram') && <div className="idea-node-shape-deco" />}
+        <div className="idea-node-shape-content">
+          <div className="map-node-head idea-node-head">
+            {editingTitle ? (
+              <input
+                className="idea-node-title"
+                style={{ color, ...titleBoldStyle }}
+                placeholder="Title…"
+                value={node.title}
+                autoFocus
+                onFocus={(e) => {
+                  pushUndo(scriptId)
+                  e.target.select()
+                }}
+                onMouseDown={(e) => e.stopPropagation()}
+                onClick={(e) => e.stopPropagation()}
+                onChange={(e) => setIdeaNodeTitle(scriptId, id, e.target.value)}
+                onBlur={() => {
+                  commitIdeaNodeTitle(scriptId)
+                  setEditingTitle(false)
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === 'Escape') e.target.blur()
+                }}
+              />
+            ) : (
+              <span
+                className="idea-node-title idea-node-title-display"
+                style={{ color: node.title ? color : 'var(--ink-faint)', ...titleBoldStyle }}
+                onMouseDown={(e) => e.detail > 1 && e.stopPropagation()}
+                onDoubleClick={(e) => {
+                  e.stopPropagation()
+                  setEditingTitle(true)
+                }}
+              >
+                {node.title || 'Title…'}
+              </span>
+            )}
             <button
-              className={'map-node-btn' + (node.collapsed ? ' active' : '')}
-              title={node.collapsed ? 'Show this node’s text' : 'Hide just this node’s text'}
+              className={'idea-node-bold' + (node.titleBold ? ' active' : '')}
+              title={node.titleBold ? 'Unbold title' : 'Bold title'}
               onMouseDown={(e) => e.stopPropagation()}
-              onClick={() => toggleMapNodeCollapsed(scriptId, id)}
+              onClick={() => toggleIdeaNodeTitleBold(scriptId, id)}
             >
-              <Icon name="eye" size={12} />
+              B
+            </button>
+            <ShapePicker value={shape} onChange={(s) => setIdeaNodeShape(scriptId, id, s)} className="idea-node-shape-picker" />
+            <input
+              type="color"
+              className="idea-node-color-input"
+              value={node.color || '#8a8d99'}
+              title="Accent color (title text, border)"
+              onMouseDown={(e) => e.stopPropagation()}
+              onFocus={() => pushUndo(scriptId)}
+              onChange={(e) => setIdeaNodeColor(scriptId, id, e.target.value)}
+            />
+            <input
+              type="color"
+              className="idea-node-bgcolor-input"
+              value={bgColor}
+              title="Fill color"
+              onMouseDown={(e) => e.stopPropagation()}
+              onFocus={() => pushUndo(scriptId)}
+              onChange={(e) => setIdeaNodeBgColor(scriptId, id, e.target.value)}
+            />
+            <button
+              className="idea-node-delete"
+              title="Delete this node"
+              onMouseDown={(e) => e.stopPropagation()}
+              onClick={() => deleteIdeaNodes(scriptId, [id])}
+            >
+              <Icon name="x" size={11} />
             </button>
           </div>
-        )}
+          {showText && (
+            <textarea
+              className="idea-node-text"
+              placeholder="Write the idea…"
+              value={node.text}
+              onMouseDown={(e) => e.stopPropagation()}
+              onFocus={() => pushUndo(scriptId)}
+              onChange={(e) => setIdeaNodeText(scriptId, id, e.target.value)}
+              onBlur={() => commitIdeaNodeText(scriptId)}
+            />
+          )}
+          {!hideSummaries && (
+            <div className="map-node-btns idea-node-btns">
+              <button
+                className={'map-node-btn' + (node.collapsed ? ' active' : '')}
+                title={node.collapsed ? 'Show this node’s text' : 'Hide just this node’s text'}
+                onMouseDown={(e) => e.stopPropagation()}
+                onClick={() => toggleMapNodeCollapsed(scriptId, id)}
+              >
+                <Icon name="eye" size={12} />
+              </button>
+            </div>
+          )}
+        </div>
       </div>
       {CONNECTOR_SIDES.map((side) => {
         const connected = connectedSides.has(side)

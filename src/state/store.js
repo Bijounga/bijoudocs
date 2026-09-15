@@ -2499,6 +2499,7 @@ export const useStore = create(
           title: opts.title || '',
           text: opts.text || '',
           color: opts.color || null,
+          bgColor: opts.bgColor || null,
           shape: opts.shape || 'rectangle'
         }
         script.updatedAt = Date.now()
@@ -2547,11 +2548,26 @@ export const useStore = create(
       get().scheduleSave(scriptId, { flash: false })
     },
     setIdeaNodeColor(scriptId, nodeId, color) {
-      get().pushUndo(scriptId)
+      // No pushUndo here on purpose — a native <input type="color"> fires
+      // onChange continuously while the user drags inside the OS picker,
+      // and pushing a snapshot on every one of those (potentially hundreds
+      // per drag) made a single Ctrl+Z only undo one tiny color tick.
+      // The caller pushes one snapshot at focus-time instead, same pattern
+      // as the title/text fields above.
       set((s) => {
         const script = s.scripts.find((sc) => sc.id === scriptId)
         const node = script && script.mapLayout.nodes[nodeId]
         if (node) node.color = color
+        if (script) script.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+    },
+    setIdeaNodeBgColor(scriptId, nodeId, bgColor) {
+      // Same no-pushUndo-here reasoning as setIdeaNodeColor above.
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        const node = script && script.mapLayout.nodes[nodeId]
+        if (node) node.bgColor = bgColor
         if (script) script.updatedAt = Date.now()
       })
       get().scheduleSave(scriptId, { flash: false })

@@ -119,6 +119,11 @@ export const CHANGELOG = {
     'Idea nodes can now take on real flowchart shapes — rectangle, diamond, parallelogram, or rounded pill — click the shape icon in a node\'s header to change it anytime',
     'Idea node presets now bundle a shape along with their label and color, so e.g. a "Decision" preset can always come out as a yellow diamond',
     'The mind map\'s right-click "Add idea node" menu now shows each preset\'s actual shape instead of a plain dot'
+  ],
+  '0.5.44': [
+    'Fixed a real bug: a diamond or parallelogram idea node could clip its own title, and its shape-picker menu could open invisible/unclickable — shapes are now a purely decorative backdrop that never covers your actual text or controls',
+    'Idea nodes get a second, independent color swatch for their fill (defaults to white) — separate from the existing accent color, which now just controls the title and border/outline',
+    'Fixed a real bug: dragging inside the color picker could push hundreds of undo steps for one color change, so a single Ctrl+Z only undid a tiny sliver of it — one drag is now one undo step'
   ]
 }
 
