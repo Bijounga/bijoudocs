@@ -9,24 +9,76 @@
 // perpendicular-exit case added — it doesn't have one today.
 
 const PAD = 40 // how far past the two nodes' own span a manual bend can be dragged
+const OBSTACLE_MARGIN = 14 // clearance kept between a re-routed trunk and the node it's avoiding
 
 function clamp(v, lo, hi) {
   return Math.min(hi, Math.max(lo, v))
 }
 
+// Finds the point closest to `desired` (clamped to [lo,hi]) that isn't
+// inside any of `forbidden` (an array of [start,end] ranges along the
+// same axis as `desired`) — used to nudge a trunk's default centered
+// position off of any unrelated node's card it would otherwise cut
+// through. Only handles being pushed clear of the *nearest* blocking
+// range, not iterative multi-obstacle pathfinding — a deliberate scope
+// limit (see routeElbow's own comment), good enough for the common case
+// of one unrelated card sitting between a source and a different
+// target, not a general router.
+function findClearBend(desired, lo, hi, forbidden) {
+  const clamped = clamp(desired, lo, hi)
+  if (!forbidden.length) return clamped
+  const merged = forbidden
+    .slice()
+    .sort((r1, r2) => r1[0] - r2[0])
+    .reduce((acc, r) => {
+      const last = acc[acc.length - 1]
+      if (last && r[0] <= last[1]) last[1] = Math.max(last[1], r[1])
+      else acc.push([r[0], r[1]])
+      return acc
+    }, [])
+  const hit = merged.find(([s, e]) => clamped >= s && clamped <= e)
+  if (!hit) return clamped
+  const left = hit[0]
+  const right = hit[1]
+  const candidate = Math.abs(clamped - left) <= Math.abs(clamped - right) ? left : right
+  return clamp(candidate, lo, hi)
+}
+
 // `a`/`b` are anchor points (from sideAnchor()), `sideA`/`sideB` the
 // sides they're on, `bendOffset` a signed pixel delta from the
-// auto-centered bend (null/0 = centered). Returns the 4 route points
-// (for building the path) and `handle`, the single point a drag grip
-// should sit at — the midpoint of the route's middle segment, which is
-// exactly what `bendOffset` moves.
-export function routeElbow(a, sideA, b, sideB, bendOffset) {
+// auto-centered bend (null/0 = centered). `obstacles` (optional) is a
+// list of `{x, y, width, height}` boxes for every *other* node on the
+// map (not this edge's own two) — the default centered bend gets
+// nudged clear of any of them it would otherwise route straight
+// through, since a source with several targets routinely has one
+// target's default trunk position land right on top of an unrelated
+// card sitting between them. A caller-supplied `bendOffset` (the user
+// manually dragged this specific edge) is trusted as-is and skips
+// obstacle avoidance entirely — a deliberate manual reroute shouldn't
+// get silently overridden. Returns the 4 route points (for building the
+// path) and `handle`, the single point a drag grip should sit at — the
+// midpoint of the route's middle segment, which is exactly what
+// `bendOffset` moves.
+export function routeElbow(a, sideA, b, sideB, bendOffset, obstacles) {
   const axis = sideA === 'top' || sideA === 'bottom' ? 'y' : 'x'
+  // != null (not a truthy check) — a manual drag that happens to land
+  // back at exactly 0 is still a manual position and must skip obstacle
+  // avoidance, same as any other manual value.
+  const manual = bendOffset != null
   const offset = bendOffset || 0
   if (axis === 'x') {
     const lo = Math.min(a.x, b.x) - PAD
     const hi = Math.max(a.x, b.x) + PAD
-    const bend = clamp((a.x + b.x) / 2 + offset, lo, hi)
+    const desired = (a.x + b.x) / 2 + offset
+    const trunkLo = Math.min(a.y, b.y)
+    const trunkHi = Math.max(a.y, b.y)
+    const forbidden =
+      manual || !obstacles
+        ? []
+        : obstacles
+            .filter((n) => n.y <= trunkHi && n.y + n.height >= trunkLo)
+            .map((n) => [n.x - OBSTACLE_MARGIN, n.x + n.width + OBSTACLE_MARGIN])
+    const bend = findClearBend(desired, lo, hi, forbidden)
     return {
       axis,
       points: [a, { x: bend, y: a.y }, { x: bend, y: b.y }, b],
@@ -35,7 +87,16 @@ export function routeElbow(a, sideA, b, sideB, bendOffset) {
   }
   const lo = Math.min(a.y, b.y) - PAD
   const hi = Math.max(a.y, b.y) + PAD
-  const bend = clamp((a.y + b.y) / 2 + offset, lo, hi)
+  const desired = (a.y + b.y) / 2 + offset
+  const trunkLo = Math.min(a.x, b.x)
+  const trunkHi = Math.max(a.x, b.x)
+  const forbidden =
+    manual || !obstacles
+      ? []
+      : obstacles
+          .filter((n) => n.x <= trunkHi && n.x + n.width >= trunkLo)
+          .map((n) => [n.y - OBSTACLE_MARGIN, n.y + n.height + OBSTACLE_MARGIN])
+  const bend = findClearBend(desired, lo, hi, forbidden)
   return {
     axis,
     points: [a, { x: a.x, y: bend }, { x: b.x, y: bend }, b],

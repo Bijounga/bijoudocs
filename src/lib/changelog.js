@@ -140,6 +140,10 @@ export const CHANGELOG = {
     'Removed the small "×" on a selected connection — delete it with Delete/Backspace instead, freeing up the spot for the new reroute grip',
     'Idea, section, and chapter nodes all get a subtle shadow now so they read as cards sitting on the canvas rather than flat rectangles, and the idea-node color swatches got a bit more definition',
     'Selection now has a soft glow to go with its existing outline'
+  ],
+  '0.5.49': [
+    'Fixed a real bug: a new connection\'s default route could cut straight through an unrelated node sitting between its two ends — connections now automatically route around any node in the way',
+    'Diamond idea nodes read as an actual diamond now, not a flat sliver, and pill nodes no longer balloon into a big blob on anything longer than a single short line'
   ]
 }
 

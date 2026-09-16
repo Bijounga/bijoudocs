@@ -26,6 +26,17 @@ function isSectionNode(node) {
 const ZOOM_MIN = 0.25
 const ZOOM_MAX = 2
 
+// A node's *real* rendered height varies a lot with its content (a
+// short idea node vs. one with several lines of text can easily differ
+// by 200px+) and isn't tracked anywhere in mapLayout — only the nominal
+// NODE_H, which routine falls well short of a real card's true height
+// (already a known gap; see pickSides's own history). For edge-routing
+// obstacle avoidance this needs *a* height to check a trunk segment
+// against, so this is a deliberately generous constant rather than
+// NODE_H itself — erring toward "route a bit further around than
+// necessary" over "cut through a card because the estimate undershot."
+const OBSTACLE_EST_HEIGHT = 220
+
 // A mousedown handler that calls e.preventDefault() (to suppress native
 // text-selection-drag, see handleCanvasMouseDown/handleNodeMouseDown)
 // also suppresses the *default* focus-shift a real click would otherwise
@@ -679,6 +690,16 @@ export default function MapView({ scriptId, script }) {
 
   const { order, litEdgeIds } = computeMainThread(script.mapLayout)
   const nodes = script.mapLayout.nodes
+  // Built once per render, reused per-edge below (each edge just filters
+  // out its own two endpoints) rather than rebuilt inside the edges.map
+  // loop — same box list, only the exclusion differs per edge.
+  const routingObstacles = Object.entries(nodes).map(([id, n]) => ({
+    id,
+    x: n.x,
+    y: n.y,
+    width: NODE_WIDTH,
+    height: OBSTACLE_EST_HEIGHT
+  }))
 
   return (
     <div className="main map-main">
@@ -781,7 +802,8 @@ export default function MapView({ scriptId, script }) {
               const [sideA, sideB] = pickSides(from, to)
               const a = sideAnchor(from, sideA)
               const b = sideAnchor(to, sideB)
-              const { axis, points, handle } = routeElbow(a, sideA, b, sideB, edge.bendOffset)
+              const obstacles = routingObstacles.filter((n) => n.id !== edge.from && n.id !== edge.to)
+              const { axis, points, handle } = routeElbow(a, sideA, b, sideB, edge.bendOffset, obstacles)
               const d = pathFromPoints(points)
               const lit = litEdgeIds.has(edge.id)
               const selected = selectedEdgeId === edge.id

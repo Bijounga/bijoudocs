@@ -2853,7 +2853,14 @@ textarea {
   padding: 12px 14px;
 }
 .idea-node-shape-inner.shape-pill {
-  border-radius: 999px;
+  /* Not 999px — on anything taller than a couple of short lines, a
+     radius that large forces full semicircular caps top AND bottom,
+     which for a card whose height approaches its 220px width reads as
+     a near-circle blob rather than a pill. A fixed, more moderate
+     radius stays clearly "very rounded" for the short single-line
+     labels a Start/End node is meant for, without ballooning as
+     content grows. */
+  border-radius: 46px;
   padding: 12px 28px;
 }
 .idea-node:hover .idea-node-shape-inner {
@@ -2870,15 +2877,20 @@ textarea {
      top-right corner sits exactly on the card's own corner; a diamond's
      apex is a point, so it doesn't need this, but sharing one rule for
      both is simpler and harmless either way). */
-  height: 34px;
   margin: -12px -14px 10px;
   border-radius: 8.5px 8.5px 0 0;
   background: color-mix(in srgb, var(--node-shape-color, var(--ink-faint)) 26%, var(--node-bg-color, var(--panel-2)));
 }
 .idea-node-shape-inner.shape-diamond .idea-node-shape-strip {
+  /* Taller than the parallelogram's — a diamond this wide (220px) at a
+     short height reads as a flat triangle-ish smear rather than a
+     recognizable diamond; a closer-to-square aspect actually looks like
+     one. */
+  height: 64px;
   clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
 }
 .idea-node-shape-inner.shape-parallelogram .idea-node-shape-strip {
+  height: 34px;
   clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);
 }
 .idea-node-head {
