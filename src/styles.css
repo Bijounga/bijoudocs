@@ -3125,6 +3125,43 @@ textarea {
 .idea-node:hover .idea-node-bgcolor-input {
   opacity: 1;
 }
+.idea-node-color-reset {
+  /* Only rendered at all once a color/bgColor is actually set (see
+     IdeaNode.jsx), so unlike the swatches themselves this doesn't need
+     its own opacity toggle just to stay out of the way on a default
+     node — but it still only becomes clickable once hovering/selected,
+     matching every other control in this row. */
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  margin-left: -3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--ink-faint);
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.1s;
+}
+.idea-node-color-reset:hover {
+  color: var(--danger);
+}
+.idea-node:hover .idea-node-color-reset,
+.idea-node-simple.is-selected .idea-node-color-reset {
+  /* The selected-without-hovering case matters specifically for the
+     simple-shape (diamond/parallelogram) branch, whose sibling controls
+     stay visible while selected via their shared parent's own opacity
+     rule (.idea-node-simple-controls) rather than each child's own —
+     this button has its own opacity toggle instead (matching the
+     header-branch swatches' pattern), so it needs the same
+     is-selected condition spelled out explicitly or it'd be the one
+     control in that row that disappears the moment the cursor leaves. */
+  opacity: 1;
+  pointer-events: auto;
+}
 .shape-picker-wrap {
   position: relative;
   flex: 0 0 auto;

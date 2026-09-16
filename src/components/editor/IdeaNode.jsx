@@ -136,6 +136,18 @@ export default function IdeaNode({
               onFocus={() => pushUndo(scriptId)}
               onChange={(e) => setIdeaNodeColor(scriptId, id, e.target.value)}
             />
+            {node.color && (
+              <button
+                className="idea-node-color-reset"
+                title="Reset accent color to default"
+                onClick={() => {
+                  pushUndo(scriptId)
+                  setIdeaNodeColor(scriptId, id, null)
+                }}
+              >
+                <Icon name="noColor" size={11} />
+              </button>
+            )}
             <input
               type="color"
               className="idea-node-bgcolor-input"
@@ -144,6 +156,18 @@ export default function IdeaNode({
               onFocus={() => pushUndo(scriptId)}
               onChange={(e) => setIdeaNodeBgColor(scriptId, id, e.target.value)}
             />
+            {node.bgColor && (
+              <button
+                className="idea-node-color-reset"
+                title="Reset fill color to default"
+                onClick={() => {
+                  pushUndo(scriptId)
+                  setIdeaNodeBgColor(scriptId, id, null)
+                }}
+              >
+                <Icon name="noColor" size={11} />
+              </button>
+            )}
             <button className="idea-node-delete" title="Delete this node" onClick={() => deleteIdeaNodes(scriptId, [id])}>
               <Icon name="x" size={11} />
             </button>
@@ -240,6 +264,19 @@ export default function IdeaNode({
               onFocus={() => pushUndo(scriptId)}
               onChange={(e) => setIdeaNodeColor(scriptId, id, e.target.value)}
             />
+            {node.color && (
+              <button
+                className="idea-node-color-reset"
+                title="Reset accent color to default"
+                onMouseDown={(e) => e.stopPropagation()}
+                onClick={() => {
+                  pushUndo(scriptId)
+                  setIdeaNodeColor(scriptId, id, null)
+                }}
+              >
+                <Icon name="noColor" size={11} />
+              </button>
+            )}
             <input
               type="color"
               className="idea-node-bgcolor-input"
@@ -249,6 +286,19 @@ export default function IdeaNode({
               onFocus={() => pushUndo(scriptId)}
               onChange={(e) => setIdeaNodeBgColor(scriptId, id, e.target.value)}
             />
+            {node.bgColor && (
+              <button
+                className="idea-node-color-reset"
+                title="Reset fill color to default"
+                onMouseDown={(e) => e.stopPropagation()}
+                onClick={() => {
+                  pushUndo(scriptId)
+                  setIdeaNodeBgColor(scriptId, id, null)
+                }}
+              >
+                <Icon name="noColor" size={11} />
+              </button>
+            )}
             <button
               className="idea-node-delete"
               title="Delete this node"

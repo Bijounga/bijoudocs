@@ -151,6 +151,9 @@ export const CHANGELOG = {
   ],
   '0.5.51': [
     'Fixed the new diamond/parallelogram idea node text sitting off-center instead of centered in the shape'
+  ],
+  '0.5.52': [
+    'Idea node color swatches: a small reset button appears next to a swatch once you\'ve picked a custom color, to clear it back to the default'
   ]
 }
 

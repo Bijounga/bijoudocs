@@ -38,7 +38,8 @@ const PATHS = {
   shapePill: '<rect x="1.5" y="5" width="13" height="6" rx="3"/>',
   alignLeft: '<line x1="2" y1="3.5" x2="14" y2="3.5"/><line x1="2" y1="7" x2="9.5" y2="7"/><line x1="2" y1="10.5" x2="14" y2="10.5"/><line x1="2" y1="14" x2="7" y2="14"/>',
   alignCenter: '<line x1="2" y1="3.5" x2="14" y2="3.5"/><line x1="4.5" y1="7" x2="11.5" y2="7"/><line x1="2" y1="10.5" x2="14" y2="10.5"/><line x1="5.5" y1="14" x2="10.5" y2="14"/>',
-  alignRight: '<line x1="2" y1="3.5" x2="14" y2="3.5"/><line x1="6.5" y1="7" x2="14" y2="7"/><line x1="2" y1="10.5" x2="14" y2="10.5"/><line x1="9" y1="14" x2="14" y2="14"/>'
+  alignRight: '<line x1="2" y1="3.5" x2="14" y2="3.5"/><line x1="6.5" y1="7" x2="14" y2="7"/><line x1="2" y1="10.5" x2="14" y2="10.5"/><line x1="9" y1="14" x2="14" y2="14"/>',
+  noColor: '<circle cx="8" cy="8" r="5.5"/><line x1="4.1" y1="4.1" x2="11.9" y2="11.9"/>'
 }
 
 export default function Icon({ name, size = 14, className, filled = false }) {
