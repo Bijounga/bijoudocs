@@ -50,16 +50,29 @@ function blurActiveEditableField() {
   }
 }
 
+// Idea nodes with no title (auto-sizing diamond/parallelogram — see
+// IdeaNode.jsx) carry their own real, content-driven width/height,
+// kept in sync from a ResizeObserver via syncIdeaNodeMeasuredSize
+// rather than assumed to be the fixed NODE_WIDTH/NODE_H every other
+// node type uses. Falling back to the constants here means every
+// *existing* node (no node.width/height set) computes exactly as
+// before — this only changes behavior for nodes that opt in.
+function nodeSize(node) {
+  return { w: node.width || NODE_WIDTH, h: node.height || NODE_H }
+}
+
 function centerOf(node) {
-  return { x: node.x + NODE_WIDTH / 2, y: node.y + NODE_H / 2 }
+  const { w, h } = nodeSize(node)
+  return { x: node.x + w / 2, y: node.y + h / 2 }
 }
 
 function sideAnchor(node, side) {
+  const { w, h } = nodeSize(node)
   const c = centerOf(node)
   if (side === 'top') return { x: c.x, y: node.y }
-  if (side === 'bottom') return { x: c.x, y: node.y + NODE_H }
+  if (side === 'bottom') return { x: c.x, y: node.y + h }
   if (side === 'left') return { x: node.x, y: c.y }
-  return { x: node.x + NODE_WIDTH, y: c.y }
+  return { x: node.x + w, y: c.y }
 }
 
 // Which side of each node an edge between them should visually leave
@@ -80,10 +93,12 @@ function pickSides(a, b) {
   // avoids that; only the true edge case — overlapping on *both* axes —
   // falls back to the old center-based guess, since there's no anchor
   // choice that isn't somewhat arbitrary at that point anyway.
-  const aRight = a.x + NODE_WIDTH
-  const bRight = b.x + NODE_WIDTH
-  const aBottom = a.y + NODE_H
-  const bBottom = b.y + NODE_H
+  const aSize = nodeSize(a)
+  const bSize = nodeSize(b)
+  const aRight = a.x + aSize.w
+  const bRight = b.x + bSize.w
+  const aBottom = a.y + aSize.h
+  const bBottom = b.y + bSize.h
   if (aRight <= b.x) return ['right', 'left']
   if (bRight <= a.x) return ['left', 'right']
   if (aBottom <= b.y) return ['bottom', 'top']
@@ -140,6 +155,7 @@ export default function MapView({ scriptId, script }) {
   const addMapEdge = useStore((s) => s.addMapEdge)
   const removeMapEdge = useStore((s) => s.removeMapEdge)
   const setMapEdgeBendOffset = useStore((s) => s.setMapEdgeBendOffset)
+  const setIdeaNodeSize = useStore((s) => s.setIdeaNodeSize)
   const pushUndo = useStore((s) => s.pushUndo)
   const removeMapEdgesByIds = useStore((s) => s.removeMapEdgesByIds)
   const toggleStruckForMapNodes = useStore((s) => s.toggleStruckForMapNodes)
@@ -162,7 +178,7 @@ export default function MapView({ scriptId, script }) {
   const updateIdeaNodePreset = useStore((s) => s.updateIdeaNodePreset)
 
   const canvasRef = useRef(null)
-  const dragRef = useRef(null) // { type: 'node'|'pan'|'connect'|'select', ... }
+  const dragRef = useRef(null) // { type: 'node'|'pan'|'connect'|'select'|'bend'|'resize', ... }
   const [zoom, setZoom] = useState(script.mapLayout.viewZoom || 1)
   const zoomRef = useRef(zoom) // mirrors `zoom` synchronously — two zoomBy() calls in the same tick (e.g. a fast double-click on the +button, before React re-renders between them) would otherwise both read the same stale closured `zoom` and not compound
   const [pan, setPan] = useState(script.mapLayout.viewPan || { x: 60, y: 40 })
@@ -435,8 +451,8 @@ export default function MapView({ scriptId, script }) {
     }
     const minX = Math.min(...nodeList.map((n) => n.x))
     const minY = Math.min(...nodeList.map((n) => n.y))
-    const maxX = Math.max(...nodeList.map((n) => n.x + NODE_WIDTH))
-    const maxY = Math.max(...nodeList.map((n) => n.y + NODE_H))
+    const maxX = Math.max(...nodeList.map((n) => n.x + nodeSize(n).w))
+    const maxY = Math.max(...nodeList.map((n) => n.y + nodeSize(n).h))
     const padding = 60
     const fitZoom = Math.min((rect.width - padding * 2) / (maxX - minX), (rect.height - padding * 2) / (maxY - minY))
     const clamped = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, isFinite(fitZoom) && fitZoom > 0 ? fitZoom : 1))
@@ -556,6 +572,27 @@ export default function MapView({ scriptId, script }) {
     openContextMenu({ type: 'mapNode', scriptId, sectionId, selectedIds: validSelectedNodeIds, x: e.clientX, y: e.clientY })
   }
 
+  // Manual resize (the title-less diamond/parallelogram idea nodes only
+  // — see IdeaNode.jsx) — `startWidth`/`startHeight` are the node's own
+  // last-measured world-unit size (node.width/height, kept in sync by
+  // IdeaNode's ResizeObserver), not a fresh DOM read here, so this
+  // never needs zoom-space conversion for its *starting* point, only
+  // for the drag delta below.
+  function handleResizeMouseDown(e, nodeId, startWidth, startHeight) {
+    e.stopPropagation()
+    e.preventDefault()
+    blurActiveEditableField()
+    pushUndo(scriptId)
+    dragRef.current = {
+      type: 'resize',
+      nodeId,
+      startX: e.clientX,
+      startY: e.clientY,
+      startWidth,
+      startHeight
+    }
+  }
+
   useEffect(() => {
     function onMouseMove(e) {
       const d = dragRef.current
@@ -580,6 +617,10 @@ export default function MapView({ scriptId, script }) {
         const clientPos = d.axis === 'x' ? e.clientX : e.clientY
         const delta = (clientPos - d.startClientPos) / zoom
         setMapEdgeBendOffset(scriptId, d.edgeId, d.startBendOffset + delta)
+      } else if (d.type === 'resize') {
+        const dx = (e.clientX - d.startX) / zoom
+        const dy = (e.clientY - d.startY) / zoom
+        setIdeaNodeSize(scriptId, d.nodeId, Math.max(60, d.startWidth + dx), Math.max(40, d.startHeight + dy))
       }
     }
     function onMouseUp(e) {
@@ -607,7 +648,10 @@ export default function MapView({ scriptId, script }) {
         const curScript = cur.scripts.find((sc) => sc.id === scriptId)
         const nodesNow = curScript ? curScript.mapLayout.nodes : {}
         const hitIds = Object.entries(nodesNow)
-          .filter(([, n]) => n.x < x2 && n.x + NODE_WIDTH > x1 && n.y < y2 && n.y + NODE_H > y1)
+          .filter(([, n]) => {
+            const { w, h } = nodeSize(n)
+            return n.x < x2 && n.x + w > x1 && n.y < y2 && n.y + h > y1
+          })
           .map(([id]) => id)
         if (hitIds.length) {
           setSelectedNodeIds((prev) => (d.shiftKey ? Array.from(new Set([...prev, ...hitIds])) : hitIds))
@@ -697,8 +741,11 @@ export default function MapView({ scriptId, script }) {
     id,
     x: n.x,
     y: n.y,
-    width: NODE_WIDTH,
-    height: OBSTACLE_EST_HEIGHT
+    width: n.width || NODE_WIDTH,
+    // A real measured height (auto-sizing shape nodes) is trustworthy
+    // as-is; anything else still only has the nominal NODE_H to go on,
+    // so keep using the generous estimate for those.
+    height: n.height || OBSTACLE_EST_HEIGHT
   }))
 
   return (
@@ -909,6 +956,7 @@ export default function MapView({ scriptId, script }) {
                   onConnectorMouseDown={handleConnectorMouseDown}
                   onAddInDirection={handleAddInDirection}
                   onContextMenu={handleNodeContextMenu}
+                  onResizeMouseDown={handleResizeMouseDown}
                 />
               )
             })}

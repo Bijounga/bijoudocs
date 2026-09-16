@@ -144,6 +144,10 @@ export const CHANGELOG = {
   '0.5.49': [
     'Fixed a real bug: a new connection\'s default route could cut straight through an unrelated node sitting between its two ends — connections now automatically route around any node in the way',
     'Diamond idea nodes read as an actual diamond now, not a flat sliver, and pill nodes no longer balloon into a big blob on anything longer than a single short line'
+  ],
+  '0.5.50': [
+    'Diamond and parallelogram idea nodes are redesigned: no title field anymore, just centered text that grows or shrinks to fit what you type',
+    'Click a diamond or parallelogram node to reveal a resize handle if you want to make it bigger than its text alone needs'
   ]
 }
 

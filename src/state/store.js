@@ -2595,6 +2595,53 @@ export const useStore = create(
       })
       get().scheduleSave(scriptId, { flash: false })
     },
+    // A user-initiated resize (dragging the corner handle) — undo-tracked
+    // like any other deliberate action. Stored separately from
+    // node.width/height (see syncIdeaNodeMeasuredSize): this is a floor
+    // applied live via CSS min-width/min-height, not a value that gets
+    // silently overwritten the next time content is measured — content
+    // can still grow the node past it, and shrinking text never erases
+    // a manual resize the way overwriting one shared field would.
+    setIdeaNodeSize(scriptId, nodeId, width, height) {
+      // No pushUndo here — this fires on every mousemove tick while the
+      // user drags the resize handle. MapView.jsx's handleResizeMouseDown
+      // already pushes one snapshot at mousedown, same fix as
+      // setMapEdgeBendOffset/setIdeaNodeColor before it. (Caught this
+      // exact regression via a real drag-simulated test before shipping
+      // — undo stack grew by 5 across 5 mousemove ticks instead of
+      // staying at 1, the same bug shape as those two earlier fixes.)
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        const node = script && script.mapLayout.nodes[nodeId]
+        if (node) {
+          node.manualWidth = width
+          node.manualHeight = height
+        }
+        if (script) script.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+    },
+    // Passive sync only — called from a ResizeObserver as a title-less
+    // shape node's real rendered size changes with its content (grows
+    // *or* shrinks, freely), so the connector-anchor math (sideAnchor/
+    // pickSides in MapView.jsx) has an accurate size to work from
+    // instead of an assumed constant. This is a plain "here's the
+    // current measurement" cache, not a user action — never pushes
+    // undo. It's always accurate to trust as-is (not maxed against
+    // anything) because the *rendering* itself already respects
+    // node.manualWidth/manualHeight as a CSS min-width/min-height floor,
+    // so what gets measured here can never be smaller than that floor
+    // in the first place.
+    syncIdeaNodeMeasuredSize(scriptId, nodeId, width, height) {
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        const node = script && script.mapLayout.nodes[nodeId]
+        if (node) {
+          node.width = width
+          node.height = height
+        }
+      })
+    },
     toggleIdeaNodeTitleBold(scriptId, nodeId) {
       get().pushUndo(scriptId)
       set((s) => {

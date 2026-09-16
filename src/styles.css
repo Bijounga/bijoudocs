@@ -2819,33 +2819,24 @@ textarea {
 
 .idea-node {
   /* The outer .map-node box stays a plain, unstyled positioning
-     container for idea nodes specifically — .idea-node-shape-inner
-     below carries the actual visible background/border/shape, so
-     clip-path (needed for diamond/parallelogram) never clips the
-     connector dots, which sit slightly outside this box on purpose. */
+     container for idea nodes specifically — .idea-node-shape-inner (or,
+     for diamond/parallelogram, .idea-node-simple-shape) below carries
+     the actual visible background/border/shape, so clip-path never
+     clips the connector dots, which sit slightly outside this box on
+     purpose. */
   background: none;
   border: none;
   padding: 0;
-  box-shadow: none; /* the shadow lives on .idea-node-shape-inner instead, so it follows that element's own per-shape border-radius (pill's 999px included) rather than this outer box's fixed 10px */
+  box-shadow: none; /* the shadow lives on the inner shape element instead, so it follows that element's own per-shape border-radius (pill's 999px included) rather than this outer box's fixed 10px */
 }
 .idea-node-shape-inner {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
-  /* Every shape is a plain, solidly-colored rounded card — background is
+  /* Rectangle/pill only now — diamond/parallelogram are a completely
+     different, title-less node (.idea-node-simple-shape below). Every
+     shape here is a plain, solidly-colored rounded card — background is
      always exactly the fill color the user picked (falling back to the
      current theme's own panel color, not a hardcoded white, for a node
-     that's never had one set), border always exactly the accent color.
-     Diamond/parallelogram additionally get a real, in-flow strip above
-     the header (.idea-node-shape-strip) — not absolutely positioned,
-     not clip-path'd on this element itself. Two earlier attempts tried
-     an absolutely-positioned shape layer behind the header/text, which
-     kept either getting covered by the textarea's own opaque background
-     (the header-to-text gap is only 6px — nowhere near enough room for
-     a shape that still reads as a shape) or clipped away along with the
-     shape-picker's own popover by whatever container property was
-     added to stop that. A strip in normal document flow can't suffer
-     either problem: nothing else occupies its space, and it has no
-     clip-path/overflow relationship with anything else in the card at
-     all. */
+     that's never had one set), border always exactly the accent color. */
   position: relative;
   background: var(--node-bg-color, var(--panel-2));
   border: 1.5px solid var(--node-shape-color, var(--ink-faint));
@@ -2866,32 +2857,134 @@ textarea {
 .idea-node:hover .idea-node-shape-inner {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22);
 }
-.idea-node-shape-strip {
-  /* A real block-level element, not positioned — occupies actual space
-     in the card's normal layout, pushing the header down below it, so
-     nothing can ever render on top of or hide it regardless of how much
-     text the node holds. Negative margins bleed it flush to the card's
-     own edges (canceling .idea-node-shape-inner's padding); rounded to
-     match the card's own top corners since the clip-path'd shape
-     underneath doesn't reliably cover them itself (a parallelogram's
-     top-right corner sits exactly on the card's own corner; a diamond's
-     apex is a point, so it doesn't need this, but sharing one rule for
-     both is simpler and harmless either way). */
-  margin: -12px -14px 10px;
-  border-radius: 8.5px 8.5px 0 0;
-  background: color-mix(in srgb, var(--node-shape-color, var(--ink-faint)) 26%, var(--node-bg-color, var(--panel-2)));
+.idea-node-simple-controls {
+  /* Floating above the shape, not inside it — absolutely positioned
+     against the outer .idea-node (which is itself position:absolute,
+     so this needs no extra positioning context setup). Being a sibling
+     of the clipped shape rather than a descendant means it can never be
+     covered or clipped by anything happening inside the shape — the
+     exact two failure modes every earlier header-inside-a-shape design
+     hit, repeatedly. Hover/selection-revealed, same convention as
+     .map-node-connector. */
+  position: absolute;
+  top: -24px;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.1s;
+  z-index: 1;
 }
-.idea-node-shape-inner.shape-diamond .idea-node-shape-strip {
-  /* Taller than the parallelogram's — a diamond this wide (220px) at a
-     short height reads as a flat triangle-ish smear rather than a
-     recognizable diamond; a closer-to-square aspect actually looks like
-     one. */
-  height: 64px;
+.idea-node-simple:hover .idea-node-simple-controls,
+.idea-node-simple.is-selected .idea-node-simple-controls {
+  opacity: 1;
+  pointer-events: auto;
+}
+.idea-node-simple-shape {
+  /* The whole node *is* the shape now — no separate header/title, just
+     this one auto-sizing text area clipped into it. field-sizing:
+     content on .idea-node-simple-text (below) drives the growing/
+     shrinking; this element's own size just follows its child's,
+     which is exactly why it can't also carry a fixed NODE_WIDTH the
+     way every other node type does (see IdeaNode.jsx's style prop). */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 120px;
+  min-height: 80px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  background: var(--node-bg-color, var(--panel-2));
+  /* border doesn't follow a clip-path polygon's actual edges (drawn on
+     the original rectangular box, then clipped into fragments) — a
+     colored glow reads as "this node's accent color" without that
+     problem. */
+  filter: drop-shadow(0 0 3px var(--node-shape-color, var(--ink-faint)));
+}
+.idea-node-simple-shape.shape-diamond {
   clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  /* Worked out from the actual geometry, not eyeballed: a diamond's
+     half-width at vertical distance d from its own top point is
+     (boxWidth/2) * (d/halfBoxHeight). The content box's top/bottom
+     edges sit at d = this padding value, so solving that inequality
+     against the content's own half-width (~44px, from the 88px
+     max-width + scroll cap below) is what these three numbers (this
+     padding, the text's max-width, and the wrapper's max-height) were
+     picked to satisfy with a real margin, not eyeballed from a
+     screenshot — confirmed after the fact via elementFromPoint hit-
+     testing on the content wrapper's own 4 corners. Changing any one of
+     the three without rechecking the inequality against the other two
+     can reopen the exact clipping this was built to close. */
+  padding: 64px 32px;
 }
-.idea-node-shape-inner.shape-parallelogram .idea-node-shape-strip {
-  height: 34px;
+.idea-node-simple-shape.shape-parallelogram {
   clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);
+  padding: 18px 40px;
+}
+.idea-node-simple-text {
+  background: transparent;
+  border: none;
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
+  resize: none;
+  field-sizing: content;
+  max-width: 200px;
+  min-height: 1.5em;
+  padding: 0;
+}
+.idea-node-simple-text-scroll {
+  /* Deliberately a plain block element, not a flex item — max-height +
+     overflow-y on a flex child of an align-items:center row container
+     was silently ignored here even with min-height:0 set (a
+     field-sizing:content descendant seems to force the flex item's
+     cross-axis size regardless), while the exact same properties on a
+     plain block work exactly as expected. Not fully explained, just
+     confirmed empirically — block sidesteps it entirely. */
+  display: block;
+  width: 100%;
+}
+.idea-node-simple-shape.shape-diamond .idea-node-simple-text-scroll {
+  /* A diamond's readable middle narrows toward its top/bottom points —
+     letting the textarea (and so the whole shape) keep growing taller
+     for more text eventually pinches real content against those points
+     and clips it for real (confirmed via elementFromPoint hit-testing,
+     not assumed) since the fixed padding above can't scale with an
+     ever-taller, ever-narrower diamond. Capped height + scroll instead:
+     the diamond stops growing past a size that still reads as one, and
+     genuinely long text scrolls rather than silently losing pixels off
+     its own corners. Parallelogram doesn't need this — its clip-path
+     keeps a constant usable width at every height, so it never pinches
+     the way a diamond's point does. */
+  max-height: 72px;
+  overflow-y: auto;
+}
+.idea-node-simple-shape.shape-diamond .idea-node-simple-text {
+  /* Narrower than the shared default (below) — paired with this
+     shape's padding and its wrapper's max-height above to satisfy the
+     no-clipping inequality explained on .shape-diamond itself. */
+  max-width: 88px;
+}
+.idea-node-simple-text::placeholder {
+  color: var(--ink-faint);
+}
+.idea-node-simple-text:focus {
+  outline: none;
+}
+.idea-node-resize-handle {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--panel-3);
+  border: 1.5px solid var(--cyan);
+  cursor: nwse-resize;
+  z-index: 1;
 }
 .idea-node-head {
   margin-bottom: 6px;
