@@ -2824,7 +2824,6 @@ textarea {
   border: 1.5px solid var(--node-shape-color, var(--ink-faint));
   border-radius: 10px;
   padding: 12px 14px;
-  overflow: hidden;
 }
 .idea-node-shape-inner.shape-pill {
   border-radius: 999px;
@@ -2836,12 +2835,17 @@ textarea {
      bgColor everywhere else). Capped height, clamped to the card's own
      height for short cards, so it never has to stretch past a size that
      still reads as its shape. Absolutely positioned behind
-     .idea-node-shape-content, never the thing being interacted with. */
+     .idea-node-shape-content, never the thing being interacted with.
+     Rounded to match the card's own top corners (instead of an
+     `overflow: hidden` on the card, which would also clip the shape
+     picker's popover right back into the exact "menu hidden inside the
+     shape" bug this whole badge redesign exists to fix). */
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   max-height: 100%;
+  border-radius: 8.5px 8.5px 0 0;
   pointer-events: none;
   background: color-mix(in srgb, var(--node-shape-color, var(--ink-faint)) 20%, transparent);
 }

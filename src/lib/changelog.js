@@ -127,6 +127,9 @@ export const CHANGELOG = {
   ],
   '0.5.45': [
     'Fixed a real bug: a diamond or parallelogram idea node with more than a line or two of text showed a broken-looking fragment of its shape instead of a clean one (and the fill color looked wrong, blended from the accent color instead of your actual pick) — the shape is now a clean, fixed-size accent badge near the title, and the card\'s fill is always exactly the color you chose, no matter how much you write'
+  ],
+  '0.5.46': [
+    'Fixed a real bug: the shape-picker menu could get hidden behind a diamond/parallelogram node\'s own accent badge again, unclickable — same underlying cause as a fix from earlier today, reintroduced by the very next fix\'s own CSS. Sorry about the back-and-forth on this one'
   ]
 }
 
