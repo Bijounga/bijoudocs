@@ -130,6 +130,10 @@ export const CHANGELOG = {
   ],
   '0.5.46': [
     'Fixed a real bug: the shape-picker menu could get hidden behind a diamond/parallelogram node\'s own accent badge again, unclickable — same underlying cause as a fix from earlier today, reintroduced by the very next fix\'s own CSS. Sorry about the back-and-forth on this one'
+  ],
+  '0.5.47': [
+    'Rewrote how diamond/parallelogram idea nodes show their shape: it\'s now a plain colored strip that takes up real space above the title, instead of a layer sitting behind the header/text — which kept either getting covered by the text box below it or clipped along with the shape-picker menu. The strip can\'t be covered or clipped by anything now, since nothing else occupies its space',
+    'A new idea node\'s fill color now defaults to match your current theme instead of always starting white'
   ]
 }
 

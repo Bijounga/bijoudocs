@@ -2809,18 +2809,23 @@ textarea {
 }
 .idea-node-shape-inner {
   /* Every shape is a plain, solidly-colored rounded card — background is
-     always exactly the fill color the user picked, border always exactly
-     the accent color. Diamond/parallelogram show their shape as a small
-     fixed-size accent badge (.idea-node-shape-deco) layered near the top
-     instead of reshaping the whole card: a shape that spans arbitrarily
-     tall content (a real card with more than a line or two of text)
-     inevitably has its own middle hidden behind that content — a diamond
-     collapses to two disconnected triangle slivers, a parallelogram to a
-     stray diagonal band — which reads as broken, not "shaped." A capped-
-     height badge stays a clean, recognizable shape no matter how much
-     text the node holds. */
+     always exactly the fill color the user picked (falling back to the
+     current theme's own panel color, not a hardcoded white, for a node
+     that's never had one set), border always exactly the accent color.
+     Diamond/parallelogram additionally get a real, in-flow strip above
+     the header (.idea-node-shape-strip) — not absolutely positioned,
+     not clip-path'd on this element itself. Two earlier attempts tried
+     an absolutely-positioned shape layer behind the header/text, which
+     kept either getting covered by the textarea's own opaque background
+     (the header-to-text gap is only 6px — nowhere near enough room for
+     a shape that still reads as a shape) or clipped away along with the
+     shape-picker's own popover by whatever container property was
+     added to stop that. A strip in normal document flow can't suffer
+     either problem: nothing else occupies its space, and it has no
+     clip-path/overflow relationship with anything else in the card at
+     all. */
   position: relative;
-  background: var(--node-bg-color, #fff);
+  background: var(--node-bg-color, var(--panel-2));
   border: 1.5px solid var(--node-shape-color, var(--ink-faint));
   border-radius: 10px;
   padding: 12px 14px;
@@ -2829,43 +2834,27 @@ textarea {
   border-radius: 999px;
   padding: 12px 28px;
 }
-.idea-node-shape-deco {
-  /* Purely decorative accent badge — a solid accent-color tint, never
-     mixed into the card's actual fill (which stays exactly the chosen
-     bgColor everywhere else). Capped height, clamped to the card's own
-     height for short cards, so it never has to stretch past a size that
-     still reads as its shape. Absolutely positioned behind
-     .idea-node-shape-content, never the thing being interacted with.
-     Rounded to match the card's own top corners (instead of an
-     `overflow: hidden` on the card, which would also clip the shape
-     picker's popover right back into the exact "menu hidden inside the
-     shape" bug this whole badge redesign exists to fix). */
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  max-height: 100%;
+.idea-node-shape-strip {
+  /* A real block-level element, not positioned — occupies actual space
+     in the card's normal layout, pushing the header down below it, so
+     nothing can ever render on top of or hide it regardless of how much
+     text the node holds. Negative margins bleed it flush to the card's
+     own edges (canceling .idea-node-shape-inner's padding); rounded to
+     match the card's own top corners since the clip-path'd shape
+     underneath doesn't reliably cover them itself (a parallelogram's
+     top-right corner sits exactly on the card's own corner; a diamond's
+     apex is a point, so it doesn't need this, but sharing one rule for
+     both is simpler and harmless either way). */
+  height: 34px;
+  margin: -12px -14px 10px;
   border-radius: 8.5px 8.5px 0 0;
-  pointer-events: none;
-  background: color-mix(in srgb, var(--node-shape-color, var(--ink-faint)) 20%, transparent);
+  background: color-mix(in srgb, var(--node-shape-color, var(--ink-faint)) 26%, var(--node-bg-color, var(--panel-2)));
 }
-.idea-node-shape-inner.shape-diamond .idea-node-shape-deco {
-  height: 110px;
+.idea-node-shape-inner.shape-diamond .idea-node-shape-strip {
   clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
 }
-.idea-node-shape-inner.shape-parallelogram .idea-node-shape-deco {
-  height: 64px;
+.idea-node-shape-inner.shape-parallelogram .idea-node-shape-strip {
   clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);
-}
-.idea-node-shape-content {
-  /* Deliberately never clip-path'd, regardless of shape — a node's
-     header (title, bold, shape picker, 2 color swatches, delete) plus a
-     variable amount of body text can't reliably be made to fit inside a
-     diamond/parallelogram's narrow points just by tuning padding, and the
-     shape picker's own popover needs to stay fully clickable too. Sits
-     on top of .idea-node-shape-deco in normal DOM stacking order (both
-     positioned, this one later in the DOM paints on top). */
-  position: relative;
 }
 .idea-node-head {
   margin-bottom: 6px;
