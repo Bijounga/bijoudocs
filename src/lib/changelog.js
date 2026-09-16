@@ -124,6 +124,9 @@ export const CHANGELOG = {
     'Fixed a real bug: a diamond or parallelogram idea node could clip its own title, and its shape-picker menu could open invisible/unclickable — shapes are now a purely decorative backdrop that never covers your actual text or controls',
     'Idea nodes get a second, independent color swatch for their fill (defaults to white) — separate from the existing accent color, which now just controls the title and border/outline',
     'Fixed a real bug: dragging inside the color picker could push hundreds of undo steps for one color change, so a single Ctrl+Z only undid a tiny sliver of it — one drag is now one undo step'
+  ],
+  '0.5.45': [
+    'Fixed a real bug: a diamond or parallelogram idea node with more than a line or two of text showed a broken-looking fragment of its shape instead of a clean one (and the fill color looked wrong, blended from the accent color instead of your actual pick) — the shape is now a clean, fixed-size accent badge near the title, and the card\'s fill is always exactly the color you chose, no matter how much you write'
   ]
 }
 

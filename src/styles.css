@@ -2808,43 +2808,49 @@ textarea {
   padding: 0;
 }
 .idea-node-shape-inner {
+  /* Every shape is a plain, solidly-colored rounded card — background is
+     always exactly the fill color the user picked, border always exactly
+     the accent color. Diamond/parallelogram show their shape as a small
+     fixed-size accent badge (.idea-node-shape-deco) layered near the top
+     instead of reshaping the whole card: a shape that spans arbitrarily
+     tall content (a real card with more than a line or two of text)
+     inevitably has its own middle hidden behind that content — a diamond
+     collapses to two disconnected triangle slivers, a parallelogram to a
+     stray diagonal band — which reads as broken, not "shaped." A capped-
+     height badge stays a clean, recognizable shape no matter how much
+     text the node holds. */
   position: relative;
   background: var(--node-bg-color, #fff);
   border: 1.5px solid var(--node-shape-color, var(--ink-faint));
   border-radius: 10px;
   padding: 12px 14px;
+  overflow: hidden;
 }
 .idea-node-shape-inner.shape-pill {
   border-radius: 999px;
   padding: 12px 28px;
 }
-.idea-node-shape-inner.shape-diamond,
-.idea-node-shape-inner.shape-parallelogram {
-  /* No border/background here — both live on .idea-node-shape-deco
-     instead, so they can be clip-path'd to the shape without taking the
-     actual content (which must never be clipped, see .idea-node-shape-
-     content below) down with them. */
-  border: none;
-  background: none;
-  padding: 10px 14px;
-}
 .idea-node-shape-deco {
-  /* Purely decorative: the diamond/parallelogram fill, clipped to the
-     shape. `border` doesn't follow a clip-path polygon's actual edges —
-     it's drawn on the original rectangular box, then clipped along with
-     everything else, leaving odd fragments instead of a clean outline —
-     so the accent color shows as a tint mixed into the fill instead of a
-     stroke. Absolutely positioned behind .idea-node-shape-content, and
-     never the thing being interacted with. */
+  /* Purely decorative accent badge — a solid accent-color tint, never
+     mixed into the card's actual fill (which stays exactly the chosen
+     bgColor everywhere else). Capped height, clamped to the card's own
+     height for short cards, so it never has to stretch past a size that
+     still reads as its shape. Absolutely positioned behind
+     .idea-node-shape-content, never the thing being interacted with. */
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  max-height: 100%;
   pointer-events: none;
-  background: color-mix(in srgb, var(--node-shape-color, var(--ink-faint)) 18%, var(--node-bg-color, #fff));
+  background: color-mix(in srgb, var(--node-shape-color, var(--ink-faint)) 20%, transparent);
 }
 .idea-node-shape-inner.shape-diamond .idea-node-shape-deco {
+  height: 110px;
   clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
 }
 .idea-node-shape-inner.shape-parallelogram .idea-node-shape-deco {
+  height: 64px;
   clip-path: polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%);
 }
 .idea-node-shape-content {
