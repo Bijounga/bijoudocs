@@ -2946,6 +2946,12 @@ textarea {
      confirmed empirically — block sidesteps it entirely. */
   display: block;
   width: 100%;
+  /* The textarea itself is capped narrower than this wrapper
+     (max-width, diamond especially) — text-align:center on the
+     textarea only centers its own text within its own box, it doesn't
+     position that (narrower) box within this wider one. This is what
+     actually centers the textarea horizontally in the shape. */
+  text-align: center;
 }
 .idea-node-simple-shape.shape-diamond .idea-node-simple-text-scroll {
   /* A diamond's readable middle narrows toward its top/bottom points —

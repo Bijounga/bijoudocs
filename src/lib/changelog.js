@@ -148,6 +148,9 @@ export const CHANGELOG = {
   '0.5.50': [
     'Diamond and parallelogram idea nodes are redesigned: no title field anymore, just centered text that grows or shrinks to fit what you type',
     'Click a diamond or parallelogram node to reveal a resize handle if you want to make it bigger than its text alone needs'
+  ],
+  '0.5.51': [
+    'Fixed the new diamond/parallelogram idea node text sitting off-center instead of centered in the shape'
   ]
 }
 
