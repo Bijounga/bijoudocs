@@ -2440,6 +2440,19 @@ export const useStore = create(
       })
       get().scheduleSave(scriptId, { flash: false })
     },
+    setMapEdgeBendOffset(scriptId, edgeId, bendOffset) {
+      // No pushUndo here — this fires on every mousemove tick while the
+      // user drags an edge's reroute handle. The caller pushes one
+      // snapshot at mousedown instead, same fix as setIdeaNodeColor's
+      // color-drag undo-spam bug.
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        const edge = script && script.mapLayout.edges.find((e) => e.id === edgeId)
+        if (edge) edge.bendOffset = bendOffset
+        if (script) script.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+    },
     removeMapEdge(scriptId, edgeId) {
       get().pushUndo(scriptId)
       set((s) => {

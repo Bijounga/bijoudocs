@@ -134,6 +134,12 @@ export const CHANGELOG = {
   '0.5.47': [
     'Rewrote how diamond/parallelogram idea nodes show their shape: it\'s now a plain colored strip that takes up real space above the title, instead of a layer sitting behind the header/text — which kept either getting covered by the text box below it or clipped along with the shape-picker menu. The strip can\'t be covered or clipped by anything now, since nothing else occupies its space',
     'A new idea node\'s fill color now defaults to match your current theme instead of always starting white'
+  ],
+  '0.5.48': [
+    'Mind-map connections are now real right-angle wires instead of straight diagonal lines — select one and drag its grip to reroute it anywhere, like Figma/Lucidchart\'s connectors',
+    'Removed the small "×" on a selected connection — delete it with Delete/Backspace instead, freeing up the spot for the new reroute grip',
+    'Idea, section, and chapter nodes all get a subtle shadow now so they read as cards sitting on the canvas rather than flat rectangles, and the idea-node color swatches got a bit more definition',
+    'Selection now has a soft glow to go with its existing outline'
   ]
 }
 

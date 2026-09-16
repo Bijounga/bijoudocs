@@ -2550,22 +2550,39 @@ textarea {
   stroke-dasharray: 5 4;
 }
 .map-edge-hit {
+  /* fill: none matters now that this is a <path> (it used to be a
+     <line>, which never renders a fill regardless of the property) — an
+     unset fill defaults to solid black and was rendering as a filled
+     wedge across every elbow bend. */
+  fill: none;
   stroke: transparent;
   stroke-width: 14;
   pointer-events: stroke;
   cursor: pointer;
 }
-.map-edge-delete circle {
-  fill: var(--panel-3);
-  stroke: var(--danger);
-  stroke-width: 1.5;
-  cursor: pointer;
-  pointer-events: auto;
+.map-edge-bend-hit {
+  fill: transparent;
+  pointer-events: none;
+  opacity: 0;
 }
-.map-edge-delete line {
-  stroke: var(--danger);
+.map-edge-bend-handle {
+  fill: var(--panel-2);
+  stroke: var(--ink-faint);
   stroke-width: 1.5;
   pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+.map-edge-group:hover .map-edge-bend-hit,
+.map-edge-group.is-selected .map-edge-bend-hit {
+  pointer-events: auto;
+}
+.map-edge-group:hover .map-edge-bend-handle,
+.map-edge-group.is-selected .map-edge-bend-handle {
+  opacity: 1;
+}
+.map-edge-group:hover .map-edge-bend-handle {
+  stroke: var(--cyan);
 }
 .map-node {
   position: absolute;
@@ -2575,10 +2592,12 @@ textarea {
   padding: 12px 14px;
   cursor: grab;
   user-select: none;
-  transition: border-color 0.12s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  transition: border-color 0.12s, box-shadow 0.12s;
 }
 .map-node:hover {
   border-color: var(--line-soft);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22);
 }
 .map-node.is-main {
   border-color: var(--pink);
@@ -2587,7 +2606,7 @@ textarea {
   border-color: var(--cyan);
 }
 .map-node.is-selected {
-  box-shadow: 0 0 0 2px var(--cyan);
+  box-shadow: 0 0 0 2px var(--cyan), 0 4px 14px color-mix(in srgb, var(--cyan) 25%, transparent);
 }
 .map-node.struck {
   opacity: 0.5;
@@ -2604,6 +2623,7 @@ textarea {
   stroke: var(--cyan);
   stroke-width: 1;
   stroke-dasharray: 4 3;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--cyan) 35%, transparent));
 }
 .map-node-order {
   position: absolute;
@@ -2806,8 +2826,10 @@ textarea {
   background: none;
   border: none;
   padding: 0;
+  box-shadow: none; /* the shadow lives on .idea-node-shape-inner instead, so it follows that element's own per-shape border-radius (pill's 999px included) rather than this outer box's fixed 10px */
 }
 .idea-node-shape-inner {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
   /* Every shape is a plain, solidly-colored rounded card — background is
      always exactly the fill color the user picked (falling back to the
      current theme's own panel color, not a hardcoded white, for a node
@@ -2833,6 +2855,9 @@ textarea {
 .idea-node-shape-inner.shape-pill {
   border-radius: 999px;
   padding: 12px 28px;
+}
+.idea-node:hover .idea-node-shape-inner {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22);
 }
 .idea-node-shape-strip {
   /* A real block-level element, not positioned — occupies actual space
@@ -2956,12 +2981,16 @@ textarea {
   width: 16px;
   height: 16px;
   padding: 0;
-  border: none;
+  border: 1.5px solid var(--line-soft);
   background: transparent;
   border-radius: 50%;
   overflow: hidden;
   opacity: 0;
-  transition: opacity 0.1s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition: opacity 0.1s, border-color 0.1s;
+}
+.idea-node-color-input:hover {
+  border-color: var(--ink-dim);
 }
 .idea-node:hover .idea-node-color-input {
   opacity: 1;
@@ -2971,12 +3000,16 @@ textarea {
   width: 16px;
   height: 16px;
   padding: 0;
-  border: 1px solid var(--line-soft);
+  border: 1.5px solid var(--line-soft);
   background: transparent;
   border-radius: 4px;
   overflow: hidden;
   opacity: 0;
-  transition: opacity 0.1s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition: opacity 0.1s, border-color 0.1s;
+}
+.idea-node-bgcolor-input:hover {
+  border-color: var(--ink-dim);
 }
 .idea-node:hover .idea-node-bgcolor-input {
   opacity: 1;

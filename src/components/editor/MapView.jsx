@@ -8,6 +8,7 @@ import IdeaNode from './IdeaNode.jsx'
 import ChapterNode from './ChapterNode.jsx'
 import ShapePicker, { SHAPES } from './ShapePicker.jsx'
 import { computeMainThread } from '../../lib/mapGraph.js'
+import { routeElbow, pathFromPoints } from '../../lib/mapEdgeRouting.js'
 
 function isIdeaNode(node) {
   return !!node && node.type === 'idea'
@@ -127,6 +128,8 @@ export default function MapView({ scriptId, script }) {
   const toggleMapNodeCollapsed = useStore((s) => s.toggleMapNodeCollapsed)
   const addMapEdge = useStore((s) => s.addMapEdge)
   const removeMapEdge = useStore((s) => s.removeMapEdge)
+  const setMapEdgeBendOffset = useStore((s) => s.setMapEdgeBendOffset)
+  const pushUndo = useStore((s) => s.pushUndo)
   const removeMapEdgesByIds = useStore((s) => s.removeMapEdgesByIds)
   const toggleStruckForMapNodes = useStore((s) => s.toggleStruckForMapNodes)
   const setMapViewport = useStore((s) => s.setMapViewport)
@@ -524,6 +527,20 @@ export default function MapView({ scriptId, script }) {
     setConnectPreview({ fromId: sectionId, x: world.x, y: world.y })
   }
 
+  function handleBendMouseDown(e, edge, axis) {
+    e.stopPropagation()
+    e.preventDefault()
+    blurActiveEditableField()
+    pushUndo(scriptId) // once, at gesture start — see setMapEdgeBendOffset's own comment
+    dragRef.current = {
+      type: 'bend',
+      edgeId: edge.id,
+      axis,
+      startClientPos: axis === 'x' ? e.clientX : e.clientY,
+      startBendOffset: edge.bendOffset || 0
+    }
+  }
+
   function handleNodeContextMenu(e, sectionId) {
     openContextMenu({ type: 'mapNode', scriptId, sectionId, selectedIds: validSelectedNodeIds, x: e.clientX, y: e.clientY })
   }
@@ -548,6 +565,10 @@ export default function MapView({ scriptId, script }) {
       } else if (d.type === 'select') {
         d.curWorld = screenToWorld(e.clientX, e.clientY)
         setSelectionBox({ x1: d.startWorld.x, y1: d.startWorld.y, x2: d.curWorld.x, y2: d.curWorld.y })
+      } else if (d.type === 'bend') {
+        const clientPos = d.axis === 'x' ? e.clientX : e.clientY
+        const delta = (clientPos - d.startClientPos) / zoom
+        setMapEdgeBendOffset(scriptId, d.edgeId, d.startBendOffset + delta)
       }
     }
     function onMouseUp(e) {
@@ -760,38 +781,38 @@ export default function MapView({ scriptId, script }) {
               const [sideA, sideB] = pickSides(from, to)
               const a = sideAnchor(from, sideA)
               const b = sideAnchor(to, sideB)
-              const mx = (a.x + b.x) / 2
-              const my = (a.y + b.y) / 2
+              const { axis, points, handle } = routeElbow(a, sideA, b, sideB, edge.bendOffset)
+              const d = pathFromPoints(points)
               const lit = litEdgeIds.has(edge.id)
               const selected = selectedEdgeId === edge.id
               return (
-                <g key={edge.id}>
-                  <line
-                    x1={a.x}
-                    y1={a.y}
-                    x2={b.x}
-                    y2={b.y}
+                <g key={edge.id} className={'map-edge-group' + (selected ? ' is-selected' : '')}>
+                  <path
+                    d={d}
                     className={'map-edge-hit'}
                     onClick={(e) => {
                       e.stopPropagation()
                       setSelectedEdgeId(edge.id)
                     }}
                   />
-                  <line
-                    x1={a.x}
-                    y1={a.y}
-                    x2={b.x}
-                    y2={b.y}
+                  <path
+                    d={d}
                     className={'map-edge' + (lit ? ' is-lit' : '') + (selected ? ' is-selected' : '')}
                     markerEnd={lit ? 'url(#map-arrow-lit)' : 'url(#map-arrow)'}
                   />
-                  {selected && (
-                    <g className="map-edge-delete" onClick={(e) => { e.stopPropagation(); removeMapEdge(scriptId, edge.id); setSelectedEdgeId(null) }}>
-                      <circle cx={mx} cy={my} r="9" />
-                      <line x1={mx - 4} y1={my - 4} x2={mx + 4} y2={my + 4} />
-                      <line x1={mx - 4} y1={my + 4} x2={mx + 4} y2={my - 4} />
-                    </g>
-                  )}
+                  {/* Reroute handle — a fat invisible hit-circle plus a small
+                      visible dot, hover/selection-revealed in CSS (same
+                      convention as .map-node-connector). Dragging it moves
+                      edge.bendOffset via the shared 'bend' drag mode. */}
+                  <circle
+                    cx={handle.x}
+                    cy={handle.y}
+                    r="9"
+                    className="map-edge-bend-hit"
+                    style={{ cursor: axis === 'x' ? 'ew-resize' : 'ns-resize' }}
+                    onMouseDown={(e) => handleBendMouseDown(e, edge, axis)}
+                  />
+                  <circle cx={handle.x} cy={handle.y} r="3.5" className="map-edge-bend-handle" />
                 </g>
               )
             })}
