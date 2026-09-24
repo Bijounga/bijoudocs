@@ -3721,18 +3721,67 @@ textarea {
   letter-spacing: 0.08em;
   margin-bottom: 14px;
   opacity: 0.75;
+  /* Both this and the collapsed variant above are now click-to-toggle
+     (open/close the section), same action as the main editor's own
+     section head — the chevron here is the same shared .chevron/
+     .chevron.collapsed rotation rule that already drives that. */
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  width: fit-content;
 }
-.tp-section p {
+.tp-section-label:hover {
+  opacity: 1;
+}
+.tp-line-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
   margin: 0 0 0.9em;
+  /* TagMenu positions itself absolute relative to the nearest positioned
+     ancestor (right:0; top:26px) — without this it'd anchor against
+     .teleprompter-overlay itself instead of this specific line. */
+  position: relative;
 }
-.tp-section p b,
-.tp-section p strong {
+.tp-line {
+  /* The line's own text — now a real (editable) element instead of
+     dangerouslySetInnerHTML, see TeleprompterView.jsx. flex:1 so the tag
+     pill/button sit at a fixed size next to it regardless of how long
+     the line's own text runs. */
+  flex: 1 1 auto;
+  min-width: 0;
+  outline: none;
+  border-radius: 6px;
+  padding: 0 0.12em;
+  margin: 0 -0.12em;
+}
+.tp-line:focus {
+  background: rgba(255, 255, 255, 0.08);
+}
+.tp-line:empty:before {
+  content: attr(data-placeholder);
+  opacity: 0.35;
+}
+.tp-line b,
+.tp-line strong {
   color: #fff;
 }
-.tp-section p.tp-line-note {
+.tp-line.tp-line-note {
   font-size: 0.5em;
   font-style: italic;
   opacity: 0.6;
+}
+.tp-line-row .tag-pill {
+  margin-top: 0.3em;
+}
+.tp-line-row .tp-tag-btn {
+  flex: 0 0 auto;
+  margin-top: 0.25em;
+  opacity: 0;
+}
+.tp-line-row:hover .tp-tag-btn {
+  opacity: 1;
 }
 .tp-section p.tp-note-aside {
   font-size: 0.4em;
@@ -3742,6 +3791,18 @@ textarea {
   border-left: 2px solid color-mix(in srgb, var(--note-color) 60%, transparent);
   padding-left: 0.6em;
   margin-top: -0.5em;
+  cursor: pointer;
+}
+.tp-section p.tp-note-aside:hover {
+  color: var(--ink);
+  opacity: 1;
+}
+.tp-section .note-box {
+  /* NoteBox's own textarea is already a fixed, non-em-scaled size (see
+     .note-box textarea) regardless of the teleprompter's own font-size
+     setting — just give it normal fixed spacing to match, not an em
+     value that would swing wildly with a 14px vs 96px reading size. */
+  margin: 4px 0 18px;
 }
 .tp-end {
   font-family: var(--mono);

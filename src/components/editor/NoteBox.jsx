@@ -7,7 +7,7 @@ export default function NoteBox({ scriptId, sectionId, line, indent }) {
   const setLineNote = useStore((s) => s.setLineNote)
   const commitLineNote = useStore((s) => s.commitLineNote)
   const clearAndCloseNote = useStore((s) => s.clearAndCloseNote)
-  const toggleLineNote = useStore((s) => s.toggleLineNote)
+  const closeLineNote = useStore((s) => s.closeLineNote)
 
   const key = sectionId + ':' + line.id
   const rootRef = useRef(null)
@@ -18,16 +18,23 @@ export default function NoteBox({ scriptId, sectionId, line, indent }) {
   // "Close note" item, both of which already call toggleLineNote
   // themselves; without the exclusion, this listener would close it and
   // then their own onClick would immediately reopen it.
+  //
+  // Uses closeLineNote (an explicit set, not toggleLineNote's flip) —
+  // the same line's note can now be open in two mounted NoteBox
+  // instances at once (the main editor stays mounted underneath the
+  // Teleprompter, not unmounted by it), each running this exact effect.
+  // Two toggle() calls on the one real outside click would cancel out
+  // (closed -> open again); two closeLineNote() calls are idempotent.
   useEffect(() => {
     function onMouseDown(e) {
       if (rootRef.current && rootRef.current.contains(e.target)) return
       if (e.target.closest('.note-trigger') || e.target.closest('.context-menu')) return
       commitLineNote(scriptId, sectionId, line.id)
-      toggleLineNote(scriptId, sectionId, line.id)
+      closeLineNote(scriptId, sectionId, line.id)
     }
     document.addEventListener('mousedown', onMouseDown)
     return () => document.removeEventListener('mousedown', onMouseDown)
-  }, [scriptId, sectionId, line.id, commitLineNote, toggleLineNote])
+  }, [scriptId, sectionId, line.id, commitLineNote, closeLineNote])
 
   function handleKeyDown(e) {
     // Plain Enter closes the note back to its preview; Shift+Enter falls
@@ -38,7 +45,7 @@ export default function NoteBox({ scriptId, sectionId, line, indent }) {
       (e.key === 'ArrowUp' && e.target.selectionStart === 0 && e.target.selectionEnd === 0)
     ) {
       e.preventDefault()
-      toggleLineNote(scriptId, sectionId, line.id)
+      closeLineNote(scriptId, sectionId, line.id)
       focusLineEnd(key)
       return
     }

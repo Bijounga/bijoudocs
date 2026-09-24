@@ -1,7 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useStore } from '../state/store.js'
 import Icon from './icons.jsx'
-import { stripHtmlToText } from '../lib/html.js'
+import { stripHtmlToText, getInk } from '../lib/html.js'
+import LineText from './editor/LineText.jsx'
+import TagMenu from './editor/TagMenu.jsx'
+import NoteBox from './editor/NoteBox.jsx'
 
 // A reasonable starting point before the user ever asks for their full
 // system font list — common cross-platform/Windows fonts that are almost
@@ -32,6 +35,13 @@ export default function TeleprompterView({ script }) {
   const setAlign = useStore((s) => s.setTeleprompterAlign)
   const font = useStore((s) => s.teleprompterFont)
   const setFont = useStore((s) => s.setTeleprompterFont)
+  const pushUndo = useStore((s) => s.pushUndo)
+  const commitLineText = useStore((s) => s.commitLineText)
+  const openTagMenu = useStore((s) => s.openTagMenu)
+  const openTagMenuFor = useStore((s) => s.openTagMenuFor)
+  const closeTagMenu = useStore((s) => s.closeTagMenu)
+  const toggleLineNote = useStore((s) => s.toggleLineNote)
+  const toggleSectionCollapsed = useStore((s) => s.toggleSectionCollapsed)
 
   const scrollRef = useRef(null)
   const [fontOptions, setFontOptions] = useState(FALLBACK_FONTS)
@@ -62,11 +72,30 @@ export default function TeleprompterView({ script }) {
   useEffect(() => {
     if (!teleprompterOpen) return
     function onKeyDown(e) {
+      // Checked via e.target (fixed at dispatch) rather than
+      // document.activeElement — a field's own handler (LineText's
+      // Escape-blurs-itself below, NoteBox's Escape-closes-itself) can
+      // synchronously shift focus before this listener runs, and reading
+      // activeElement at that point would see the *new* target instead
+      // of what was actually being edited when the key was pressed.
+      const target = e.target
+      const editingField = !!(target && (target.dataset?.lineKey || target.tagName === 'TEXTAREA'))
       if (e.key === 'Escape') {
+        if (editingField) return // LineText/NoteBox already handle their own Escape
+        if (openTagMenuFor) {
+          e.preventDefault()
+          closeTagMenu()
+          return
+        }
         e.preventDefault()
         closeTeleprompter()
         return
       }
+      // Don't let Space/+/- fire their teleprompter-wide shortcuts while
+      // actually typing a line/note or picking a tag — Space in
+      // particular would otherwise toggle auto-scroll on every space bar
+      // press instead of typing one.
+      if (editingField || openTagMenuFor) return
       if (e.key === ' ') {
         e.preventDefault()
         toggleAutoScroll()
@@ -84,7 +113,7 @@ export default function TeleprompterView({ script }) {
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [teleprompterOpen, fontSize, setFontSize, toggleAutoScroll, closeTeleprompter])
+  }, [teleprompterOpen, fontSize, setFontSize, toggleAutoScroll, closeTeleprompter, openTagMenuFor, closeTagMenu])
 
   useEffect(() => {
     if (!autoScroll) return
@@ -180,7 +209,16 @@ export default function TeleprompterView({ script }) {
             if (sec.collapsed) {
               return (
                 <div className="tp-section tp-section-collapsed" key={sec.id}>
-                  <div className="tp-section-label tp-section-label-collapsed">{sec.heading}</div>
+                  <div
+                    className="tp-section-label tp-section-label-collapsed"
+                    onClick={() => toggleSectionCollapsed(script.id, sec.id)}
+                    title="Click to open this section"
+                  >
+                    <span className="chevron collapsed">
+                      <Icon name="chevron" size={11} />
+                    </span>
+                    {sec.heading}
+                  </div>
                 </div>
               )
             }
@@ -194,19 +232,63 @@ export default function TeleprompterView({ script }) {
             if (!visibleLines.length) return null
             return (
               <div className="tp-section" key={sec.id}>
-                <div className="tp-section-label">{sec.heading}</div>
+                <div
+                  className="tp-section-label"
+                  onClick={() => toggleSectionCollapsed(script.id, sec.id)}
+                  title="Click to close this section"
+                >
+                  <span className="chevron">
+                    <Icon name="chevron" size={11} />
+                  </span>
+                  {sec.heading}
+                </div>
                 {visibleLines.map((l) => {
+                  const lineKey = sec.id + ':' + l.id
                   const cat = l.categoryId ? catInfo(l.categoryId) : null
                   const isNote = cat && cat.spoken === false && cat.teleprompterNote
-                  const isResumePoint = script.resumeLineKey === sec.id + ':' + l.id
+                  const isResumePoint = script.resumeLineKey === lineKey
+                  const tagMenuOpen = openTagMenuFor === lineKey
                   return (
                     <React.Fragment key={l.id}>
-                      <p
-                        data-line-key={sec.id + ':' + l.id}
-                        className={(isNote ? 'tp-line-note' : '') + (isResumePoint ? ' tp-resume-point' : '')}
-                        dangerouslySetInnerHTML={{ __html: l.text || '' }}
-                      />
-                      {showNotes && l.note && l.note.trim() && <p className="tp-note-aside">{l.note}</p>}
+                      <div className="tp-line-row">
+                        <LineText
+                          dataKey={lineKey}
+                          value={l.text}
+                          placeholder="Write a line…"
+                          className={'tp-line' + (isNote ? ' tp-line-note' : '') + (isResumePoint ? ' tp-resume-point' : '')}
+                          onFocus={() => pushUndo(script.id)}
+                          onCommit={(html) => commitLineText(script.id, sec.id, l.id, html)}
+                          onKeyDown={(e, el) => {
+                            if (e.key === 'Escape') {
+                              e.preventDefault()
+                              el.blur()
+                            }
+                          }}
+                        />
+                        {cat && (
+                          <span
+                            className="tag-pill"
+                            style={{ background: cat.color, color: getInk(cat.color) }}
+                            onClick={() => openTagMenu(lineKey)}
+                          >
+                            {cat.label}
+                          </span>
+                        )}
+                        <button className="line-btn tp-tag-btn" onClick={() => openTagMenu(lineKey)} title="Tag">
+                          <Icon name="tag" />
+                        </button>
+                        {tagMenuOpen && <TagMenu scriptId={script.id} sectionId={sec.id} line={l} categories={script.categories} />}
+                      </div>
+                      {showNotes && l.note && l.note.trim() && !l.noteOpen && (
+                        <p
+                          className="tp-note-aside"
+                          onClick={() => toggleLineNote(script.id, sec.id, l.id)}
+                          title="Click to edit this note"
+                        >
+                          {l.note}
+                        </p>
+                      )}
+                      {showNotes && l.noteOpen && <NoteBox scriptId={script.id} sectionId={sec.id} line={l} indent={0} />}
                     </React.Fragment>
                   )
                 })}

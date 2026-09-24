@@ -989,6 +989,24 @@ export const useStore = create(
         if (line) line.noteOpen = !line.noteOpen
       })
     },
+    // An explicit "set closed" rather than toggleLineNote's flip — needed
+    // because a line's note can now be open in two mounted views at once
+    // (the main editor stays mounted underneath the Teleprompter, not
+    // unmounted by it), each with its own NoteBox instance and its own
+    // outside-click-to-close effect. Two toggle() calls on the same real
+    // click would cancel out (open->closed->open again); two closeLineNote()
+    // calls are idempotent. NoteBox.jsx uses this for its own self-closing
+    // paths (outside click, Enter, Escape) — the various "open" call sites
+    // (note-trigger button, note-preview click) keep using toggleLineNote,
+    // since they only ever fire while a note is currently closed anyway.
+    closeLineNote(scriptId, sectionId, lineId) {
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        const sec = script && script.sections.find((se) => se.id === sectionId)
+        const line = sec && sec.lines.find((l) => l.id === lineId)
+        if (line) line.noteOpen = false
+      })
+    },
     setLineNote(scriptId, sectionId, lineId, note) {
       set((s) => {
         const script = s.scripts.find((sc) => sc.id === scriptId)

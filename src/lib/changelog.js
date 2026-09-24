@@ -154,6 +154,10 @@ export const CHANGELOG = {
   ],
   '0.5.52': [
     'Idea node color swatches: a small reset button appears next to a swatch once you\'ve picked a custom color, to clear it back to the default'
+  ],
+  '0.5.53': [
+    'Teleprompter: click a line, note, or tag to edit it right there — no need to leave and go back to the regular editor',
+    'Teleprompter: click a section heading to open or close it without leaving the teleprompter'
   ]
 }
 
