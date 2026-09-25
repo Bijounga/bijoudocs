@@ -165,6 +165,13 @@ export const CHANGELOG = {
   '0.5.55': [
     'New "Hide outlines" button in the mind map toolbar turns off each idea node\'s colored border for a calmer look — the small status dot stays colored either way',
     'Every mind-map node (sections, idea nodes, chapters) can now be resized by dragging its edges when selected, not just the small corner handle diamond/parallelogram nodes had — dragging a side changes just that dimension, and it\'s separate from the connector dots so making a connection still works exactly the same'
+  ],
+  '0.5.56': [
+    'Mind-map nodes can now be resized diagonally too — drag a corner (not just an edge) to change width and height together',
+    'Fixed "Hide outlines" (and "Hide summaries") not actually being remembered — they only lived in memory before, so closing the app right after toggling one silently reverted it',
+    'Toolbar toggle buttons (like "Hide outlines") read calmer when active — less of a bright cyan glow',
+    'Mind-map canvas background is back to the original dot pattern — the graph-paper line grid from 0.5.54 is gone',
+    'New "Midnight" theme — same accent colors as Dark, every surface just a notch darker'
   ]
 }
 

@@ -2419,11 +2419,21 @@ export const useStore = create(
       if (newId) get().addMapEdge(scriptId, fromId, newId)
       return newId
     },
+    // Both this and toggleMapHideOutlines below explicitly scheduleSave
+    // — without it, the toggle only changed in-memory state and relied
+    // on some *other*, unrelated action happening to also trigger a
+    // save before the app closed to ever reach disk; close the app
+    // right after toggling and it silently reverted next launch. Caught
+    // as a real bug report ("my hide-outlines toggle isn't remembered"),
+    // not assumed — same fix applies to hideSummaries, which had the
+    // identical gap from the start (never separately reported, since
+    // it's less often toggled in isolation right before closing).
     toggleMapHideSummaries(scriptId) {
       set((s) => {
         const script = s.scripts.find((sc) => sc.id === scriptId)
         if (script) script.mapLayout.hideSummaries = !script.mapLayout.hideSummaries
       })
+      get().scheduleSave(scriptId, { flash: false })
     },
     // A view preference, same shape as hideSummaries above — turns off
     // idea nodes' colored accent border for a calmer, uniform look once
@@ -2439,6 +2449,7 @@ export const useStore = create(
         const script = s.scripts.find((sc) => sc.id === scriptId)
         if (script) script.mapLayout.hideOutlines = !script.mapLayout.hideOutlines
       })
+      get().scheduleSave(scriptId, { flash: false })
     },
     // Saved once when the map view unmounts (leaving the map, or switching
     // to a different script while still in it) — not on every pan/zoom

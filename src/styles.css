@@ -137,6 +137,32 @@
   --green: #909090;
   --editor-page: #0f1013;
 }
+/* Same hue/accent character as the default Dark theme (accents
+   unchanged) — every neutral *surface* pulled down a step darker.
+   --panel-2 here (#14151a) lands almost exactly on Dark's own --bg, so
+   the whole surface stack reads as "the same app, one notch deeper,"
+   not a different mood the way Fable/Earthen/Monochrome are. Text
+   tokens (--ink/--ink-dim/--ink-faint) deliberately stay at Dark's own
+   values rather than also dimming — the background already dropped a
+   lot more than a proportional dim would need, so keeping text at full
+   brightness increases contrast/legibility here instead of costing it. */
+:root[data-theme='midnight'] {
+  --bg: #0a0b0d;
+  --panel: #0f1014;
+  --panel-2: #14151a;
+  --panel-3: #191a20;
+  --ink: #ece9e2;
+  --ink-dim: #9a9da6;
+  --ink-faint: #63656f;
+  --line: #23252d;
+  --line-soft: #1a1b21;
+  --cyan: #4fd1c5;
+  --amber: #f2a65a;
+  --pink: #d46fb0;
+  --danger: #e2665b;
+  --green: #4ade80;
+  --editor-page: #050506;
+}
 
 * {
   box-sizing: border-box;
@@ -398,9 +424,14 @@ textarea {
   color: var(--ink);
 }
 .icon-btn.active {
-  background: color-mix(in srgb, var(--cyan) 12%, transparent);
-  border-color: var(--cyan);
-  color: var(--cyan);
+  /* Softer than a full-strength cyan border/fill/text — that combination
+     read as a glowing, overly loud "on" state once seen on a real
+     toolbar button (the Map view's own "Show outlines"), not just a
+     quiet toggled-on indicator. Still clearly distinguishable from the
+     resting state, just not shouting. */
+  background: color-mix(in srgb, var(--cyan) 8%, transparent);
+  border-color: color-mix(in srgb, var(--cyan) 45%, var(--line));
+  color: color-mix(in srgb, var(--cyan) 70%, var(--ink-dim));
 }
 .icon-btn:disabled {
   opacity: 0.35;
@@ -2510,13 +2541,8 @@ textarea {
   position: relative;
   overflow: hidden;
   background: var(--bg);
-  /* A fine graph-paper line grid instead of dots — reads as a proper
-     planning-canvas surface rather than a dotted placeholder background,
-     same subtle --line-soft tone so it stays exactly as unobtrusive. */
-  background-image:
-    linear-gradient(var(--line-soft) 1px, transparent 1px),
-    linear-gradient(90deg, var(--line-soft) 1px, transparent 1px);
-  background-size: 24px 24px;
+  background-image: radial-gradient(circle, var(--line-soft) 1px, transparent 1px);
+  background-size: 22px 22px;
   cursor: default;
 }
 .map-canvas-inner {
@@ -2825,6 +2851,36 @@ textarea {
 }
 .map-node-resize-edge:hover {
   background: color-mix(in srgb, var(--cyan) 25%, transparent);
+}
+.map-node-resize-corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  z-index: 0;
+  border-radius: 3px;
+}
+.map-node-resize-corner:hover {
+  background: color-mix(in srgb, var(--cyan) 30%, transparent);
+}
+.map-node-resize-corner.corner-top-left {
+  top: -7px;
+  left: -7px;
+  cursor: nwse-resize;
+}
+.map-node-resize-corner.corner-bottom-right {
+  bottom: -7px;
+  right: -7px;
+  cursor: nwse-resize;
+}
+.map-node-resize-corner.corner-top-right {
+  top: -7px;
+  right: -7px;
+  cursor: nesw-resize;
+}
+.map-node-resize-corner.corner-bottom-left {
+  bottom: -7px;
+  left: -7px;
+  cursor: nesw-resize;
 }
 .map-node-extend {
   position: absolute;

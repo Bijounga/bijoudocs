@@ -8,6 +8,7 @@ import { THEME_TOKENS, DEFAULT_CUSTOM_THEME_COLORS } from '../../lib/themeTokens
 // picking the vars would just show whatever's already applied to the page.
 const THEMES = [
   { id: 'dark', label: 'Dark', swatches: ['#14151a', '#1b1d23', '#ece9e2', '#4fd1c5'] },
+  { id: 'midnight', label: 'Midnight', swatches: ['#0a0b0d', '#0f1014', '#ece9e2', '#4fd1c5'] },
   { id: 'light', label: 'MacBook Light', swatches: ['#e5e5e7', '#f7f7f8', '#1d1d1f', '#005bb8'] },
   { id: 'fable', label: 'Fable', swatches: ['#b9a26c', '#e8d9ab', '#3b2a17', '#9c2b2b'] },
   { id: 'fantasy', label: 'Earthen', swatches: ['#1a120b', '#241a10', '#f0e0c0', '#d4af37'] },
