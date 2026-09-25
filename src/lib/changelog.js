@@ -161,6 +161,10 @@ export const CHANGELOG = {
   ],
   '0.5.54': [
     'Mind map got a visual polish pass: sleeker rounded cards, a colored status dot next to each title, cleaner sans-serif type, idea-node body text now flows directly on the card instead of a separate boxed field, and a subtle graph-paper grid instead of dots on the canvas'
+  ],
+  '0.5.55': [
+    'New "Hide outlines" button in the mind map toolbar turns off each idea node\'s colored border for a calmer look — the small status dot stays colored either way',
+    'Every mind-map node (sections, idea nodes, chapters) can now be resized by dragging its edges when selected, not just the small corner handle diamond/parallelogram nodes had — dragging a side changes just that dimension, and it\'s separate from the connector dots so making a connection still works exactly the same'
   ]
 }
 

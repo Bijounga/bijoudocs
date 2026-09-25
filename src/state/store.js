@@ -1879,7 +1879,7 @@ export const useStore = create(
           activeTabId: 'all',
           checkpoints: [],
           pinnedSectionIds: [],
-          mapLayout: { nodes: {}, edges: [], mainThreadId: null, hideSummaries: false }
+          mapLayout: { nodes: {}, edges: [], mainThreadId: null, hideSummaries: false, hideOutlines: false }
         }
       }
       set((s) => {
@@ -2425,6 +2425,21 @@ export const useStore = create(
         if (script) script.mapLayout.hideSummaries = !script.mapLayout.hideSummaries
       })
     },
+    // A view preference, same shape as hideSummaries above — turns off
+    // idea nodes' colored accent border for a calmer, uniform look once
+    // a map has enough of them that the colors themselves become the
+    // noise. Deliberately doesn't touch the small status dot each node
+    // (idea or section) shows next to its title — that stays colored
+    // either way, since it's the one place a node's category is still
+    // visible at a glance without the louder full border. Purely a
+    // rendering flag: node.color/bgColor are untouched, so switching
+    // back reveals every node's real border color exactly as it was.
+    toggleMapHideOutlines(scriptId) {
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        if (script) script.mapLayout.hideOutlines = !script.mapLayout.hideOutlines
+      })
+    },
     // Saved once when the map view unmounts (leaving the map, or switching
     // to a different script while still in it) — not on every pan/zoom
     // change, which would mean a store write per mousemove while dragging.
@@ -2613,16 +2628,18 @@ export const useStore = create(
       })
       get().scheduleSave(scriptId, { flash: false })
     },
-    // A user-initiated resize (dragging the corner handle) — undo-tracked
-    // like any other deliberate action. Stored separately from
-    // node.width/height (see syncIdeaNodeMeasuredSize): this is a floor
+    // A user-initiated resize (dragging an edge/corner handle) — undo-
+    // tracked like any other deliberate action. Stored separately from
+    // node.width/height (see syncMapNodeMeasuredSize): this is a floor
     // applied live via CSS min-width/min-height, not a value that gets
     // silently overwritten the next time content is measured — content
     // can still grow the node past it, and shrinking text never erases
-    // a manual resize the way overwriting one shared field would.
-    setIdeaNodeSize(scriptId, nodeId, width, height) {
+    // a manual resize the way overwriting one shared field would. Despite
+    // the generic name, works for any node type — section/chapter/idea —
+    // since they all share the same mapLayout.nodes[id] storage shape.
+    setMapNodeSize(scriptId, nodeId, width, height) {
       // No pushUndo here — this fires on every mousemove tick while the
-      // user drags the resize handle. MapView.jsx's handleResizeMouseDown
+      // user drags a resize handle. MapView.jsx's handleResizeMouseDown
       // already pushes one snapshot at mousedown, same fix as
       // setMapEdgeBendOffset/setIdeaNodeColor before it. (Caught this
       // exact regression via a real drag-simulated test before shipping
@@ -2639,18 +2656,19 @@ export const useStore = create(
       })
       get().scheduleSave(scriptId, { flash: false })
     },
-    // Passive sync only — called from a ResizeObserver as a title-less
-    // shape node's real rendered size changes with its content (grows
-    // *or* shrinks, freely), so the connector-anchor math (sideAnchor/
-    // pickSides in MapView.jsx) has an accurate size to work from
-    // instead of an assumed constant. This is a plain "here's the
-    // current measurement" cache, not a user action — never pushes
-    // undo. It's always accurate to trust as-is (not maxed against
-    // anything) because the *rendering* itself already respects
+    // Passive sync only — called from a ResizeObserver as a node's real
+    // rendered size changes with its content (grows *or* shrinks,
+    // freely), so the connector-anchor math (sideAnchor/pickSides in
+    // MapView.jsx) has an accurate size to work from instead of an
+    // assumed constant. Shared by every node type's own ResizeObserver
+    // (section/chapter/idea, both idea branches). This is a plain
+    // "here's the current measurement" cache, not a user action — never
+    // pushes undo. It's always accurate to trust as-is (not maxed
+    // against anything) because the *rendering* itself already respects
     // node.manualWidth/manualHeight as a CSS min-width/min-height floor,
     // so what gets measured here can never be smaller than that floor
     // in the first place.
-    syncIdeaNodeMeasuredSize(scriptId, nodeId, width, height) {
+    syncMapNodeMeasuredSize(scriptId, nodeId, width, height) {
       set((s) => {
         const script = s.scripts.find((sc) => sc.id === scriptId)
         const node = script && script.mapLayout.nodes[nodeId]

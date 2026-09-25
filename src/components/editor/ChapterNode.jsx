@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useStore } from '../../state/store.js'
 import Icon from '../icons.jsx'
+import ResizeHandles from './ResizeHandles.jsx'
 
 export const NODE_WIDTH = 220
 
@@ -22,21 +23,43 @@ export default function ChapterNode({
   onNodeMouseDown,
   onConnectorMouseDown,
   onAddInDirection,
-  onContextMenu
+  onContextMenu,
+  onResizeMouseDown
 }) {
   const pushUndo = useStore((s) => s.pushUndo)
   const setChapterNodeLabel = useStore((s) => s.setChapterNodeLabel)
   const commitChapterNodeLabel = useStore((s) => s.commitChapterNodeLabel)
   const setChapterNodeNumber = useStore((s) => s.setChapterNodeNumber)
   const deleteIdeaNodes = useStore((s) => s.deleteIdeaNodes)
+  const syncMapNodeMeasuredSize = useStore((s) => s.syncMapNodeMeasuredSize)
 
   const [editingLabel, setEditingLabel] = useState(false)
+  const nodeRef = useRef(null)
+
+  // Same pattern as MapNode.jsx/IdeaNode.jsx — keeps node.width/height
+  // accurate for MapView's connector-anchor math once a chapter node can
+  // be manually resized too.
+  useEffect(() => {
+    if (!nodeRef.current) return
+    const el = nodeRef.current
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0]
+      if (!entry) return
+      const box = entry.borderBoxSize && entry.borderBoxSize[0]
+      const width = box ? box.inlineSize : entry.contentRect.width
+      const height = box ? box.blockSize : entry.contentRect.height
+      syncMapNodeMeasuredSize(scriptId, id, Math.round(width), Math.round(height))
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [scriptId, id, syncMapNodeMeasuredSize])
 
   return (
     <div
+      ref={nodeRef}
       className={'map-node chapter-node' + (isSelected ? ' is-selected' : '') + (node.struck ? ' struck' : '')}
       data-section-id={id}
-      style={{ left: node.x, top: node.y, width: NODE_WIDTH }}
+      style={{ left: node.x, top: node.y, width: node.manualWidth || NODE_WIDTH, minHeight: node.manualHeight || undefined }}
       onMouseDown={(e) => onNodeMouseDown(e, id)}
       onContextMenu={(e) => {
         e.preventDefault()
@@ -96,6 +119,9 @@ export default function ChapterNode({
           <Icon name="x" size={11} />
         </button>
       </div>
+      {isSelected && (
+        <ResizeHandles onResizeMouseDown={(e, axis) => onResizeMouseDown(e, id, node.width || NODE_WIDTH, node.height || 60, axis)} />
+      )}
       {CONNECTOR_SIDES.map((side) => {
         const connected = connectedSides.has(side)
         return (

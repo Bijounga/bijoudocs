@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useStore } from '../../state/store.js'
 import Icon from '../icons.jsx'
+import ResizeHandles from './ResizeHandles.jsx'
 
 export const NODE_WIDTH = 220
 // Nominal card height for edge-anchor/new-node-placement math — cards vary
@@ -31,7 +32,8 @@ export default function MapNode({
   onConnectorMouseDown,
   onDoubleClick,
   onAddInDirection,
-  onContextMenu
+  onContextMenu,
+  onResizeMouseDown
 }) {
   const pushUndo = useStore((s) => s.pushUndo)
   const setSectionHeading = useStore((s) => s.setSectionHeading)
@@ -42,13 +44,40 @@ export default function MapNode({
   const toggleMapView = useStore((s) => s.toggleMapView)
   const setMapMainThread = useStore((s) => s.setMapMainThread)
   const toggleMapNodeCollapsed = useStore((s) => s.toggleMapNodeCollapsed)
+  const syncMapNodeMeasuredSize = useStore((s) => s.syncMapNodeMeasuredSize)
 
   const [editingHeading, setEditingHeading] = useState(false)
+  const nodeRef = useRef(null)
 
   const showSummary = !hideSummaries && !node.collapsed
+  // Sections have no separate colored border to hide (only titleColor,
+  // which drives the heading text) — "Hide outlines" only ever affects
+  // idea nodes' border/glow, so the dot here always shows the section's
+  // real color, same reasoning as idea nodes' own dot staying colored.
+  const dotColor = sec.titleColor || 'var(--ink-faint)'
+
+  // Same pattern as IdeaNode.jsx's rectangle/pill branch — keeps
+  // node.width/height accurate for MapView's connector-anchor math once
+  // a section can be manually resized taller than NODE_H's nominal
+  // estimate (see that constant's own comment above).
+  useEffect(() => {
+    if (!nodeRef.current) return
+    const el = nodeRef.current
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0]
+      if (!entry) return
+      const box = entry.borderBoxSize && entry.borderBoxSize[0]
+      const width = box ? box.inlineSize : entry.contentRect.width
+      const height = box ? box.blockSize : entry.contentRect.height
+      syncMapNodeMeasuredSize(scriptId, sec.id, Math.round(width), Math.round(height))
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [scriptId, sec.id, syncMapNodeMeasuredSize])
 
   return (
     <div
+      ref={nodeRef}
       className={
         'map-node' +
         (isMain ? ' is-main' : '') +
@@ -57,7 +86,7 @@ export default function MapNode({
         (node.struck ? ' struck' : '')
       }
       data-section-id={sec.id}
-      style={{ left: node.x, top: node.y, width: NODE_WIDTH }}
+      style={{ left: node.x, top: node.y, width: node.manualWidth || NODE_WIDTH, minHeight: node.manualHeight || undefined }}
       onMouseDown={(e) => onNodeMouseDown(e, sec.id)}
       onDoubleClick={() => onDoubleClick(sec.id)}
       onContextMenu={(e) => {
@@ -68,7 +97,7 @@ export default function MapNode({
     >
       {order != null && <span className="map-node-order">{order}</span>}
       <div className="map-node-head">
-        <span className="map-node-dot" style={{ background: sec.titleColor || 'var(--ink-faint)' }} />
+        <span className="map-node-dot" style={{ background: dotColor }} />
         {editingHeading ? (
           <input
             className="map-node-heading-input"
@@ -147,6 +176,9 @@ export default function MapNode({
           </button>
         )}
       </div>
+      {isSelected && (
+        <ResizeHandles onResizeMouseDown={(e, axis) => onResizeMouseDown(e, sec.id, node.width || NODE_WIDTH, node.height || NODE_H, axis)} />
+      )}
       {CONNECTOR_SIDES.map((side) => {
         const connected = connectedSides.has(side)
         return (

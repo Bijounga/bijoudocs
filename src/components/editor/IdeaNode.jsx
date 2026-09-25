@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { useStore } from '../../state/store.js'
 import Icon from '../icons.jsx'
 import ShapePicker from './ShapePicker.jsx'
+import ResizeHandles from './ResizeHandles.jsx'
 
 export const NODE_WIDTH = 220
 
@@ -29,6 +30,7 @@ export default function IdeaNode({
   isLit,
   order,
   hideSummaries,
+  hideOutlines,
   connectedSides,
   threadEndDir,
   onNodeMouseDown,
@@ -45,7 +47,7 @@ export default function IdeaNode({
   const setIdeaNodeColor = useStore((s) => s.setIdeaNodeColor)
   const setIdeaNodeBgColor = useStore((s) => s.setIdeaNodeBgColor)
   const setIdeaNodeShape = useStore((s) => s.setIdeaNodeShape)
-  const syncIdeaNodeMeasuredSize = useStore((s) => s.syncIdeaNodeMeasuredSize)
+  const syncMapNodeMeasuredSize = useStore((s) => s.syncMapNodeMeasuredSize)
   const toggleIdeaNodeTitleBold = useStore((s) => s.toggleIdeaNodeTitleBold)
   const toggleMapNodeCollapsed = useStore((s) => s.toggleMapNodeCollapsed)
   const deleteIdeaNodes = useStore((s) => s.deleteIdeaNodes)
@@ -54,6 +56,13 @@ export default function IdeaNode({
   const shapeRef = useRef(null)
 
   const color = node.color || 'var(--ink-faint)'
+  // "Hide outlines" (Map toolbar) only neutralizes the border/glow —
+  // the dot stays colored regardless, since it's the one place a node's
+  // category is still visible at a glance once the (louder) colored
+  // border is turned off. node.color itself is untouched either way, so
+  // turning outlines back on reveals every node's real border color
+  // exactly as it was.
+  const borderColor = hideOutlines ? 'var(--ink-faint)' : color
   const shape = node.shape || 'rectangle'
   // Diamond/parallelogram are a completely different, simpler node —
   // no title, no header row, just one auto-sizing text area clipped
@@ -75,18 +84,21 @@ export default function IdeaNode({
   const titleBoldStyle = node.titleBold ? { fontWeight: 800, WebkitTextStroke: '0.5px currentColor' } : { fontWeight: 600 }
   const showText = !hideSummaries && !node.collapsed
 
-  // Keeps node.width/height in sync with the shape's real, content-
-  // driven rendered size — MapView.jsx's connector-anchor math
-  // (sideAnchor/pickSides) needs an accurate size for these nodes
-  // instead of the fixed NODE_WIDTH/NODE_H every other node type uses.
+  // Keeps node.width/height in sync with the card's real, content-driven
+  // rendered size — MapView.jsx's connector-anchor math (sideAnchor/
+  // pickSides) needs an accurate size for these nodes instead of the
+  // fixed NODE_WIDTH/NODE_H every other node type uses. Shared by both
+  // branches now that rectangle/pill can also be manually resized taller
+  // than its content needs — shapeRef points at whichever one actually
+  // rendered (.idea-node-shape-inner or .idea-node-simple-shape).
   // borderBoxSize is already in local (untransformed-by-the-canvas'-own-
   // zoom) layout units, same coordinate space as node.x/y, so this
   // needs no zoom conversion — only a mouse-drag delta does (see
   // MapView's handleResizeMouseDown). Deliberately not undo-tracked or
-  // saved to disk (see syncIdeaNodeMeasuredSize's own comment) — purely
+  // saved to disk (see syncMapNodeMeasuredSize's own comment) — purely
   // a passive rendering-accuracy cache that re-derives itself on load.
   useEffect(() => {
-    if (!isSimpleShape || !shapeRef.current) return
+    if (!shapeRef.current) return
     const el = shapeRef.current
     const observer = new ResizeObserver((entries) => {
       const entry = entries[0]
@@ -94,11 +106,19 @@ export default function IdeaNode({
       const box = entry.borderBoxSize && entry.borderBoxSize[0]
       const width = box ? box.inlineSize : entry.contentRect.width
       const height = box ? box.blockSize : entry.contentRect.height
-      syncIdeaNodeMeasuredSize(scriptId, id, Math.round(width), Math.round(height))
+      syncMapNodeMeasuredSize(scriptId, id, Math.round(width), Math.round(height))
     })
     observer.observe(el)
     return () => observer.disconnect()
-  }, [isSimpleShape, scriptId, id, syncIdeaNodeMeasuredSize])
+    // isSimpleShape (not just scriptId/id) has to be a dep: switching
+    // between the two conditionally-rendered branches unmounts one JSX
+    // subtree and mounts the other, so shapeRef.current changes to a
+    // genuinely different DOM node — without re-running, this would
+    // keep observing the now-detached old element forever and never
+    // attach to the new one, since a plain rectangle<->pill change
+    // (same branch, same element, just a restyle) doesn't need this to
+    // re-run at all.
+  }, [isSimpleShape, scriptId, id, syncMapNodeMeasuredSize])
 
   return (
     <div
@@ -110,7 +130,7 @@ export default function IdeaNode({
         (isSimpleShape ? ' idea-node-simple' : '')
       }
       data-section-id={id}
-      style={{ left: node.x, top: node.y, width: isSimpleShape ? undefined : NODE_WIDTH }}
+      style={{ left: node.x, top: node.y, width: isSimpleShape ? undefined : node.manualWidth || NODE_WIDTH }}
       onMouseDown={(e) => onNodeMouseDown(e, id)}
       onContextMenu={(e) => {
         e.preventDefault()
@@ -176,7 +196,7 @@ export default function IdeaNode({
             ref={shapeRef}
             className={'idea-node-simple-shape shape-' + shape}
             style={{
-              '--node-shape-color': color,
+              '--node-shape-color': borderColor,
               '--node-bg-color': node.bgColor || undefined,
               minWidth: node.manualWidth || undefined,
               minHeight: node.manualHeight || undefined
@@ -194,16 +214,6 @@ export default function IdeaNode({
               />
             </div>
           </div>
-          {isSelected && (
-            <div
-              className="idea-node-resize-handle"
-              title="Drag to resize"
-              onMouseDown={(e) => {
-                e.stopPropagation()
-                onResizeMouseDown(e, id, node.width || 140, node.height || 90)
-              }}
-            />
-          )}
         </>
       ) : (
         <>
@@ -271,8 +281,13 @@ export default function IdeaNode({
             </button>
           </div>
           <div
+            ref={shapeRef}
             className={'idea-node-shape-inner shape-' + shape}
-            style={{ '--node-shape-color': color, '--node-bg-color': node.bgColor || undefined }}
+            style={{
+              '--node-shape-color': borderColor,
+              '--node-bg-color': node.bgColor || undefined,
+              minHeight: node.manualHeight || undefined
+            }}
           >
             <div className="map-node-head idea-node-head">
               <span className="map-node-dot" style={{ background: color }} />
@@ -337,6 +352,13 @@ export default function IdeaNode({
             )}
           </div>
         </>
+      )}
+      {isSelected && (
+        <ResizeHandles
+          onResizeMouseDown={(e, axis) =>
+            onResizeMouseDown(e, id, node.width || (isSimpleShape ? 140 : NODE_WIDTH), node.height || 90, axis)
+          }
+        />
       )}
       {CONNECTOR_SIDES.map((side) => {
         const connected = connectedSides.has(side)

@@ -62,7 +62,8 @@ function migrateScript(raw, { forceNewId = false } = {}) {
     nodes: rawMap.nodes && typeof rawMap.nodes === 'object' ? rawMap.nodes : {},
     edges: Array.isArray(rawMap.edges) ? rawMap.edges : [],
     mainThreadId: typeof rawMap.mainThreadId === 'string' ? rawMap.mainThreadId : null,
-    hideSummaries: !!rawMap.hideSummaries
+    hideSummaries: !!rawMap.hideSummaries,
+    hideOutlines: !!rawMap.hideOutlines
   }
   script.sections = script.sections.map((sec) => ({
     id: sec.id || uid(),

@@ -50,13 +50,14 @@ function blurActiveEditableField() {
   }
 }
 
-// Idea nodes with no title (auto-sizing diamond/parallelogram — see
-// IdeaNode.jsx) carry their own real, content-driven width/height,
-// kept in sync from a ResizeObserver via syncIdeaNodeMeasuredSize
-// rather than assumed to be the fixed NODE_WIDTH/NODE_H every other
-// node type uses. Falling back to the constants here means every
-// *existing* node (no node.width/height set) computes exactly as
-// before — this only changes behavior for nodes that opt in.
+// Every map node type now carries its own real, content-driven
+// width/height, kept in sync from a ResizeObserver via
+// syncMapNodeMeasuredSize (see MapNode.jsx/IdeaNode.jsx/ChapterNode.jsx)
+// rather than assumed to be the fixed NODE_WIDTH/NODE_H constant.
+// Falling back to the constants here means a node that's never actually
+// rendered yet (no node.width/height measured) computes exactly as
+// before — this only changes behavior once a node has actually mounted
+// and been measured at least once.
 function nodeSize(node) {
   return { w: node.width || NODE_WIDTH, h: node.height || NODE_H }
 }
@@ -151,11 +152,12 @@ export default function MapView({ scriptId, script }) {
   const addSectionFromMap = useStore((s) => s.addSectionFromMap)
   const addConnectedSectionFromMap = useStore((s) => s.addConnectedSectionFromMap)
   const toggleMapHideSummaries = useStore((s) => s.toggleMapHideSummaries)
+  const toggleMapHideOutlines = useStore((s) => s.toggleMapHideOutlines)
   const toggleMapNodeCollapsed = useStore((s) => s.toggleMapNodeCollapsed)
   const addMapEdge = useStore((s) => s.addMapEdge)
   const removeMapEdge = useStore((s) => s.removeMapEdge)
   const setMapEdgeBendOffset = useStore((s) => s.setMapEdgeBendOffset)
-  const setIdeaNodeSize = useStore((s) => s.setIdeaNodeSize)
+  const setMapNodeSize = useStore((s) => s.setMapNodeSize)
   const pushUndo = useStore((s) => s.pushUndo)
   const removeMapEdgesByIds = useStore((s) => s.removeMapEdgesByIds)
   const toggleStruckForMapNodes = useStore((s) => s.toggleStruckForMapNodes)
@@ -572,13 +574,17 @@ export default function MapView({ scriptId, script }) {
     openContextMenu({ type: 'mapNode', scriptId, sectionId, selectedIds: validSelectedNodeIds, x: e.clientX, y: e.clientY })
   }
 
-  // Manual resize (the title-less diamond/parallelogram idea nodes only
-  // — see IdeaNode.jsx) — `startWidth`/`startHeight` are the node's own
-  // last-measured world-unit size (node.width/height, kept in sync by
-  // IdeaNode's ResizeObserver), not a fresh DOM read here, so this
-  // never needs zoom-space conversion for its *starting* point, only
-  // for the drag delta below.
-  function handleResizeMouseDown(e, nodeId, startWidth, startHeight) {
+  // Manual resize — every map node type now has edge handles (see
+  // ResizeHandles.jsx), not just the title-less diamond/parallelogram
+  // idea nodes this started with. `startWidth`/`startHeight` are the
+  // node's own last-measured world-unit size (node.width/height, kept in
+  // sync by each node component's own ResizeObserver), not a fresh DOM
+  // read here, so this never needs zoom-space conversion for its
+  // *starting* point, only for the drag delta below. `axis` is which
+  // edge was actually grabbed — 'x' (left/right) only changes width,
+  // 'y' (top/bottom) only changes height, 'both' (corner, currently
+  // unused but kept for that future) changes either.
+  function handleResizeMouseDown(e, nodeId, startWidth, startHeight, axis) {
     e.stopPropagation()
     e.preventDefault()
     blurActiveEditableField()
@@ -586,6 +592,7 @@ export default function MapView({ scriptId, script }) {
     dragRef.current = {
       type: 'resize',
       nodeId,
+      axis: axis || 'both',
       startX: e.clientX,
       startY: e.clientY,
       startWidth,
@@ -618,9 +625,9 @@ export default function MapView({ scriptId, script }) {
         const delta = (clientPos - d.startClientPos) / zoom
         setMapEdgeBendOffset(scriptId, d.edgeId, d.startBendOffset + delta)
       } else if (d.type === 'resize') {
-        const dx = (e.clientX - d.startX) / zoom
-        const dy = (e.clientY - d.startY) / zoom
-        setIdeaNodeSize(scriptId, d.nodeId, Math.max(60, d.startWidth + dx), Math.max(40, d.startHeight + dy))
+        const dx = d.axis === 'y' ? 0 : (e.clientX - d.startX) / zoom
+        const dy = d.axis === 'x' ? 0 : (e.clientY - d.startY) / zoom
+        setMapNodeSize(scriptId, d.nodeId, Math.max(60, d.startWidth + dx), Math.max(40, d.startHeight + dy))
       }
     }
     function onMouseUp(e) {
@@ -812,6 +819,13 @@ export default function MapView({ scriptId, script }) {
         >
           <Icon name="eye" size={13} /> {script.mapLayout.hideSummaries ? 'Show summaries' : 'Hide summaries'}
         </button>
+        <button
+          className={'icon-btn' + (script.mapLayout.hideOutlines ? ' active' : '')}
+          onClick={() => toggleMapHideOutlines(scriptId)}
+          title="Turn each idea node's colored accent border off — the small status dot stays colored either way — a calmer, uniform look once a map has a lot of nodes"
+        >
+          <Icon name="noColor" size={13} /> {script.mapLayout.hideOutlines ? 'Show outlines' : 'Hide outlines'}
+        </button>
         <div style={{ display: 'flex', alignItems: 'center', gap: 2, border: '1px solid var(--line)', borderRadius: 6, flex: '0 0 auto' }}>
           <button className="icon-btn" style={{ border: 'none', padding: '7px 9px' }} onClick={() => zoomByCenter(1 / 1.2)}>&minus;</button>
           <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-faint)', minWidth: 34, textAlign: 'center' }}>{Math.round(zoom * 100)}%</span>
@@ -928,6 +942,7 @@ export default function MapView({ scriptId, script }) {
                 onDoubleClick={goToSection}
                 onAddInDirection={handleAddInDirection}
                 onContextMenu={handleNodeContextMenu}
+                onResizeMouseDown={handleResizeMouseDown}
               />
             )
           })}
@@ -949,6 +964,7 @@ export default function MapView({ scriptId, script }) {
                   isLit={order.has(id)}
                   isSelected={validSelectedNodeIds.includes(id)}
                   hideSummaries={script.mapLayout.hideSummaries}
+                  hideOutlines={script.mapLayout.hideOutlines}
                   order={order.get(id)}
                   threadEndDir={threadEndDirection(id, nodes, script.mapLayout.edges)}
                   connectedSides={connectedSides}
@@ -982,6 +998,7 @@ export default function MapView({ scriptId, script }) {
                   onConnectorMouseDown={handleConnectorMouseDown}
                   onAddInDirection={handleAddInDirection}
                   onContextMenu={handleNodeContextMenu}
+                  onResizeMouseDown={handleResizeMouseDown}
                 />
               )
             })}

@@ -2784,6 +2784,48 @@ textarea {
 .map-node:hover .map-node-connector.is-connected {
   opacity: 1;
 }
+.map-node-resize-edge {
+  /* Rendered *before* the connector dots in every node component's own
+     JSX (MapNode/IdeaNode/ChapterNode), not after — both are absolutely
+     positioned siblings sitting right on the same border, and DOM order
+     decides which one's on top where they'd otherwise overlap. Painting
+     the dots later means they stay independently grabbable in their own
+     small spot for making connections, while grabbing anywhere else
+     along that same edge resizes instead — exactly the "grab the edge,
+     not the connector" split that was asked for. Only shown at all
+     while selected, same gating the old single corner-handle used. */
+  position: absolute;
+  z-index: 0;
+}
+.map-node-resize-edge.side-top,
+.map-node-resize-edge.side-bottom {
+  left: 10px;
+  right: 10px;
+  height: 10px;
+  cursor: ns-resize;
+}
+.map-node-resize-edge.side-top {
+  top: -5px;
+}
+.map-node-resize-edge.side-bottom {
+  bottom: -5px;
+}
+.map-node-resize-edge.side-left,
+.map-node-resize-edge.side-right {
+  top: 10px;
+  bottom: 10px;
+  width: 10px;
+  cursor: ew-resize;
+}
+.map-node-resize-edge.side-left {
+  left: -5px;
+}
+.map-node-resize-edge.side-right {
+  right: -5px;
+}
+.map-node-resize-edge:hover {
+  background: color-mix(in srgb, var(--cyan) 25%, transparent);
+}
 .map-node-extend {
   position: absolute;
   width: 20px;
@@ -3029,18 +3071,6 @@ textarea {
 }
 .idea-node-simple-text:focus {
   outline: none;
-}
-.idea-node-resize-handle {
-  position: absolute;
-  right: -6px;
-  bottom: -6px;
-  width: 12px;
-  height: 12px;
-  border-radius: 3px;
-  background: var(--panel-3);
-  border: 1.5px solid var(--cyan);
-  cursor: nwse-resize;
-  z-index: 1;
 }
 .idea-node-head {
   margin-bottom: 9px;
