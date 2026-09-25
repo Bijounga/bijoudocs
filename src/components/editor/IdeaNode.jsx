@@ -206,61 +206,31 @@ export default function IdeaNode({
           )}
         </>
       ) : (
-        <div
-          className={'idea-node-shape-inner shape-' + shape}
-          style={{ '--node-shape-color': color, '--node-bg-color': node.bgColor || undefined }}
-        >
-          <div className="map-node-head idea-node-head">
-            {editingTitle ? (
-              <input
-                className="idea-node-title"
-                style={{ color, ...titleBoldStyle }}
-                placeholder="Title…"
-                value={node.title}
-                autoFocus
-                onFocus={(e) => {
-                  pushUndo(scriptId)
-                  e.target.select()
-                }}
-                onMouseDown={(e) => e.stopPropagation()}
-                onClick={(e) => e.stopPropagation()}
-                onChange={(e) => setIdeaNodeTitle(scriptId, id, e.target.value)}
-                onBlur={() => {
-                  commitIdeaNodeTitle(scriptId)
-                  setEditingTitle(false)
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === 'Escape') e.target.blur()
-                }}
-              />
-            ) : (
-              <span
-                className="idea-node-title idea-node-title-display"
-                style={{ color: node.title ? color : 'var(--ink-faint)', ...titleBoldStyle }}
-                onMouseDown={(e) => e.detail > 1 && e.stopPropagation()}
-                onDoubleClick={(e) => {
-                  e.stopPropagation()
-                  setEditingTitle(true)
-                }}
-              >
-                {node.title || 'Title…'}
-              </span>
-            )}
+        <>
+          {/* Floating above the card, not inline in the header — a
+              sibling of .idea-node-shape-inner, same convention as
+              .idea-node-simple-controls for diamond/parallelogram.
+              Inline icon controls used to sit in the header row next to
+              the title, permanently reserving their width even while
+              invisible (opacity:0 still occupies flex space) — on a
+              fixed 220px-wide card with 6+ of these, that left so little
+              room for the title that anything longer than a couple words
+              got hard-truncated ("Roadblocks" down to "Ro..."). Floating
+              them frees the header down to just the dot + title. */}
+          <div className="idea-node-controls" onMouseDown={(e) => e.stopPropagation()}>
             <button
               className={'idea-node-bold' + (node.titleBold ? ' active' : '')}
               title={node.titleBold ? 'Unbold title' : 'Bold title'}
-              onMouseDown={(e) => e.stopPropagation()}
               onClick={() => toggleIdeaNodeTitleBold(scriptId, id)}
             >
               B
             </button>
-            <ShapePicker value={shape} onChange={(s) => setIdeaNodeShape(scriptId, id, s)} className="idea-node-shape-picker" />
+            <ShapePicker value={shape} onChange={(s) => setIdeaNodeShape(scriptId, id, s)} />
             <input
               type="color"
               className="idea-node-color-input"
               value={node.color || '#8a8d99'}
               title="Accent color (title text, border)"
-              onMouseDown={(e) => e.stopPropagation()}
               onFocus={() => pushUndo(scriptId)}
               onChange={(e) => setIdeaNodeColor(scriptId, id, e.target.value)}
             />
@@ -268,7 +238,6 @@ export default function IdeaNode({
               <button
                 className="idea-node-color-reset"
                 title="Reset accent color to default"
-                onMouseDown={(e) => e.stopPropagation()}
                 onClick={() => {
                   pushUndo(scriptId)
                   setIdeaNodeColor(scriptId, id, null)
@@ -282,7 +251,6 @@ export default function IdeaNode({
               className="idea-node-bgcolor-input"
               value={node.bgColor || themeBgColor()}
               title="Fill color"
-              onMouseDown={(e) => e.stopPropagation()}
               onFocus={() => pushUndo(scriptId)}
               onChange={(e) => setIdeaNodeBgColor(scriptId, id, e.target.value)}
             />
@@ -290,7 +258,6 @@ export default function IdeaNode({
               <button
                 className="idea-node-color-reset"
                 title="Reset fill color to default"
-                onMouseDown={(e) => e.stopPropagation()}
                 onClick={() => {
                   pushUndo(scriptId)
                   setIdeaNodeBgColor(scriptId, id, null)
@@ -299,39 +266,77 @@ export default function IdeaNode({
                 <Icon name="noColor" size={11} />
               </button>
             )}
-            <button
-              className="idea-node-delete"
-              title="Delete this node"
-              onMouseDown={(e) => e.stopPropagation()}
-              onClick={() => deleteIdeaNodes(scriptId, [id])}
-            >
+            <button className="idea-node-delete" title="Delete this node" onClick={() => deleteIdeaNodes(scriptId, [id])}>
               <Icon name="x" size={11} />
             </button>
           </div>
-          {showText && (
-            <textarea
-              className="idea-node-text"
-              placeholder="Write the idea…"
-              value={node.text}
-              onMouseDown={(e) => e.stopPropagation()}
-              onFocus={() => pushUndo(scriptId)}
-              onChange={(e) => setIdeaNodeText(scriptId, id, e.target.value)}
-              onBlur={() => commitIdeaNodeText(scriptId)}
-            />
-          )}
-          {!hideSummaries && (
-            <div className="map-node-btns idea-node-btns">
-              <button
-                className={'map-node-btn' + (node.collapsed ? ' active' : '')}
-                title={node.collapsed ? 'Show this node’s text' : 'Hide just this node’s text'}
-                onMouseDown={(e) => e.stopPropagation()}
-                onClick={() => toggleMapNodeCollapsed(scriptId, id)}
-              >
-                <Icon name="eye" size={12} />
-              </button>
+          <div
+            className={'idea-node-shape-inner shape-' + shape}
+            style={{ '--node-shape-color': color, '--node-bg-color': node.bgColor || undefined }}
+          >
+            <div className="map-node-head idea-node-head">
+              <span className="map-node-dot" style={{ background: color }} />
+              {editingTitle ? (
+                <input
+                  className="idea-node-title"
+                  style={{ color, ...titleBoldStyle }}
+                  placeholder="Title…"
+                  value={node.title}
+                  autoFocus
+                  onFocus={(e) => {
+                    pushUndo(scriptId)
+                    e.target.select()
+                  }}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={(e) => e.stopPropagation()}
+                  onChange={(e) => setIdeaNodeTitle(scriptId, id, e.target.value)}
+                  onBlur={() => {
+                    commitIdeaNodeTitle(scriptId)
+                    setEditingTitle(false)
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === 'Escape') e.target.blur()
+                  }}
+                />
+              ) : (
+                <span
+                  className="idea-node-title idea-node-title-display"
+                  style={{ color: node.title ? color : 'var(--ink-faint)', ...titleBoldStyle }}
+                  onMouseDown={(e) => e.detail > 1 && e.stopPropagation()}
+                  onDoubleClick={(e) => {
+                    e.stopPropagation()
+                    setEditingTitle(true)
+                  }}
+                >
+                  {node.title || 'Title…'}
+                </span>
+              )}
             </div>
-          )}
-        </div>
+            {showText && (
+              <textarea
+                className="idea-node-text"
+                placeholder="Write the idea…"
+                value={node.text}
+                onMouseDown={(e) => e.stopPropagation()}
+                onFocus={() => pushUndo(scriptId)}
+                onChange={(e) => setIdeaNodeText(scriptId, id, e.target.value)}
+                onBlur={() => commitIdeaNodeText(scriptId)}
+              />
+            )}
+            {!hideSummaries && (
+              <div className="map-node-btns idea-node-btns">
+                <button
+                  className={'map-node-btn' + (node.collapsed ? ' active' : '')}
+                  title={node.collapsed ? 'Show this node’s text' : 'Hide just this node’s text'}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={() => toggleMapNodeCollapsed(scriptId, id)}
+                >
+                  <Icon name="eye" size={12} />
+                </button>
+              </div>
+            )}
+          </div>
+        </>
       )}
       {CONNECTOR_SIDES.map((side) => {
         const connected = connectedSides.has(side)

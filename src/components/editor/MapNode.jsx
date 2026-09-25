@@ -68,6 +68,7 @@ export default function MapNode({
     >
       {order != null && <span className="map-node-order">{order}</span>}
       <div className="map-node-head">
+        <span className="map-node-dot" style={{ background: sec.titleColor || 'var(--ink-faint)' }} />
         {editingHeading ? (
           <input
             className="map-node-heading-input"

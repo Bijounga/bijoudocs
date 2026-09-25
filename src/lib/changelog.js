@@ -158,6 +158,9 @@ export const CHANGELOG = {
   '0.5.53': [
     'Teleprompter: click a line, note, or tag to edit it right there — no need to leave and go back to the regular editor',
     'Teleprompter: click a section heading to open or close it without leaving the teleprompter'
+  ],
+  '0.5.54': [
+    'Mind map got a visual polish pass: sleeker rounded cards, a colored status dot next to each title, cleaner sans-serif type, idea-node body text now flows directly on the card instead of a separate boxed field, and a subtle graph-paper grid instead of dots on the canvas'
   ]
 }
 

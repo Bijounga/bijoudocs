@@ -2510,8 +2510,13 @@ textarea {
   position: relative;
   overflow: hidden;
   background: var(--bg);
-  background-image: radial-gradient(circle, var(--line-soft) 1px, transparent 1px);
-  background-size: 22px 22px;
+  /* A fine graph-paper line grid instead of dots — reads as a proper
+     planning-canvas surface rather than a dotted placeholder background,
+     same subtle --line-soft tone so it stays exactly as unobtrusive. */
+  background-image:
+    linear-gradient(var(--line-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line-soft) 1px, transparent 1px);
+  background-size: 24px 24px;
   cursor: default;
 }
 .map-canvas-inner {
@@ -2588,8 +2593,8 @@ textarea {
   position: absolute;
   background: var(--panel-2);
   border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 12px 14px;
+  border-radius: 14px;
+  padding: 14px 16px;
   cursor: grab;
   user-select: none;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
@@ -2642,15 +2647,22 @@ textarea {
   justify-content: center;
 }
 .map-node-head {
-  font-family: var(--mono);
-  font-size: 12px;
+  font-family: var(--sans);
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.01em;
   color: var(--ink);
   margin-bottom: 8px;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
+}
+.map-node-dot {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25) inset;
 }
 .map-node-heading {
   flex: 1;
@@ -2663,10 +2675,10 @@ textarea {
   background: transparent;
   border: none;
   color: var(--ink);
-  font-family: var(--mono);
-  font-size: 12px;
+  font-family: var(--sans);
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.01em;
   text-transform: uppercase;
   padding: 0;
 }
@@ -2683,8 +2695,9 @@ textarea {
   border: 1px solid var(--line-soft);
   border-radius: 6px;
   color: var(--ink);
-  font-size: 12px;
-  line-height: 1.5;
+  font-family: var(--sans);
+  font-size: 12.5px;
+  line-height: 1.55;
   padding: 6px 8px;
   resize: vertical;
   min-height: 38px;
@@ -2840,8 +2853,8 @@ textarea {
   position: relative;
   background: var(--node-bg-color, var(--panel-2));
   border: 1.5px solid var(--node-shape-color, var(--ink-faint));
-  border-radius: 10px;
-  padding: 12px 14px;
+  border-radius: 14px;
+  padding: 14px 16px;
 }
 .idea-node-shape-inner.shape-pill {
   /* Not 999px — on anything taller than a couple of short lines, a
@@ -2856,6 +2869,43 @@ textarea {
 }
 .idea-node:hover .idea-node-shape-inner {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22);
+}
+.idea-node-controls {
+  /* Rectangle/pill's own version of .idea-node-simple-controls below —
+     floats above the card, right-aligned (the dot+title sit left), so
+     the header row inside the card never has to permanently reserve
+     width for these regardless of whether they're actually visible. */
+  position: absolute;
+  top: -26px;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.1s;
+  z-index: 1;
+}
+.idea-node:hover .idea-node-controls,
+.idea-node.is-selected .idea-node-controls {
+  opacity: 1;
+  pointer-events: auto;
+}
+/* Each of these buttons/swatches also has its own opacity:0-by-default,
+   hover-revealed rule (shared with other places they're reused, like
+   the preset manager rows) — that rule alone would leave them invisible
+   here whenever the node is selected but not actually hovered, since it
+   only ever checks `.idea-node:hover`, not `.is-selected`. Higher
+   specificity than that base rule (two classes vs. one), so this always
+   wins once the floating container itself is visible — the parent rule
+   above is the single source of truth for when this whole toolbar
+   should show, not each child's own hover state. */
+.idea-node-controls .idea-node-bold,
+.idea-node-controls .shape-picker-btn,
+.idea-node-controls .idea-node-color-input,
+.idea-node-controls .idea-node-bgcolor-input,
+.idea-node-controls .idea-node-delete {
+  opacity: 1;
 }
 .idea-node-simple-controls {
   /* Floating above the shape, not inside it — absolutely positioned
@@ -2993,7 +3043,7 @@ textarea {
   z-index: 1;
 }
 .idea-node-head {
-  margin-bottom: 6px;
+  margin-bottom: 9px;
 }
 .chapter-node {
   border-top: 3px solid var(--cyan);
@@ -3041,10 +3091,10 @@ textarea {
   min-width: 0;
   background: transparent;
   border: none;
-  font-family: var(--mono);
-  font-size: 12px;
+  font-family: var(--sans);
+  font-size: 13.5px;
   font-weight: 600;
-  letter-spacing: 0.03em;
+  letter-spacing: 0;
   padding: 0;
 }
 .idea-node-title:focus {
@@ -3150,15 +3200,16 @@ textarea {
   color: var(--danger);
 }
 .idea-node:hover .idea-node-color-reset,
-.idea-node-simple.is-selected .idea-node-color-reset {
-  /* The selected-without-hovering case matters specifically for the
-     simple-shape (diamond/parallelogram) branch, whose sibling controls
-     stay visible while selected via their shared parent's own opacity
-     rule (.idea-node-simple-controls) rather than each child's own —
-     this button has its own opacity toggle instead (matching the
-     header-branch swatches' pattern), so it needs the same
-     is-selected condition spelled out explicitly or it'd be the one
-     control in that row that disappears the moment the cursor leaves. */
+.idea-node.is-selected .idea-node-color-reset {
+  /* The selected-without-hovering case matters for both idea-node
+     branches — each one's sibling controls stay visible while selected
+     via their shared floating parent's own opacity rule
+     (.idea-node-simple-controls / .idea-node-controls) rather than each
+     child's own — this button has its own opacity toggle instead
+     (matching the other swatches/buttons it sits next to), so it needs
+     the same is-selected condition spelled out explicitly or it'd be
+     the one control in that row that disappears the moment the cursor
+     leaves. */
   opacity: 1;
   pointer-events: auto;
 }
@@ -3243,14 +3294,21 @@ textarea {
   opacity: 1;
 }
 .idea-node-text {
+  /* Flush against the card's own background rather than a nested boxed
+     widget — reads as one continuous surface (title + body) instead of
+     "a title bar sitting on top of a form field." The negative margin
+     cancels the small padding so the text still lines up with the
+     title above it in the default (unhovered, unfocused) state. */
   width: 100%;
-  background: var(--panel-3);
-  border: 1px solid var(--line-soft);
+  background: transparent;
+  border: none;
   border-radius: 6px;
   color: var(--ink);
-  font-size: 12px;
-  line-height: 1.5;
-  padding: 6px 8px;
+  font-family: var(--sans);
+  font-size: 12.5px;
+  line-height: 1.55;
+  padding: 2px 4px;
+  margin: -2px -4px;
   resize: none;
   field-sizing: content;
   min-height: 20px;
@@ -3258,9 +3316,12 @@ textarea {
   overflow-y: auto;
   cursor: text;
 }
+.idea-node-text:hover {
+  background: color-mix(in srgb, var(--panel-3) 55%, transparent);
+}
 .idea-node-text:focus {
   outline: none;
-  border-color: var(--cyan);
+  background: var(--panel-3);
   color: var(--ink);
 }
 
