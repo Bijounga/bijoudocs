@@ -51,6 +51,13 @@ function createWindow() {
     show: false,
     autoHideMenuBar: true,
     backgroundColor: '#14151A',
+    // The renderer draws its own themed title bar (TitleBar.jsx), so each
+    // theme can restyle it. 'hidden' rather than frame:false: on Windows it
+    // removes the native bar (the renderer draws the caption buttons), and
+    // on macOS it keeps the native traffic lights, positioned to sit
+    // centered in the 32px bar.
+    titleBarStyle: 'hidden',
+    trafficLightPosition: { x: 12, y: 10 },
     icon: path.join(__dirname, '../../build/icon.ico'),
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.js'),
@@ -67,6 +74,8 @@ function createWindow() {
   })
 
   win.on('ready-to-show', () => win.show())
+  win.on('maximize', () => win.webContents.send('window:maximizedChanged', true))
+  win.on('unmaximize', () => win.webContents.send('window:maximizedChanged', false))
   if (isDev) {
     win.webContents.on('console-message', (_e, level, message, line, sourceId) => {
       console.log('[renderer]', message, '(' + sourceId + ':' + line + ')')
@@ -146,6 +155,18 @@ function registerIpc(win) {
   ipcMain.handle('scripts:docsDir', () => fileStore.getDocsDir())
 
   ipcMain.handle('app:version', () => app.getVersion())
+
+  // Caption buttons for the renderer-drawn title bar (the native one is
+  // hidden — see titleBarStyle in createWindow).
+  ipcMain.handle('window:minimize', (e) => BrowserWindow.fromWebContents(e.sender)?.minimize())
+  ipcMain.handle('window:toggleMaximize', (e) => {
+    const w = BrowserWindow.fromWebContents(e.sender)
+    if (!w) return
+    if (w.isMaximized()) w.unmaximize()
+    else w.maximize()
+  })
+  ipcMain.handle('window:close', (e) => BrowserWindow.fromWebContents(e.sender)?.close())
+  ipcMain.handle('window:isMaximized', (e) => BrowserWindow.fromWebContents(e.sender)?.isMaximized() ?? false)
 
   ipcMain.handle('settings:load', () => fileStore.loadSettings())
   ipcMain.handle('settings:save', (_e, settings) => fileStore.saveSettings(settings))

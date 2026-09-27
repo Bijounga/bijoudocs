@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react'
 import { useStore } from './state/store.js'
 import Topbar from './components/Topbar.jsx'
+import TitleBar from './components/TitleBar.jsx'
 import TabBar from './components/TabBar.jsx'
 import SectionTimeline from './components/SectionTimeline.jsx'
 import Sidebar from './components/Sidebar.jsx'
@@ -179,13 +180,19 @@ export default function App() {
   }, [contextMenu, closeContextMenu])
 
   if (!loaded) {
-    return <div className="app-loading">Loading BijouDocs…</div>
+    return (
+      <div className="app-root">
+        <TitleBar />
+        <div className="app-loading">Loading BijouDocs…</div>
+      </div>
+    )
   }
 
   const script = scripts.find((s) => s.id === currentScriptId) || null
 
   return (
     <div className={'app-root ' + (hideTags ? 'hide-tags ' : '') + (hideNotes ? 'hide-notes' : '')}>
+      <TitleBar />
       <Topbar script={script} />
       {script && <TabBar script={script} />}
       {script && <SectionTimeline script={script} />}

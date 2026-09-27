@@ -30,7 +30,17 @@ const api = {
   saveGlobalCategories: (list) => ipcRenderer.invoke('categories:saveGlobal', list),
   installUpdateNow: () => ipcRenderer.invoke('update:installNow'),
   checkForUpdatesNow: () => ipcRenderer.invoke('update:checkNow'),
-  downloadManualUpdate: (version) => ipcRenderer.invoke('update:downloadManualMac', version)
+  downloadManualUpdate: (version) => ipcRenderer.invoke('update:downloadManualMac', version),
+  platform: process.platform,
+  windowMinimize: () => ipcRenderer.invoke('window:minimize'),
+  windowToggleMaximize: () => ipcRenderer.invoke('window:toggleMaximize'),
+  windowClose: () => ipcRenderer.invoke('window:close'),
+  windowIsMaximized: () => ipcRenderer.invoke('window:isMaximized'),
+  onWindowMaximizedChanged: (cb) => {
+    const listener = (_e, maximized) => cb(maximized)
+    ipcRenderer.on('window:maximizedChanged', listener)
+    return () => ipcRenderer.removeListener('window:maximizedChanged', listener)
+  }
 }
 
 contextBridge.exposeInMainWorld('bijou', api)

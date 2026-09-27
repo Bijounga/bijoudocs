@@ -163,6 +163,966 @@
   --green: #4ade80;
   --editor-page: #050506;
 }
+/* v3 — v2's teal desktop was true to a Windows 95 screenshot but wrong
+   for this app's layout: real Win95 only ever showed a sliver of teal
+   *around* a maximized window, never as the work surface itself. BijouDocs
+   has one window, and `.main` (the actual writing canvas) covers most of
+   it — inheriting raw teal there made the majority of the screen a
+   saturated wash for hours of real writing, which is what read as "hard
+   to look at," not a wrong idea, a wrong proportion. Swapped --bg for the
+   gray Word/Excel actually used behind a white page (their MDI client
+   area, a mid gray a couple steps darker than the --panel chrome), and
+   forced --editor-page (white) on unconditionally below instead of
+   leaving it behind the app's opt-in "page contrast" toggle — for every
+   other theme that's a matter of taste, but for *this* theme the white
+   page against gray chrome is the whole identity, not an option. */
+:root[data-theme='dos'] {
+  --bg: #a0a0a0;
+  --panel: #c0c0c0;
+  --panel-2: #d4d0c8;
+  --panel-3: #a0a0a0;
+  --ink: #000000;
+  /* Both meaningfully darker than the v3 pass — --ink-faint was #707070,
+     almost the same luminance as --bg (#808080 then), which is why the
+     margin panels (timestamps/pinned/checklist/bookmarks — the "left and
+     right things") were nearly unreadable: faint hint text sitting
+     directly on the plain canvas, not on a panel of its own. Every other
+     theme's --bg is dark enough that a light --ink-faint reads fine
+     against it; this theme's --bg is light, so faint text needs to go
+     dark instead, even at some cost to the dim/faint hierarchy step. */
+  --ink-dim: #303030;
+  --ink-faint: #4d4d4d;
+  --line: #808080;
+  --line-soft: #a0a0a0;
+  --cyan: #000080;
+  --amber: #808000;
+  --pink: #800080;
+  --danger: #ff0000;
+  --green: #008000;
+  --editor-page: #ffffff;
+  /* Tahoma over the app's usual Inter — the actual Windows UI face from
+     98/2000/XP on, still installed on every Windows machine (this one
+     included), so this renders as the real font rather than a fallback
+     approximation. Every component already reads var(--sans), so this
+     one line is enough to re-font the whole theme, chrome and document
+     text alike, the same trick --editor-page uses per-theme. */
+  --sans: 'Tahoma', 'MS Sans Serif', Verdana, Arial, sans-serif;
+}
+/* Tahoma only really has two weight cuts, regular and bold — 500 rounds
+   straight back down to regular (why that first attempt did nothing),
+   and 700 turned out too heavy once applied to actual paragraphs of
+   dialogue rather than short labels (confirmed by feedback: liked bold
+   on section names, too much on body text). There's no real middle
+   weight to reach for, so this fakes one instead: plain regular weight
+   plus a hairline text-stroke, which thickens the strokes a touch
+   without the blocky look of true bold. Section headings/labels already
+   set their own explicit weight (e.g. .section-heading-input at 600, in
+   the mono font) and are untouched by this either way — they stay bold
+   because that was never coming from this body-level rule to begin
+   with. */
+[data-theme='dos'] body {
+  font-weight: 400;
+  -webkit-text-stroke: 0.3px currentColor;
+}
+[data-theme='dos'] .editor-wrap,
+[data-theme='dos'] .outline-list {
+  background: var(--editor-page) !important;
+}
+/* The blue-sky-and-clouds desktop wallpaper behind the floating text
+   editor, in the spirit of Windows 95/98's "Clouds" (not that image
+   itself — it's Microsoft's copyrighted art). A real photo, since the
+   earlier radial-gradient blobs read as fake: "The sky is beautiful
+   with cumulus clouds" by Nana Hemaa N.A., Wikimedia Commons, CC0 (no
+   attribution or share-alike obligations). Cropped to window aspect —
+   which also removed a red scribble drawn on the original — with a
+   speck blended out, ~240KB, bundled locally so it works offline.
+   Scattered puffy cumulus on flat royal blue, deliberately different
+   from the Aero theme's softer cloud bank.
+   It lives on .app-root, not .main: .main is a different element in the
+   editor and the map view, so a photo there was re-rasterized from
+   scratch on every view switch (and painted under the opaque map canvas
+   where it's never seen) — the likely reason switching to the map lagged
+   only in the photo themes (not measured: a backgrounded window can't be
+   paint-profiled). .app-root never remounts or scrolls, so it paints once
+   and needs no `background-attachment: fixed`; .main just goes
+   transparent to let it show through. */
+[data-theme='dos'] .app-root {
+  background: url('./assets/dos-bg.jpg') center / cover no-repeat;
+}
+[data-theme='dos'] .main {
+  background: transparent !important;
+}
+/* Every selector that declares its own border-radius elsewhere in this
+   file, named explicitly instead of `[data-theme='dos'] * { ... }` — the
+   wildcard version matches literally every node in the DOM (this app
+   routinely has 200+ script lines and 100+ map nodes on screen at once)
+   on every style recalc, which is exactly the kind of thing that turns
+   into real, felt lag rather than a one-time cost. Generated once from
+   every `border-radius:` declaration in this file, not hand-maintained —
+   if a future component adds a new rounded corner, it just won't be
+   square under this theme until it's added here too, which is a fine
+   failure mode (a stray rounded corner, not a performance regression). */
+[data-theme='dos'] .add-line-btn,
+[data-theme='dos'] .add-section-btn,
+[data-theme='dos'] .cat-add-btn,
+[data-theme='dos'] .cat-add-global,
+[data-theme='dos'] .cat-add-global-existing,
+[data-theme='dos'] .cat-add-row input[type='color'],
+[data-theme='dos'] .cat-add-row input[type='text'],
+[data-theme='dos'] .cat-label-input,
+[data-theme='dos'] .cat-row,
+[data-theme='dos'] .cat-spoken-btn,
+[data-theme='dos'] .cat-swatch,
+[data-theme='dos'] .cat-swatch-dot,
+[data-theme='dos'] .chapter-node-number,
+[data-theme='dos'] .check-item-btn,
+[data-theme='dos'] .checklist-add button,
+[data-theme='dos'] .checklist-add input,
+[data-theme='dos'] .checklist-item input[type='text'],
+[data-theme='dos'] .checklist-panel,
+[data-theme='dos'] .context-menu,
+[data-theme='dos'] .context-menu-item,
+[data-theme='dos'] .cp-compare-btn,
+[data-theme='dos'] .cp-draft button,
+[data-theme='dos'] .cp-draft input,
+[data-theme='dos'] .cp-item,
+[data-theme='dos'] .cp-newbtn,
+[data-theme='dos'] .date-field,
+[data-theme='dos'] .dict-word-list,
+[data-theme='dos'] .diff-add,
+[data-theme='dos'] .diff-del,
+[data-theme='dos'] .diff-modal,
+[data-theme='dos'] .done-indicator,
+[data-theme='dos'] .drop-indicator-after::after,
+[data-theme='dos'] .export-item,
+[data-theme='dos'] .export-menu,
+[data-theme='dos'] .filter-back,
+[data-theme='dos'] .icon-btn,
+[data-theme='dos'] .idea-node-bgcolor-input,
+[data-theme='dos'] .idea-node-bold,
+[data-theme='dos'] .idea-node-color-input,
+[data-theme='dos'] .idea-node-color-reset,
+[data-theme='dos'] .idea-node-delete,
+[data-theme='dos'] .idea-node-shape-inner,
+[data-theme='dos'] .idea-node-shape-inner.shape-pill,
+[data-theme='dos'] .idea-node-text,
+[data-theme='dos'] .jump-flash,
+[data-theme='dos'] .kbd-pill,
+[data-theme='dos'] .line,
+[data-theme='dos'] .line-btn,
+[data-theme='dos'] .line-search-menu,
+[data-theme='dos'] .line-text,
+[data-theme='dos'] .line-text img,
+[data-theme='dos'] .logo .dot,
+[data-theme='dos'] .ls-row,
+[data-theme='dos'] .ls-search,
+[data-theme='dos'] .map-idea-menu,
+[data-theme='dos'] .map-idea-menu-item,
+[data-theme='dos'] .map-node,
+[data-theme='dos'] .map-node-btn,
+[data-theme='dos'] .map-node-connector,
+[data-theme='dos'] .map-node-dot,
+[data-theme='dos'] .map-node-extend,
+[data-theme='dos'] .map-node-order,
+[data-theme='dos'] .map-node-resize-corner,
+[data-theme='dos'] .map-node-summary,
+[data-theme='dos'] .map-preset-add-input,
+[data-theme='dos'] .map-preset-color-input,
+[data-theme='dos'] .map-preset-delete,
+[data-theme='dos'] .map-preset-label-input,
+[data-theme='dos'] .margin-panel-collapse,
+[data-theme='dos'] .new-script-btn,
+[data-theme='dos'] .note-box textarea,
+[data-theme='dos'] .note-color-input,
+[data-theme='dos'] .outline-item-text,
+[data-theme='dos'] .outline-search,
+[data-theme='dos'] .pin-dot,
+[data-theme='dos'] .pinned-card,
+[data-theme='dos'] .pinned-card-heading,
+[data-theme='dos'] .pinned-drop,
+[data-theme='dos'] .pinned-line-text,
+[data-theme='dos'] .progress-bar-fill,
+[data-theme='dos'] .progress-bar-wrap,
+[data-theme='dos'] .save-history-badge,
+[data-theme='dos'] .save-history-restore,
+[data-theme='dos'] .script-item,
+[data-theme='dos'] .search-wrap input,
+[data-theme='dos'] .sec-color-input,
+[data-theme='dos'] .sec-icon-btn,
+[data-theme='dos'] .sec-list-dot,
+[data-theme='dos'] .sec-list-move,
+[data-theme='dos'] .sec-list-row,
+[data-theme='dos'] .section-block.drag-over,
+[data-theme='dos'] .section-block.selected,
+[data-theme='dos'] .section-chip,
+[data-theme='dos'] .section-chip-dot,
+[data-theme='dos'] .section-jump-menu,
+[data-theme='dos'] .section-map-order,
+[data-theme='dos'] .shape-picker-btn,
+[data-theme='dos'] .shape-picker-menu,
+[data-theme='dos'] .shape-picker-option,
+[data-theme='dos'] .sj-dot,
+[data-theme='dos'] .sj-row,
+[data-theme='dos'] .sj-search,
+[data-theme='dos'] .synonym-menu,
+[data-theme='dos'] .synonym-menu-chip,
+[data-theme='dos'] .tab-chip,
+[data-theme='dos'] .tab-close,
+[data-theme='dos'] .tag-menu,
+[data-theme='dos'] .tag-menu-dot,
+[data-theme='dos'] .tag-menu-item,
+[data-theme='dos'] .tag-pill,
+[data-theme='dos'] .theme-editor,
+[data-theme='dos'] .theme-editor-name,
+[data-theme='dos'] .theme-editor-row input[type='color'],
+[data-theme='dos'] .theme-row,
+[data-theme='dos'] .theme-swatches,
+[data-theme='dos'] .timestamp-note,
+[data-theme='dos'] .timestamp-time,
+[data-theme='dos'] .title-input,
+[data-theme='dos'] .tp-btn,
+[data-theme='dos'] .tp-font-select,
+[data-theme='dos'] .tp-line,
+[data-theme='dos'] .update-banner,
+[data-theme='dos'] .update-banner-btn,
+[data-theme='dos'] .update-banner.conflict code,
+[data-theme='dos'] .version-badge,
+[data-theme='dos'] ::-webkit-scrollbar-thumb,
+[data-theme='dos'] [data-editor-contrast='on'] .editor-wrap,
+[data-theme='dos'] [data-editor-contrast='on'] .outline-list {
+  border-radius: 0 !important;
+}
+/* The flourish a palette swap alone can't give it: genuine 3D bevels.
+   border-style: outset/inset is a real browser feature — given one base
+   color it auto-derives the lighter/darker edge shades that make a flat
+   div read as a raised button or a sunken panel, exactly how every
+   Windows 95 control actually worked. */
+[data-theme='dos'] .icon-btn,
+[data-theme='dos'] .tab-chip,
+[data-theme='dos'] .map-node,
+[data-theme='dos'] .diff-modal,
+[data-theme='dos'] .export-menu,
+[data-theme='dos'] .section-jump-menu {
+  border-style: outset !important;
+  border-width: 2px !important;
+  border-color: var(--panel) !important;
+}
+[data-theme='dos'] .icon-btn,
+[data-theme='dos'] .tab-chip {
+  /* A raised bevel over a transparent middle reads as a ghost outline,
+     not a button — real Win95 controls are solid-filled gray even when
+     they sit on a colored titlebar (think the min/max/close squares). */
+  background: var(--panel) !important;
+  color: var(--ink) !important;
+}
+/* A toggled-on button should look *pressed*, not just tinted — inset
+   flips the bevel direction so it reads as physically pushed in. */
+[data-theme='dos'] .icon-btn.active,
+[data-theme='dos'] .tab-chip.active {
+  border-style: inset !important;
+  background: var(--panel-3) !important;
+}
+/* Content panels (sidebar, inspector, the script column, floating
+   menus) were sunken listbox-style wells in real Win95 apps, not raised
+   buttons — the opposite bevel direction from controls, which is what
+   actually sells "this is a real desktop app" rather than "gray paint." */
+[data-theme='dos'] .sidebar,
+[data-theme='dos'] .inspector,
+[data-theme='dos'] .search-wrap input,
+[data-theme='dos'] .sj-search,
+[data-theme='dos'] .margin-stack,
+[data-theme='dos'] .editor-wrap {
+  border-style: inset !important;
+  border-width: 3px !important;
+  border-color: var(--panel) !important;
+}
+[data-theme='dos'] .search-wrap input {
+  background: var(--editor-page) !important;
+}
+/* The timestamps/pinned/checklist/bookmarks margin panels had no
+   background of their own — they sat directly on .main's sky gradient,
+   which is exactly why their already-fixed --ink-faint text still read
+   as hard to find: the gradient's brightness varies by region, so one
+   text color could never stay reliably legible against all of it.
+   Giving them the same solid --panel gray as every other chrome surface
+   fixes that at the source, and matches the sunken-frame treatment now
+   applied consistently across every side panel. */
+[data-theme='dos'] .margin-stack {
+  background: var(--panel) !important;
+}
+/* Tried white sidebar/inspector panels first (like a document/listbox);
+   corrected back to gray on direct feedback — the actual reference shots
+   (GWD Text Editor's tree, EditPad's chrome) keep the tree/list panel in
+   the same gray as the rest of the chrome, with a visibly sunken border
+   doing the work of setting it apart, not a color change. The inset
+   border above already does that job; this just stops fighting it with
+   a background override. */
+/* The other half of a real Windows listbox: a selected row is a solid
+   navy fill with white text, not a tinted background — same navy as the
+   titlebar, so the "selected" language reads as one consistent system
+   rather than two different conventions. */
+[data-theme='dos'] .script-item.active,
+[data-theme='dos'] .theme-row.active {
+  background: #000080 !important;
+  border-color: #000080 !important;
+}
+[data-theme='dos'] .script-item.active .st,
+[data-theme='dos'] .script-item.active .sm,
+[data-theme='dos'] .theme-row.active .theme-row-label {
+  color: #ffffff !important;
+}
+/* The one unmistakable Windows 95 signature: a gradient blue titlebar
+   with bright white bold text. Applied only to the topbar — the rest of
+   the chrome stays the neutral gray/bevel language above. */
+[data-theme='dos'] .topbar {
+  background: linear-gradient(to right, #000080, #1084d0);
+  border-bottom: 2px solid #000000;
+}
+[data-theme='dos'] .topbar .logo,
+[data-theme='dos'] .title-input {
+  color: #ffffff;
+}
+[data-theme='dos'] .logo .dot {
+  background: #ffffff;
+}
+/* Everything else directly in the titlebar that isn't a button (the
+   save-status text, the version badge, the due-date field) — these all
+   normally read in --ink-faint/--cyan, which on this theme resolve to
+   grays and navy that vanish against the blue gradient. Only the topbar's
+   *own* small text needs this; buttons and the main app body are
+   unaffected. */
+[data-theme='dos'] .topbar .version-badge,
+[data-theme='dos'] .topbar .saved-flash,
+[data-theme='dos'] .topbar .save-status,
+[data-theme='dos'] .topbar .date-field {
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* Frutiger Aero — the Vista/Windows 7 era "glass and gloss" look:
+   translucent frosted-glass chrome over a vivid blue backdrop, glossy
+   "candy" buttons with a bright highlight strip across the top half,
+   soft blue glow on focus/selection, bubbly oversized corner radii.
+   v1 used translucent rgba() panels with a real backdrop-filter blur
+   behind them (the actual Aero Glass technique) — corrected to solid
+   opaque colors on direct feedback: the transparency read as "broken,"
+   not "glass," once seen over real content (the map canvas in
+   particular, an opaque dot-grid sitting in front of the blurred
+   gradient, hid the effect entirely and just looked like a flat dark
+   panel). Solid pastel-blue chrome, reusing the "vibe reference" screen-
+   shots given for the direction, keeps the glossy buttons/glow/rounded-
+   bubble language without relying on blur actually being visible. */
+:root[data-theme='aero'] {
+  --bg: #0a3d62;
+  --panel: #eaf6ff;
+  --panel-2: #ffffff;
+  --panel-3: #d3ecfb;
+  --ink: #0b2545;
+  --ink-dim: #35516b;
+  --ink-faint: #5c7791;
+  --line: #bcdcf0;
+  --line-soft: #d8edfa;
+  --cyan: #0f9fdb;
+  --amber: #f2a71b;
+  --pink: #e75ba0;
+  --danger: #e2432f;
+  --green: #2fb866;
+  --editor-page: #ffffff;
+  /* Segoe UI — the real Vista/Windows 7 system font, already on this
+     machine, same "use the actual period font" approach as Tahoma for
+     DOS rather than an approximation. */
+  --sans: 'Segoe UI', 'Segoe UI Light', Tahoma, Verdana, sans-serif;
+}
+/* Solid pastel-blue chrome — no backdrop-filter (there's nothing
+   translucent left for it to blur behind), just a clean opaque panel in
+   the same family as --bg. */
+[data-theme='aero'] .topbar,
+[data-theme='aero'] .sidebar,
+[data-theme='aero'] .inspector,
+[data-theme='aero'] .tabbar,
+[data-theme='aero'] .margin-stack,
+[data-theme='aero'] .diff-modal,
+[data-theme='aero'] .export-menu,
+[data-theme='aero'] .section-jump-menu {
+  background: var(--panel) !important;
+  border-color: var(--line) !important;
+}
+/* The signature glossy "candy button": a light-to-darker gradient base
+   plus a bright inset highlight along the very top edge, simulating a
+   glass bubble catching light from above. Oversized radius (bubbly, not
+   the app's usual tight corners) and a soft glow on hover/active instead
+   of DOS's hard bevel-flip — Aero sold depth with light and blur, never
+   with a pressed/raised 3D edge. */
+[data-theme='aero'] .icon-btn,
+[data-theme='aero'] .tab-chip {
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.55) 45%, rgba(200, 232, 255, 0.4) 50%, rgba(170, 215, 250, 0.3) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.85) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 1px 3px rgba(10, 40, 70, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+  color: var(--ink) !important;
+}
+[data-theme='aero'] .icon-btn:hover,
+[data-theme='aero'] .tab-chip:hover {
+  box-shadow: 0 2px 8px rgba(15, 159, 219, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+}
+[data-theme='aero'] .icon-btn.active,
+[data-theme='aero'] .tab-chip.active {
+  background: linear-gradient(to bottom, rgba(160, 220, 255, 0.95) 0%, rgba(90, 190, 250, 0.75) 45%, rgba(40, 150, 230, 0.65) 50%, rgba(20, 120, 200, 0.55) 100%) !important;
+  color: #06263f !important;
+  box-shadow: 0 0 10px rgba(15, 159, 219, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.85) !important;
+}
+/* Selected list rows get the same glass-bubble treatment as buttons
+   rather than DOS's flat navy fill — a glowing blue glass pill, which is
+   exactly how Vista/7 Explorer highlighted a selected item. */
+[data-theme='aero'] .script-item.active,
+[data-theme='aero'] .theme-row.active {
+  background: linear-gradient(to bottom, rgba(180, 228, 255, 0.9), rgba(90, 190, 250, 0.55)) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 0 12px rgba(15, 159, 219, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+  border-color: rgba(255, 255, 255, 0.8) !important;
+}
+[data-theme='aero'] .editor-wrap {
+  border-radius: 16px !important;
+  box-shadow: 0 4px 16px rgba(10, 40, 70, 0.25) !important;
+}
+/* Same fix DOS needed: force the near-opaque page on regardless of the
+   app's own "page contrast" toggle default. Without it the document text
+   just sits directly on the blurred glass backdrop with nothing marking
+   where the page actually is. */
+[data-theme='aero'] .editor-wrap,
+[data-theme='aero'] .outline-list {
+  background: var(--editor-page) !important;
+}
+/* Segoe UI has real weight cuts (unlike Tahoma, which only really had
+   two) — 600 renders as genuine semibold here, not a rounded-off 400 or
+   700, so body text can actually sit at a real medium weight instead of
+   the thin-vs-too-bold binary the DOS theme had to work around. */
+[data-theme='aero'] body {
+  font-weight: 600;
+}
+/* A real cloud photo behind the editor canvas (faked radial-gradient
+   clouds kept reading as "weird circles"): "Bright blue sky with scenic
+   white cloud patterns" by Trixia Lao, Wikimedia Commons, CC0 (public
+   domain — no attribution or share-alike obligations on the app), with
+   a sky-blue wash baked in to soften the clouds. Bundled locally (~150KB)
+   so it works offline. Layers, top to bottom: a deep-blue tint fading
+   down from the top (depth, and keeps white clouds from washing out the
+   white page), and a green glow rising from the bottom — Frutiger Aero's
+   other signature color besides blue. The green is a plain gradient, not
+   a photo: a cut-in grass photo was tried and read as low-res and too
+   literal. On .app-root with a transparent .main for the same reason as
+   the DOS wallpaper above (painted once, not on every view switch). */
+[data-theme='aero'] .app-root {
+  background:
+    linear-gradient(to top, rgba(88, 190, 70, 0.6) 0%, rgba(120, 205, 90, 0.3) 14%, rgba(140, 215, 110, 0) 34%),
+    linear-gradient(180deg, rgba(6, 42, 69, 0.45) 0%, rgba(10, 77, 120, 0.2) 40%, rgba(255, 255, 255, 0) 100%),
+    url('./assets/aero-sky.jpg') center / cover no-repeat;
+}
+[data-theme='aero'] .main {
+  background: transparent !important;
+}
+/* The mind map gets gradients only, no photo (asked for directly). The
+   dot grid stays as a faint white overlay since snapping still uses it. */
+[data-theme='aero'] .map-canvas {
+  background:
+    radial-gradient(circle, rgba(255, 255, 255, 0.22) 1px, transparent 1px) 0 0 / 22px 22px,
+    linear-gradient(to top, rgba(88, 190, 70, 0.55) 0%, rgba(120, 205, 90, 0.25) 14%, rgba(140, 215, 110, 0) 32%),
+    linear-gradient(180deg, #062a45 0%, #0a4d78 35%, #1179ad 70%, #3aa8d8 100%) !important;
+}
+/* The mind-map cards get the same glossy "candy" treatment as the
+   buttons — a light-to-blue gradient fill, a bright top highlight, a
+   real drop shadow plus a soft color-matched glow, so a node reads as a
+   physical glass bubble sitting above the canvas rather than a flat
+   tinted rectangle. Bigger radius than the editor page on purpose —
+   Aero's UI objects were consistently rounder the more "physical" they
+   were meant to feel. */
+/* One blurred shadow plus a crisp inset highlight. Measured on a
+   129-node map: this theme's node/edge styling adds roughly 10ms of paint
+   per click over Dark (~42ms vs ~30ms) — heavier shadow stacks and an
+   edge drop-shadow filter made no measurable difference either way. */
+[data-theme='aero'] .map-node {
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.88) 45%, rgba(205, 232, 255, 0.8) 50%, rgba(165, 212, 250, 0.72) 100%) !important;
+  border: 2px solid rgba(255, 255, 255, 0.9) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 6px 16px rgba(6, 30, 55, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.95) !important;
+}
+[data-theme='aero'] .map-node.is-selected {
+  box-shadow: 0 0 0 2px var(--cyan), 0 6px 16px rgba(15, 100, 170, 0.5), inset 0 2px 0 rgba(255, 255, 255, 0.95) !important;
+}
+/* Connector dots get the same glass-bead language — a glossy little
+   sphere instead of a flat circle. Edges are styled by stroke color
+   only, a lighter blue that reads against the gradient. */
+[data-theme='aero'] .map-node-connector,
+[data-theme='aero'] .map-node-dot {
+  background: radial-gradient(circle at 35% 30%, #ffffff, #8fd4f5 55%, #0f9fdb 100%) !important;
+  box-shadow: 0 1px 3px rgba(6, 30, 55, 0.4) !important;
+  border: none !important;
+}
+[data-theme='aero'] .map-edge {
+  stroke: rgba(210, 238, 255, 0.85);
+}
+[data-theme='aero'] .map-edge.is-lit {
+  stroke: #7fdcff;
+}
+
+/* Vaporwave: pastel Windows 98 windows (lavender chrome, pink-to-purple
+   titlebar) floating over a sunset sky with a neon perspective grid.
+   Built with the lessons from DOS/Aero up front: the wallpaper lives on
+   .app-root (painted once, never re-rasterized on a view switch), .main
+   is transparent, the page itself stays near-white for readability, and
+   nothing expensive (filters, blur, wildcard selectors) is applied per
+   node/line. --cyan is this theme's hot-pink primary accent — the token
+   name is historical; every theme repurposes it as "the accent." */
+:root[data-theme='vaporwave'] {
+  --bg: #2b1055;
+  --panel: #e8d9ff;
+  --panel-2: #f6edff;
+  --panel-3: #d7c2f5;
+  --ink: #2a1a4a;
+  --ink-dim: #4f3d78;
+  --ink-faint: #6a5794;
+  --line: #b99be6;
+  --line-soft: #d9c8f3;
+  --cyan: #e0359b;
+  --amber: #c96f00;
+  --pink: #8a3ad9;
+  --danger: #d6204e;
+  --green: #0f9d74;
+  --editor-page: #fffafe;
+  --sans: 'Trebuchet MS', 'Segoe UI', Verdana, sans-serif;
+}
+/* The app-wide font-feature-settings (html, body) turns on 'ss03', an
+   Inter-specific stylistic set (its alternate "g"). Trebuchet MS maps
+   ss03 to small caps instead — measured: it's the only one of the theme
+   fonts it changes — so this theme drops it. */
+[data-theme='vaporwave'] body {
+  font-feature-settings: 'calt', 'kern', 'liga';
+}
+/* Behind the script: big bitcrushed pastel clouds on a periwinkle sky,
+   with a deep purple band rising from the bottom (like BijouMusic's grid
+   strip) so the neon grid reads against it. The clouds come from the CC0
+   photo the DOS theme uses ("The sky is beautiful with cumulus clouds"
+   by Nana Hemaa N.A., Wikimedia Commons — no attribution or share-alike
+   obligations), gradient-mapped to periwinkle → lavender → pink, given
+   film grain, and crushed to 320×200 with a 12-color dithered palette
+   (17KB), stretched to cover. Tried and dropped: a seamless tiled
+   version (read as unbalanced) and a thin full-width band of small
+   clouds along the top (the big clouds were preferred).
+   image-rendering: pixelated keeps the
+   upscale blocky instead of smoothing it back out — set on its own
+   ::after layer, not .app-root, because image-rendering is inherited and
+   would otherwise pixelate every image inside the app too. The deep
+   night gradient stays on the mind map (.map-canvas, below), where it
+   was liked. The perspective grid (::before) sits above it, kept faint. */
+[data-theme='vaporwave'] .app-root {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: #8a8fd0;
+}
+[data-theme='vaporwave'] .app-root::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    linear-gradient(to top, #1f0a45 0%, rgba(58, 20, 110, 0.9) 16%, rgba(120, 50, 160, 0.45) 30%, rgba(160, 90, 190, 0) 42%),
+    url('./assets/vapor-clouds.png') center / cover no-repeat;
+  image-rendering: pixelated;
+}
+/* The neon perspective grid rising to the horizon: two repeating line
+   gradients tilted back with a 3D rotation, faded out toward the top so
+   the lines vanish into the sunset instead of hitting a hard edge. A
+   single static composited layer — cheap after its first paint.
+   Projected height ≈ h·cosθ · p / (p + h·sinθ): a tight camera
+   (p=420px) at 62° squashed a 575px layer to ~120px on screen; 900px at
+   45° with p=800 lands around 350px, roughly the bottom quarter. */
+[data-theme='vaporwave'] .app-root::before {
+  content: '';
+  position: absolute;
+  left: -50%;
+  right: -50%;
+  bottom: 0;
+  height: 900px;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(0deg, rgba(255, 79, 216, 0.85) 0 2px, transparent 2px 56px),
+    repeating-linear-gradient(90deg, rgba(1, 205, 254, 0.7) 0 2px, transparent 2px 56px);
+  transform: perspective(800px) rotateX(45deg);
+  transform-origin: 50% 100%;
+  -webkit-mask-image: linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0.6) 45%, transparent 100%);
+  mask-image: linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0.6) 45%, transparent 100%);
+}
+[data-theme='vaporwave'] .main {
+  background: transparent !important;
+}
+[data-theme='vaporwave'] .editor-wrap,
+[data-theme='vaporwave'] .outline-list {
+  background: var(--editor-page) !important;
+  border: 2px solid #b967ff !important;
+  border-radius: 4px !important;
+  box-shadow: 4px 4px 0 rgba(26, 10, 61, 0.35) !important;
+}
+/* The pink-to-purple Windows 98 titlebar from the references. */
+[data-theme='vaporwave'] .topbar {
+  background: linear-gradient(to right, #ff71ce, #b967ff 55%, #6b4bd8) !important;
+  border-bottom: 2px solid #1a0a3d;
+}
+[data-theme='vaporwave'] .topbar .logo,
+[data-theme='vaporwave'] .title-input {
+  color: #ffffff !important;
+}
+[data-theme='vaporwave'] .topbar .version-badge,
+[data-theme='vaporwave'] .topbar .saved-flash,
+[data-theme='vaporwave'] .topbar .save-status,
+[data-theme='vaporwave'] .topbar .date-field {
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.6) !important;
+}
+[data-theme='vaporwave'] .logo .dot {
+  background: #01cdfe;
+}
+/* Chunky flat retro panels: solid lavender with a hard purple outline,
+   no bevel (that's DOS's language) and no glass (Aero's). */
+[data-theme='vaporwave'] .sidebar,
+[data-theme='vaporwave'] .inspector,
+[data-theme='vaporwave'] .margin-stack,
+[data-theme='vaporwave'] .tabbar,
+[data-theme='vaporwave'] .diff-modal,
+[data-theme='vaporwave'] .export-menu,
+[data-theme='vaporwave'] .section-jump-menu {
+  background: var(--panel) !important;
+  border-color: #b967ff !important;
+}
+[data-theme='vaporwave'] .margin-stack {
+  border: 2px solid #b967ff;
+}
+/* Buttons: pastel face, pink outline, a hard offset drop shadow like a
+   pixel-art window button, and a neon pink glow on hover. */
+[data-theme='vaporwave'] .icon-btn,
+[data-theme='vaporwave'] .tab-chip {
+  background: #fdf3ff !important;
+  border: 1.5px solid #ff71ce !important;
+  border-radius: 3px !important;
+  color: var(--ink) !important;
+  box-shadow: 2px 2px 0 rgba(26, 10, 61, 0.35);
+}
+[data-theme='vaporwave'] .icon-btn:hover,
+[data-theme='vaporwave'] .tab-chip:hover {
+  box-shadow: 2px 2px 0 rgba(26, 10, 61, 0.35), 0 0 10px rgba(255, 113, 206, 0.7);
+}
+[data-theme='vaporwave'] .icon-btn.active,
+[data-theme='vaporwave'] .tab-chip.active {
+  background: #ff71ce !important;
+  border-color: #b967ff !important;
+  color: #ffffff !important;
+}
+[data-theme='vaporwave'] .script-item.active,
+[data-theme='vaporwave'] .theme-row.active {
+  background: linear-gradient(to right, #ff71ce, #b967ff) !important;
+  border-color: #b967ff !important;
+}
+[data-theme='vaporwave'] .script-item.active .st,
+[data-theme='vaporwave'] .script-item.active .sm,
+[data-theme='vaporwave'] .theme-row.active .theme-row-label {
+  color: #ffffff !important;
+}
+/* Mind map: deep purple night sky with a faint pink dot grid (snapping
+   still uses it), flat pastel cards with a hard offset shadow. */
+[data-theme='vaporwave'] .map-canvas {
+  background:
+    radial-gradient(circle, rgba(255, 113, 206, 0.28) 1px, transparent 1px) 0 0 / 22px 22px,
+    linear-gradient(180deg, #1a0a3d 0%, #2b1055 55%, #5a1f7a 100%) !important;
+}
+[data-theme='vaporwave'] .map-node {
+  background: #fdf3ff !important;
+  border: 2px solid #b967ff !important;
+  border-radius: 4px !important;
+  box-shadow: 4px 4px 0 rgba(255, 113, 206, 0.55) !important;
+}
+[data-theme='vaporwave'] .map-node.is-selected {
+  box-shadow: 4px 4px 0 rgba(255, 113, 206, 0.55), 0 0 0 2px #01cdfe !important;
+}
+[data-theme='vaporwave'] .map-edge {
+  stroke: #ff9ce0;
+}
+[data-theme='vaporwave'] .map-edge.is-lit {
+  stroke: #01cdfe;
+}
+
+/* Frutiger Aero Dark — the Vista / Windows Media Player 11 "black glass"
+   look, ported from BijouMusic's frutiger-aero-dark theme (same values):
+   a night sky behind dark glass panes, glossy black pills that turn
+   glowing blue when active, light text throughout. Panels are opaque, not
+   BijouMusic's translucent smoked glass — translucent panels were already
+   rejected for the light Aero theme here. */
+:root[data-theme='aeroDark'] {
+  --bg: #0a1120;
+  --panel: #101a2c;
+  --panel-2: #16223a;
+  --panel-3: #22324f;
+  --ink: #eef4fb;
+  --ink-dim: #a9bdd6;
+  --ink-faint: #8193ad;
+  --line: #2f4568;
+  --line-soft: #22324f;
+  --cyan: #4cc2ff;
+  --amber: #e0b84f;
+  --pink: #ff7ab8;
+  --danger: #ff6b6b;
+  --green: #6bcf7f;
+  --editor-page: #0d1729;
+  /* Corbel, as in BijouMusic. Measured: installed here, unaffected by the
+     app-wide ss03 feature, and has a real bold cut. */
+  --sans: 'Corbel', 'Segoe UI', system-ui, sans-serif;
+}
+/* BijouMusic's procedural night sky (deep navy, faint teal aurora low on
+   the left, stars, dim moonlit clouds) — its SVG uses feTurbulence noise
+   filters, expensive to re-rasterize, so it's pre-rendered once to a JPG
+   (2560x1600, ~460KB). The original star layer stopped 64% of the way
+   down, which rendered as a hard horizontal seam; extended to full height.
+   On .app-root with a transparent .main, same as the other photo themes. */
+[data-theme='aeroDark'] .app-root {
+  background: #0a1120 url('./assets/aero-night.jpg') center / cover no-repeat;
+}
+[data-theme='aeroDark'] .main {
+  background: transparent !important;
+}
+[data-theme='aeroDark'] .editor-wrap,
+[data-theme='aeroDark'] .outline-list {
+  background: var(--editor-page) !important;
+  border: 1px solid #2f4568 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6) !important;
+}
+/* Dark glass header with the Aero hard sheen break at the middle. */
+[data-theme='aeroDark'] .topbar {
+  background: linear-gradient(180deg, #34425a 0%, #1e2a3e 50%, #0e1624 51%, #162032 100%) !important;
+  border-bottom-color: rgba(0, 0, 0, 0.55) !important;
+}
+[data-theme='aeroDark'] .sidebar,
+[data-theme='aeroDark'] .inspector,
+[data-theme='aeroDark'] .margin-stack,
+[data-theme='aeroDark'] .tabbar,
+[data-theme='aeroDark'] .diff-modal,
+[data-theme='aeroDark'] .export-menu,
+[data-theme='aeroDark'] .section-jump-menu {
+  background: linear-gradient(180deg, #111b2e, #0b1322) !important;
+  border-color: #2f4568 !important;
+}
+/* WMP11 black glass pills: bright sheen on the top half, a hard break,
+   then a darker bottom half. */
+[data-theme='aeroDark'] .icon-btn,
+[data-theme='aeroDark'] .tab-chip {
+  background: linear-gradient(180deg, #45566f 0%, #28354b 49%, #141c2b 50%, #1d283b 100%) !important;
+  border: 1px solid #4a6184 !important;
+  border-radius: 999px !important;
+  color: #eef4fb !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.55) !important;
+}
+[data-theme='aeroDark'] .icon-btn:hover,
+[data-theme='aeroDark'] .tab-chip:hover {
+  background: linear-gradient(180deg, #56789f 0%, #2f5079 49%, #16345a 50%, #1f4670 100%) !important;
+}
+/* Toggled on: the glowing blue orb from BijouMusic's play button. */
+[data-theme='aeroDark'] .icon-btn.active,
+[data-theme='aeroDark'] .tab-chip.active {
+  background: linear-gradient(180deg, #9fdcff 0%, #4ab4f0 45%, #1470c0 50%, #2f9be6 100%) !important;
+  border-color: #031a3d !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 10px rgba(76, 194, 255, 0.55), inset 0 0 0 1px rgba(255, 255, 255, 0.25) !important;
+}
+[data-theme='aeroDark'] .script-item.active,
+[data-theme='aeroDark'] .theme-row.active {
+  background: linear-gradient(180deg, rgba(76, 194, 255, 0.32), rgba(20, 90, 170, 0.32)) !important;
+  border-color: #4cc2ff !important;
+  box-shadow: 0 0 10px rgba(76, 194, 255, 0.3) !important;
+}
+[data-theme='aeroDark'] .script-item.active .st,
+[data-theme='aeroDark'] .theme-row.active .theme-row-label {
+  color: #ffffff !important;
+}
+[data-theme='aeroDark'] .map-canvas {
+  background:
+    radial-gradient(circle, rgba(143, 220, 255, 0.18) 1px, transparent 1px) 0 0 / 22px 22px,
+    linear-gradient(180deg, #040a18 0%, #0b2146 55%, #1a4178 100%) !important;
+}
+[data-theme='aeroDark'] .map-node {
+  background: linear-gradient(180deg, #2a3a56 0%, #1a2538 49%, #101826 50%, #172236 100%) !important;
+  border: 1px solid #4a6184 !important;
+  border-radius: 14px !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+}
+[data-theme='aeroDark'] .map-node.is-selected {
+  box-shadow: 0 0 0 2px #4cc2ff, 0 6px 16px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+}
+[data-theme='aeroDark'] .map-node-connector,
+[data-theme='aeroDark'] .map-node-dot {
+  background: radial-gradient(circle at 35% 30%, #ffffff, #8fdcff 55%, #155bbd 100%) !important;
+  border: none !important;
+}
+[data-theme='aeroDark'] .map-edge {
+  stroke: rgba(170, 210, 255, 0.7);
+}
+[data-theme='aeroDark'] .map-edge.is-lit {
+  stroke: #4cc2ff;
+}
+
+/* Y2K Chrome — the app as a physical Y2K media player, ported from
+   BijouMusic's y2k-chrome theme (same values): brushed-aluminium panels
+   with corner screws, chrome push-buttons with 1px key travel, Bahnschrift
+   (Windows' DIN-style "printed on hardware" face), and an amber backlit
+   dot-matrix LCD — used here for selected items and the mind map.
+   Graphite text on light metal; amber text only ever on the dark LCD. */
+:root[data-theme='y2kChrome'] {
+  --bg: #c6cbd1;
+  --panel: #eef0f2;
+  --panel-2: #fafbfc;
+  --panel-3: #d3d8de;
+  --ink: #14171b;
+  --ink-dim: #3d444c;
+  --ink-faint: #5d646d;
+  --line: #9ea5ae;
+  --line-soft: #c3c8ce;
+  /* BijouMusic's accent is #c9640a; darkened a step so it holds contrast
+     as text on the light metal, not just as a fill. */
+  --cyan: #a85206;
+  --amber: #8f6a0a;
+  --pink: #a8326a;
+  --danger: #b8312f;
+  --green: #2a7a3f;
+  --editor-page: #fbfbfc;
+  /* Measured: installed here and unaffected by the app-wide ss03 feature. */
+  --sans: 'Bahnschrift', 'Segoe UI', system-ui, sans-serif;
+  /* Four corner screws (a slotted head: a disc plus a diagonal slot). */
+  --y2k-screws:
+    linear-gradient(45deg, transparent 38%, #565c64 38% 62%, transparent 62%) left 8px top 8px / 4px 4px no-repeat,
+    radial-gradient(circle, #f1f3f5 0 2.6px, #7d848e 3px 3.8px, transparent 4.3px) left 5px top 5px / 10px 10px no-repeat,
+    linear-gradient(45deg, transparent 38%, #565c64 38% 62%, transparent 62%) right 8px top 8px / 4px 4px no-repeat,
+    radial-gradient(circle, #f1f3f5 0 2.6px, #7d848e 3px 3.8px, transparent 4.3px) right 5px top 5px / 10px 10px no-repeat,
+    linear-gradient(45deg, transparent 38%, #565c64 38% 62%, transparent 62%) left 8px bottom 8px / 4px 4px no-repeat,
+    radial-gradient(circle, #f1f3f5 0 2.6px, #7d848e 3px 3.8px, transparent 4.3px) left 5px bottom 5px / 10px 10px no-repeat,
+    linear-gradient(45deg, transparent 38%, #565c64 38% 62%, transparent 62%) right 8px bottom 8px / 4px 4px no-repeat,
+    radial-gradient(circle, #f1f3f5 0 2.6px, #7d848e 3px 3.8px, transparent 4.3px) right 5px bottom 5px / 10px 10px no-repeat;
+  /* Brushed aluminium: fine horizontal hairlines over a metallic sheen. */
+  --y2k-brushed:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.16) 0 1px, rgba(0, 0, 0, 0.03) 1px 3px),
+    linear-gradient(90deg, #cdd1d6 0%, #e2e5e9 45%, #d0d4d9 100%);
+  --y2k-lcd: radial-gradient(ellipse 100% 90% at 50% 45%, #2e1a02 0%, #170c00 70%, #0b0600 100%);
+}
+/* The player's case behind everything: a darker brushed metal, so the
+   panels and the page read as separate parts mounted on it. */
+[data-theme='y2kChrome'] .app-root {
+  background:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.12) 0 1px, rgba(0, 0, 0, 0.04) 1px 2px),
+    linear-gradient(180deg, #c9ced4 0%, #b3b9c0 100%);
+}
+[data-theme='y2kChrome'] .main {
+  background: transparent !important;
+}
+/* The page is the "paper tray": near-white, set into a recessed bezel. */
+[data-theme='y2kChrome'] .editor-wrap,
+[data-theme='y2kChrome'] .outline-list {
+  background: var(--editor-page) !important;
+  border: 1px solid #7d848e !important;
+  border-radius: 6px !important;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.28), 0 1px 0 #ffffff !important;
+}
+[data-theme='y2kChrome'] .topbar {
+  background:
+    var(--y2k-screws),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.14) 0 1px, rgba(0, 0, 0, 0.035) 1px 2px),
+    linear-gradient(180deg, #f2f3f5 0%, #d7dbe0 55%, #c6cbd1 100%) !important;
+  border-bottom: 1px solid #8a919a !important;
+}
+[data-theme='y2kChrome'] .sidebar,
+[data-theme='y2kChrome'] .inspector,
+[data-theme='y2kChrome'] .margin-stack {
+  background: var(--y2k-screws), var(--y2k-brushed) !important;
+  border-color: #8a919a !important;
+}
+[data-theme='y2kChrome'] .tabbar,
+[data-theme='y2kChrome'] .diff-modal,
+[data-theme='y2kChrome'] .export-menu,
+[data-theme='y2kChrome'] .section-jump-menu {
+  background: var(--y2k-brushed) !important;
+  border-color: #8a919a !important;
+}
+/* Chrome push-buttons: a mirror sheen breaking at the middle, 1px of key
+   travel when pressed. */
+[data-theme='y2kChrome'] .icon-btn,
+[data-theme='y2kChrome'] .tab-chip {
+  background: linear-gradient(180deg, #fdfdfe 0%, #e3e6e9 48%, #c9ced4 52%, #e2e5e8 100%) !important;
+  border: 1px solid #7d848e !important;
+  border-radius: 5px !important;
+  color: #14171b !important;
+  box-shadow: inset 0 1px 0 #ffffff, 0 1px 2px rgba(0, 0, 0, 0.25) !important;
+}
+[data-theme='y2kChrome'] .icon-btn:hover,
+[data-theme='y2kChrome'] .tab-chip:hover {
+  background: linear-gradient(180deg, #ffffff 0%, #eef0f2 48%, #d6dade 52%, #eceef1 100%) !important;
+}
+[data-theme='y2kChrome'] .icon-btn:active,
+[data-theme='y2kChrome'] .tab-chip:active {
+  transform: translateY(1px);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.28) !important;
+}
+/* Toggled on: pressed in, with the amber power-LED glow. */
+[data-theme='y2kChrome'] .icon-btn.active,
+[data-theme='y2kChrome'] .tab-chip.active {
+  background: linear-gradient(180deg, #c8cdd3 0%, #b3b9c0 100%) !important;
+  color: #7a3c00 !important;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 176, 0, 0.45), 0 0 8px rgba(255, 160, 0, 0.3) !important;
+}
+/* Selected items light up as a strip of the amber LCD. */
+[data-theme='y2kChrome'] .script-item.active,
+[data-theme='y2kChrome'] .theme-row.active {
+  background: var(--y2k-lcd) !important;
+  border-color: #2b2f35 !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07), inset 0 2px 8px rgba(0, 0, 0, 0.8) !important;
+}
+[data-theme='y2kChrome'] .script-item.active .st,
+[data-theme='y2kChrome'] .theme-row.active .theme-row-label {
+  color: #ffb347 !important;
+}
+[data-theme='y2kChrome'] .script-item.active .sm {
+  color: #d18a2c !important;
+}
+/* The mind map is the player's big LCD: dark amber screen, a faint
+   dot-matrix pixel grid over it, and the snapping dot grid in amber.
+   Nodes are chrome plates on the screen; connections glow amber. */
+[data-theme='y2kChrome'] .map-canvas {
+  background:
+    radial-gradient(circle, rgba(255, 176, 0, 0.3) 1px, transparent 1px) 0 0 / 22px 22px,
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.3) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.3) 0 1px, transparent 1px 3px),
+    var(--y2k-lcd) !important;
+}
+[data-theme='y2kChrome'] .map-node {
+  background:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.35) 0 1px, rgba(0, 0, 0, 0.02) 1px 3px),
+    linear-gradient(180deg, #f3f4f6 0%, #dde1e5 100%) !important;
+  border: 1px solid #7d848e !important;
+  border-radius: 6px !important;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.6), inset 0 1px 0 #ffffff !important;
+}
+[data-theme='y2kChrome'] .map-node.is-selected {
+  box-shadow: 0 0 0 2px #ffb000, 0 0 12px rgba(255, 176, 0, 0.45), 0 3px 10px rgba(0, 0, 0, 0.6) !important;
+}
+/* Connector dots as little spun-metal knobs. */
+[data-theme='y2kChrome'] .map-node-connector,
+[data-theme='y2kChrome'] .map-node-dot {
+  background: conic-gradient(from 20deg, #f4f5f7, #b7bcc3, #eef0f2, #a9afb7, #f4f5f7) !important;
+  border: 1px solid #6b727c !important;
+}
+[data-theme='y2kChrome'] .map-edge {
+  stroke: #ffb000;
+}
+[data-theme='y2kChrome'] .map-edge.is-lit {
+  stroke: #ffe2a3;
+}
 
 * {
   box-sizing: border-box;
@@ -175,6 +1135,13 @@ body {
   color: var(--ink);
   font-family: var(--sans);
   height: 100%;
+  /* Inter's ss03 alternate "g" plus calt/kern/liga is the one-line typographic
+     signature that separates "default Inter" from a deliberately-tuned UI —
+     costs nothing (the hosted weights already carry the feature table) and
+     applies everywhere text renders. A hair of positive tracking on top
+     opens up the compact UI sizes without touching layout metrics. */
+  font-feature-settings: 'calt', 'kern', 'liga', 'ss03';
+  letter-spacing: 0.1px;
 }
 #app {
   height: 100vh;
@@ -183,6 +1150,266 @@ body {
   height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+/* The window's own title bar (TitleBar.jsx) — the native one is hidden so
+   every theme can restyle it. Same token system as BijouMusic's title bar.
+   The defaults below derive from each theme's own panel/ink colors (so all
+   the plain themes, and custom themes, match automatically) with Windows
+   11-style flat caption buttons; the novelty themes override the tokens. */
+:root {
+  --titlebar-h: 32px;
+  --titlebar-bg: var(--panel);
+  --titlebar-border: var(--line-soft);
+  --titlebar-text: var(--ink);
+  --titlebar-text-shadow: none;
+  --titlebar-weight: 400;
+  --caption-top: 0px;
+  --caption-width: 46px;
+  --caption-close-width: 46px;
+  --caption-height: 32px;
+  --caption-gap: 0px;
+  --caption-inset: 0px;
+  --caption-radius: 0;
+  --caption-border: transparent;
+  --caption-bg: transparent;
+  --caption-bg-hover: color-mix(in srgb, var(--ink) 10%, transparent);
+  --caption-bg-active: color-mix(in srgb, var(--ink) 6%, transparent);
+  --caption-shadow: none;
+  --caption-icon: var(--ink);
+  --caption-icon-filter: none;
+  --caption-stroke: 1;
+  --caption-close-border: transparent;
+  --caption-close-bg: transparent;
+  --caption-close-bg-hover: #c42b1c;
+  --caption-close-bg-active: #b0281a;
+  --caption-close-shadow-hover: none;
+  --caption-close-icon-hover: #ffffff;
+}
+.titlebar {
+  flex: 0 0 auto;
+  height: var(--titlebar-h);
+  display: flex;
+  align-items: center;
+  background: var(--titlebar-bg);
+  border-bottom: 1px solid var(--titlebar-border);
+  color: var(--titlebar-text);
+  -webkit-app-region: drag;
+  user-select: none;
+  -webkit-user-select: none;
+  /* Above every fixed overlay (modal dimmer z 100, teleprompter z 200), so
+     the window can always be moved/closed while one is open. */
+  position: relative;
+  z-index: 300;
+}
+/* macOS keeps its native traffic lights at the left — leave room for them. */
+.titlebar.mac {
+  padding-left: 78px;
+}
+.titlebar-icon {
+  width: 16px;
+  height: 16px;
+  margin: 0 8px 0 12px;
+  flex-shrink: 0;
+}
+.titlebar-title {
+  font-size: 12px;
+  font-weight: var(--titlebar-weight);
+  text-shadow: var(--titlebar-text-shadow);
+  white-space: nowrap;
+}
+.titlebar-captions {
+  align-self: flex-start;
+  margin-top: var(--caption-top);
+  margin-left: auto;
+  margin-right: var(--caption-inset);
+  display: flex;
+  gap: var(--caption-gap);
+  -webkit-app-region: no-drag;
+}
+.titlebar-caption {
+  width: var(--caption-width);
+  height: var(--caption-height);
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--caption-border);
+  border-top: none;
+  border-radius: var(--caption-radius);
+  background: var(--caption-bg);
+  box-shadow: var(--caption-shadow);
+  color: var(--caption-icon);
+  outline: none;
+  cursor: default;
+  transition: background 0.12s ease-out, box-shadow 0.12s ease-out;
+}
+.titlebar-caption svg {
+  width: 10px;
+  height: 10px;
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: var(--caption-stroke);
+  filter: var(--caption-icon-filter);
+}
+.titlebar-caption:hover {
+  background: var(--caption-bg-hover);
+}
+.titlebar-caption:active {
+  background: var(--caption-bg-active);
+}
+.titlebar-close {
+  width: var(--caption-close-width);
+  border-color: var(--caption-close-border);
+  background: var(--caption-close-bg);
+}
+.titlebar-close:hover {
+  background: var(--caption-close-bg-hover);
+  box-shadow: var(--caption-close-shadow-hover);
+  color: var(--caption-close-icon-hover);
+}
+.titlebar-close:active {
+  background: var(--caption-close-bg-active);
+}
+/* MS-DOS: the Windows 95 navy titlebar gradient with gray beveled caption
+   squares, matching the theme's own topbar. */
+:root[data-theme='dos'] {
+  --titlebar-bg: linear-gradient(to right, #000080, #1084d0);
+  --titlebar-border: #000000;
+  --titlebar-text: #ffffff;
+  --titlebar-weight: 700;
+  --caption-top: 7px;
+  --caption-width: 18px;
+  --caption-close-width: 18px;
+  --caption-height: 16px;
+  --caption-gap: 2px;
+  --caption-inset: 6px;
+  --caption-border: transparent;
+  --caption-bg: #c0c0c0;
+  --caption-bg-hover: #d4d0c8;
+  --caption-bg-active: #a0a0a0;
+  --caption-shadow: inset 1px 1px 0 #ffffff, inset -1px -1px 0 #404040;
+  --caption-icon: #000000;
+  --caption-stroke: 2;
+  --caption-close-bg: #c0c0c0;
+  --caption-close-bg-hover: #d4d0c8;
+  --caption-close-bg-active: #a0a0a0;
+  --caption-close-icon-hover: #000000;
+}
+/* Frutiger Aero: light glossy glass with the sheen break at the middle,
+   glass caption keys that light up blue, and the glowing red close. */
+:root[data-theme='aero'] {
+  --titlebar-bg: linear-gradient(180deg, #f4fbff 0%, #d8eefc 50%, #b9dcf5 51%, #cfe8f9 100%);
+  --titlebar-border: rgba(20, 80, 130, 0.35);
+  --titlebar-text: #0b2545;
+  --titlebar-text-shadow: 0 0 8px rgba(255, 255, 255, 0.95);
+  --caption-width: 28px;
+  --caption-close-width: 46px;
+  --caption-height: 20px;
+  --caption-gap: 1px;
+  --caption-inset: 8px;
+  --caption-radius: 0 0 5px 5px;
+  --caption-border: rgba(20, 70, 120, 0.6);
+  --caption-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.85) 0%, rgba(225, 242, 252, 0.6) 45%, rgba(160, 205, 240, 0.55) 50%, rgba(196, 228, 248, 0.7) 100%);
+  --caption-bg-hover: linear-gradient(180deg, #d4f0ff 0%, #8ed2fa 45%, #1f93d4 50%, #5fbfee 100%);
+  --caption-bg-active: linear-gradient(180deg, #a6dcf7 0%, #4fb2e6 45%, #0b6fb0 50%, #2f98d6 100%);
+  --caption-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.55);
+  --caption-icon: #ffffff;
+  --caption-icon-filter: drop-shadow(0 0 1px rgba(0, 30, 60, 0.95)) drop-shadow(0 1px 1px rgba(0, 30, 60, 0.6));
+  --caption-stroke: 1.8;
+  --caption-close-border: rgba(120, 25, 10, 0.75);
+  --caption-close-bg: linear-gradient(180deg, #f3b3a6 0%, #e27b66 45%, #c9432b 50%, #db5d40 100%);
+  --caption-close-bg-hover: linear-gradient(180deg, #ffd0c4 0%, #ff8d73 45%, #e8432a 50%, #ff7a52 100%);
+  --caption-close-bg-active: linear-gradient(180deg, #e39787 0%, #c9533d 45%, #a72d17 50%, #bf4428 100%);
+  --caption-close-shadow-hover: 0 0 8px rgba(255, 90, 50, 0.75), inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+}
+/* Frutiger Aero Dark: BijouMusic's smoked-glass title bar, same values. */
+:root[data-theme='aeroDark'] {
+  --titlebar-bg: linear-gradient(180deg, #3a4a64 0%, #1e2a3e 50%, #0e1624 51%, #162032 100%);
+  --titlebar-border: rgba(0, 0, 0, 0.55);
+  --titlebar-text: #f2f7fd;
+  --titlebar-text-shadow: 0 0 6px rgba(0, 0, 0, 0.9), 0 1px 1px rgba(0, 0, 0, 0.8);
+  --caption-width: 28px;
+  --caption-close-width: 46px;
+  --caption-height: 20px;
+  --caption-gap: 1px;
+  --caption-inset: 8px;
+  --caption-radius: 0 0 5px 5px;
+  --caption-border: rgba(0, 0, 0, 0.75);
+  --caption-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.12) 45%, rgba(255, 255, 255, 0.02) 50%, rgba(255, 255, 255, 0.1) 100%);
+  --caption-bg-hover: linear-gradient(180deg, #9fdcff 0%, #4ab4f0 45%, #1470c0 50%, #2f9be6 100%);
+  --caption-bg-active: linear-gradient(180deg, #6fbde8 0%, #2e8acc 45%, #0b4f92 50%, #1d78c0 100%);
+  --caption-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+  --caption-icon: #ffffff;
+  --caption-icon-filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.95)) drop-shadow(0 1px 1px rgba(0, 0, 0, 0.6));
+  --caption-stroke: 1.8;
+  --caption-close-border: rgba(70, 10, 0, 0.85);
+  --caption-close-bg: linear-gradient(180deg, #e8998a 0%, #cf5d48 45%, #b0331d 50%, #c64a30 100%);
+  --caption-close-bg-hover: linear-gradient(180deg, #ffd0c4 0%, #ff8d73 45%, #e8432a 50%, #ff7a52 100%);
+  --caption-close-bg-active: linear-gradient(180deg, #d98676 0%, #bb4a35 45%, #962512 50%, #ad3a20 100%);
+  --caption-close-shadow-hover: 0 0 10px rgba(255, 90, 50, 0.85), inset 0 0 0 1px rgba(255, 255, 255, 0.45);
+}
+/* Vaporwave: BijouMusic's "Vaporwave 95" title bar — the purple-to-pink
+   sunset gradient with a chromatic-split title and pastel Win95 keys. */
+:root[data-theme='vaporwave'] {
+  --titlebar-bg: linear-gradient(90deg, #2d0a6e 0%, #7a1fb8 42%, #e0409f 78%, #ff8ac8 100%);
+  --titlebar-border: #1b0f33;
+  --titlebar-text: #ffffff;
+  --titlebar-text-shadow: -1px 0 rgba(255, 60, 200, 0.7), 1px 0 rgba(0, 230, 255, 0.7);
+  --titlebar-weight: 700;
+  --caption-top: 6px;
+  --caption-width: 22px;
+  --caption-close-width: 22px;
+  --caption-height: 20px;
+  --caption-gap: 2px;
+  --caption-inset: 6px;
+  --caption-border: #1b0f33;
+  --caption-bg: #d4cce8;
+  --caption-bg-hover: #e6def8;
+  --caption-bg-active: #c2b8de;
+  --caption-shadow: inset 1px 1px 0 #ffffff, inset -1px -1px 0 #8f80b8;
+  --caption-icon: #1b0f33;
+  --caption-stroke: 2;
+  --caption-close-border: #1b0f33;
+  --caption-close-bg: #d4cce8;
+  --caption-close-bg-hover: #ff4fb8;
+  --caption-close-bg-active: #d8309a;
+  --caption-close-shadow-hover: inset 1px 1px 0 #ffc4e8, inset -1px -1px 0 #9c1072;
+}
+/* Y2K Chrome: BijouMusic's brushed-metal title bar with engraved text and
+   small chrome caption keys, same values. */
+:root[data-theme='y2kChrome'] {
+  --titlebar-bg: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.14) 0 1px, rgba(0, 0, 0, 0.035) 1px 2px),
+    linear-gradient(180deg, #f2f3f5 0%, #d7dbe0 55%, #c6cbd1 100%);
+  --titlebar-border: #8a919a;
+  --titlebar-text: #1d2126;
+  --titlebar-text-shadow: 0 1px 0 rgba(255, 255, 255, 0.85);
+  --titlebar-weight: 600;
+  --caption-top: 6px;
+  --caption-width: 26px;
+  --caption-close-width: 26px;
+  --caption-height: 20px;
+  --caption-gap: 4px;
+  --caption-inset: 8px;
+  --caption-radius: 5px;
+  --caption-border: #7a818b;
+  --caption-bg: linear-gradient(180deg, #fdfdfd 0%, #e1e4e8 45%, #c4c9cf 50%, #e6e8eb 100%);
+  --caption-bg-hover: linear-gradient(180deg, #ffffff 0%, #eef0f2 45%, #d2d6db 50%, #f0f2f4 100%);
+  --caption-bg-active: linear-gradient(180deg, #c8cdd3 0%, #b3b9c0 100%);
+  --caption-shadow: inset 0 1px 0 #ffffff, 0 1px 1px rgba(0, 0, 0, 0.25);
+  --caption-icon: #2a2f36;
+  --caption-stroke: 1.6;
+  --caption-close-border: #7a818b;
+  --caption-close-bg: linear-gradient(180deg, #fdfdfd 0%, #e1e4e8 45%, #c4c9cf 50%, #e6e8eb 100%);
+  --caption-close-bg-hover: linear-gradient(180deg, #ff9a88 0%, #e0452c 50%, #c9321a 100%);
+  --caption-close-bg-active: linear-gradient(180deg, #d9533c 0%, #a82814 100%);
+  --caption-close-shadow-hover: 0 0 6px rgba(230, 60, 30, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+/* Y2K caption keys are full rounded rectangles (the default drops the
+   top border to hang off the top edge Windows-style). */
+[data-theme='y2kChrome'] .titlebar-caption {
+  border-top: 1px solid var(--caption-border);
 }
 ::selection {
   background: color-mix(in srgb, var(--cyan) 25%, transparent);
@@ -195,13 +1422,32 @@ input,
 textarea {
   font-family: var(--sans);
 }
+/* Keyboard-focus ring — was entirely unstyled before (browser default blue
+   outline showing through on a dark theme, or nothing at all depending on
+   element). One consistent themed ring for every focusable element; mouse
+   clicks never trigger it (:focus-visible), so no change to the existing
+   click-driven hover/active states anywhere in the app. */
+:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--cyan) 55%, transparent);
+  outline-offset: 1px;
+  border-radius: 4px;
+}
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
   background: var(--line);
-  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ink-faint);
+  background-clip: padding-box;
 }
 
 .app-loading {
@@ -252,7 +1498,7 @@ textarea {
   color: var(--ink-faint);
   background: transparent;
   border: 1px solid var(--line-soft);
-  border-radius: 5px;
+  border-radius: 6px;
   padding: 3px 7px;
   flex: 0 0 auto;
   white-space: nowrap;
@@ -346,7 +1592,7 @@ textarea {
   letter-spacing: 0.05em;
   color: var(--pink);
   background: color-mix(in srgb, var(--pink) 15%, transparent);
-  border-radius: 3px;
+  border-radius: 4px;
   padding: 1px 5px;
 }
 .save-history-restore {
@@ -414,12 +1660,13 @@ textarea {
   font-size: 12px;
   padding: 7px 10px;
   border-radius: 6px;
-  transition: all 0.12s;
+  transition: background-color 0.12s ease-out, border-color 0.12s ease-out, color 0.12s ease-out;
   white-space: nowrap;
   position: relative;
   flex: 0 0 auto;
 }
 .icon-btn:hover {
+  background: var(--panel-2);
   border-color: var(--ink-faint);
   color: var(--ink);
 }
@@ -465,9 +1712,12 @@ textarea {
   flex: 0 0 auto;
 }
 .tab-chip.active {
-  border-color: var(--cyan);
-  color: var(--cyan);
-  background: color-mix(in srgb, var(--cyan) 10%, transparent);
+  /* Same restrained color-mix treatment as .icon-btn.active — a full-
+     strength cyan border+fill+text combination reads as shouting once
+     several tabs/toggles are on screen together. */
+  border-color: color-mix(in srgb, var(--cyan) 45%, var(--line));
+  color: color-mix(in srgb, var(--cyan) 75%, var(--ink));
+  background: color-mix(in srgb, var(--cyan) 8%, var(--panel-3));
 }
 .tab-close {
   width: 16px;
@@ -497,7 +1747,7 @@ textarea {
 }
 .export-item {
   padding: 8px 10px;
-  border-radius: 5px;
+  border-radius: 6px;
   font-size: 12.5px;
   color: var(--ink);
 }
@@ -655,7 +1905,7 @@ textarea {
   color: var(--ink);
   font-size: 13px;
   padding: 8px 10px 8px 30px;
-  border-radius: 7px;
+  border-radius: 8px;
 }
 .search-wrap input::placeholder {
   color: var(--ink-faint);
@@ -678,7 +1928,7 @@ textarea {
   color: var(--ink-dim);
   font-size: 12.5px;
   padding: 8px;
-  border-radius: 7px;
+  border-radius: 8px;
 }
 .new-script-btn:hover {
   border-color: var(--cyan);
@@ -729,7 +1979,7 @@ textarea {
 }
 .script-item {
   padding: 9px 10px;
-  border-radius: 7px;
+  border-radius: 8px;
   cursor: pointer;
   margin-bottom: 2px;
   border: 1px solid transparent;
@@ -831,6 +2081,10 @@ textarea {
 .margin-stack .margin-panel {
   min-height: 0;
   width: 100%;
+  /* The base .margin-panel's 40px bottom padding is sized for a panel
+     standing alone; stacked, it left a dead gap between e.g. Checklist
+     and Bookmarks before the divider. Match the top padding instead. */
+  padding-bottom: 18px;
 }
 .margin-stack .margin-panel:first-child {
   border-bottom: 1px solid var(--line-soft);
@@ -1034,7 +2288,7 @@ textarea {
   font-family: var(--mono);
   font-size: 11px;
   padding: 5px 4px;
-  border-radius: 5px;
+  border-radius: 6px;
   text-align: center;
 }
 .timestamp-time:focus {
@@ -1049,7 +2303,7 @@ textarea {
   color: var(--ink);
   font-size: 11.5px;
   padding: 5px 4px;
-  border-radius: 5px;
+  border-radius: 6px;
 }
 .timestamp-note:hover {
   border-color: var(--line);
@@ -1154,7 +2408,7 @@ textarea {
   height: 20px;
   padding: 0;
   border: 1px solid var(--line);
-  border-radius: 5px;
+  border-radius: 6px;
   background: transparent;
   cursor: pointer;
   flex: 0 0 auto;
@@ -1172,7 +2426,7 @@ textarea {
   font-size: 14px;
   line-height: 1;
   padding: 4px 7px;
-  border-radius: 5px;
+  border-radius: 6px;
   flex: 0 0 auto;
 }
 .section-head:hover .sec-icon-btn {
@@ -1422,7 +2676,7 @@ textarea {
   align-items: center;
   gap: 8px;
   padding: 6px 8px;
-  border-radius: 5px;
+  border-radius: 6px;
   font-size: 12.5px;
   color: var(--ink);
 }
@@ -1542,7 +2796,7 @@ textarea {
   background: transparent;
   border: none;
   padding: 4px 6px;
-  border-radius: 5px;
+  border-radius: 6px;
 }
 .add-line-btn:hover {
   color: var(--cyan);
@@ -1556,7 +2810,7 @@ textarea {
   color: var(--ink-faint);
   font-size: 12.5px;
   padding: 10px;
-  border-radius: 7px;
+  border-radius: 8px;
 }
 .add-section-btn:hover {
   border-color: var(--cyan);
@@ -1678,7 +2932,7 @@ textarea {
   width: 26px;
   height: 26px;
   border: 1px solid var(--line);
-  border-radius: 5px;
+  border-radius: 6px;
   padding: 1px;
   background: var(--panel);
   flex: 0 0 auto;
@@ -1694,7 +2948,7 @@ textarea {
 .theme-swatches {
   display: flex;
   flex: 0 0 auto;
-  border-radius: 5px;
+  border-radius: 6px;
   overflow: hidden;
   border: 1px solid var(--line);
 }
@@ -1726,7 +2980,7 @@ textarea {
   max-height: 220px;
   overflow-y: auto;
   border: 1px solid var(--line);
-  border-radius: 7px;
+  border-radius: 8px;
 }
 .dict-word-row {
   display: flex;
@@ -1755,7 +3009,7 @@ textarea {
   align-items: center;
   gap: 8px;
   padding: 7px 6px;
-  border-radius: 7px;
+  border-radius: 8px;
   margin-bottom: 3px;
 }
 .cat-row:hover {
@@ -1767,7 +3021,7 @@ textarea {
 .cat-swatch {
   width: 18px;
   height: 18px;
-  border-radius: 5px;
+  border-radius: 6px;
   border: none;
   padding: 0;
   flex: 0 0 auto;
@@ -1780,7 +3034,7 @@ textarea {
   color: var(--ink);
   font-size: 12.5px;
   padding: 4px 5px;
-  border-radius: 5px;
+  border-radius: 6px;
   min-width: 0;
 }
 .cat-label-input:hover {
@@ -1924,7 +3178,7 @@ textarea {
   align-items: center;
   gap: 7px;
   padding: 8px 7px;
-  border-radius: 7px;
+  border-radius: 8px;
   cursor: pointer;
   margin-bottom: 3px;
 }
@@ -1962,7 +3216,7 @@ textarea {
 }
 .progress-bar-wrap {
   height: 6px;
-  border-radius: 3px;
+  border-radius: 4px;
   background: var(--panel-2);
   overflow: hidden;
   margin-bottom: 6px;
@@ -1970,7 +3224,7 @@ textarea {
 .progress-bar-fill {
   height: 100%;
   background: var(--cyan);
-  border-radius: 3px;
+  border-radius: 4px;
   transition: width 0.2s ease;
 }
 .progress-bar-label {
@@ -1984,7 +3238,7 @@ textarea {
   color: var(--ink-faint);
   font-size: 11px;
   padding: 2px 6px;
-  border-radius: 5px;
+  border-radius: 6px;
   flex: 0 0 auto;
 }
 .sec-list-move:hover {
@@ -2042,7 +3296,7 @@ textarea {
   color: var(--ink);
   font-size: 13px;
   padding: 4px 5px;
-  border-radius: 5px;
+  border-radius: 6px;
   min-width: 0;
 }
 .checklist-item input[type='text']:hover {
@@ -2210,7 +3464,7 @@ textarea {
   color: var(--ink-dim);
   font-size: 12.5px;
   padding: 9px;
-  border-radius: 7px;
+  border-radius: 8px;
   margin-bottom: 10px;
 }
 .cp-newbtn:hover {
@@ -2246,7 +3500,7 @@ textarea {
 .cp-item {
   padding: 10px;
   border: 1px solid var(--line);
-  border-radius: 7px;
+  border-radius: 8px;
   margin-bottom: 7px;
 }
 .cp-item .cp-top {
@@ -2285,7 +3539,7 @@ textarea {
   color: var(--ink-faint);
   font-size: 12px;
   padding: 8px;
-  border-radius: 7px;
+  border-radius: 8px;
   margin-top: 4px;
 }
 .cp-compare-btn.ready {
@@ -2468,13 +3722,13 @@ textarea {
   background: color-mix(in srgb, var(--danger) 14%, transparent);
   text-decoration: line-through;
   padding: 1px 2px;
-  border-radius: 3px;
+  border-radius: 4px;
 }
 .diff-add {
   color: var(--cyan);
   background: color-mix(in srgb, var(--cyan) 14%, transparent);
   padding: 1px 2px;
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 .map-main,
@@ -2648,6 +3902,17 @@ textarea {
 .map-node.struck .idea-node-text,
 .map-node.struck .chapter-node-label {
   text-decoration: line-through;
+}
+.map-snap-guide {
+  /* Amber, not cyan/pink — both of those already mean something else on
+     this canvas (lit thread / main-thread border / selection), so a snap
+     guide needs its own color to read as "temporary alignment hint," not
+     as a real relationship between nodes. */
+  stroke: var(--amber);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  pointer-events: none;
+  opacity: 0.85;
 }
 .map-selection-box {
   fill: color-mix(in srgb, var(--cyan) 10%, transparent);
@@ -2857,7 +4122,7 @@ textarea {
   width: 14px;
   height: 14px;
   z-index: 0;
-  border-radius: 3px;
+  border-radius: 4px;
 }
 .map-node-resize-corner:hover {
   background: color-mix(in srgb, var(--cyan) 30%, transparent);
@@ -3333,7 +4598,7 @@ textarea {
   gap: 2px;
   background: var(--panel-3);
   border: 1px solid var(--line);
-  border-radius: 7px;
+  border-radius: 8px;
   padding: 4px;
   z-index: 45;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
@@ -3347,7 +4612,7 @@ textarea {
   background: transparent;
   border: none;
   color: var(--ink-dim);
-  border-radius: 5px;
+  border-radius: 6px;
 }
 .shape-picker-option:hover {
   background: var(--panel-2);
@@ -3581,7 +4846,7 @@ textarea {
   align-items: center;
   gap: 8px;
   padding: 7px 8px;
-  border-radius: 5px;
+  border-radius: 6px;
   font-size: 12.5px;
   color: var(--ink);
   cursor: pointer;
@@ -3681,7 +4946,7 @@ textarea {
   min-width: 0;
   background: var(--panel-2);
   border: 1px solid var(--line-soft);
-  border-radius: 5px;
+  border-radius: 6px;
   color: var(--ink);
   font-size: 12px;
   padding: 5px 7px;
@@ -3703,7 +4968,7 @@ textarea {
 }
 .context-menu-item {
   padding: 7px 10px;
-  border-radius: 5px;
+  border-radius: 6px;
   font-size: 12.5px;
   color: var(--ink);
   white-space: nowrap;
@@ -3759,6 +5024,9 @@ textarea {
 .teleprompter-overlay {
   position: fixed;
   inset: 0;
+  /* Starts below the app's own title bar, which stays on top so the
+     window can still be moved/closed while the teleprompter is open. */
+  top: var(--titlebar-h);
   background: #0a0b0e;
   z-index: 200;
   display: flex;
@@ -3828,6 +5096,42 @@ textarea {
   flex: 1;
   overflow-y: auto;
   scroll-behavior: auto;
+  /* The overlay behind this is always near-black (#0a0b0e) no matter the
+     theme, but the reading text used the theme's own --ink — so every
+     light theme (MacBook Light, Fable, DOS, Aero, Vaporwave, and any
+     light custom theme, which sets --ink inline on :root) rendered dark
+     text on black. The reading area gets its own fixed light palette
+     instead; for Dark/Midnight these are their existing values. */
+  --ink: #ece9e2;
+  --ink-dim: #b4b7bf;
+  --ink-faint: #8a8d96;
+}
+:root[data-theme='highContrast'] .teleprompter-body {
+  --ink: #ffffff;
+}
+:root[data-theme='fantasy'] .teleprompter-body {
+  --ink: #f0e0c0;
+}
+/* Section labels use the theme accent; on the light themes that accent
+   is tuned for a light background and disappears on black, so each gets
+   a brighter version of its own hue here. */
+:root[data-theme='light'] .teleprompter-body {
+  --cyan: #6fb3ff;
+}
+:root[data-theme='fable'] .teleprompter-body {
+  --cyan: #e8907f;
+}
+:root[data-theme='dos'] .teleprompter-body {
+  --cyan: #ffff55;
+}
+:root[data-theme='aero'] .teleprompter-body {
+  --cyan: #5fd0ff;
+}
+:root[data-theme='vaporwave'] .teleprompter-body {
+  --cyan: #ff71ce;
+}
+:root[data-theme='y2kChrome'] .teleprompter-body {
+  --cyan: #ffb347;
 }
 .teleprompter-inner {
   max-width: 1300px;
@@ -3963,7 +5267,7 @@ textarea {
   .sidebar,
   .inspector {
     position: fixed;
-    top: 52px;
+    top: calc(52px + var(--titlebar-h));
     bottom: 0;
     z-index: 15;
     transform: translateX(-102%);
@@ -4033,7 +5337,7 @@ textarea {
   font-size: 11px;
   background: var(--panel-2);
   padding: 1px 4px;
-  border-radius: 3px;
+  border-radius: 4px;
 }
 .update-banner.conflict .update-banner-btn {
   background: var(--amber, #f2a65a);

@@ -76,6 +76,62 @@ function sideAnchor(node, side) {
   return { x: node.x + w, y: c.y }
 }
 
+const SNAP_PX = 6 // screen px — divided by zoom below so it feels the same at any zoom level
+
+// Figma-style alignment snapping for a node drag. `x`/`y` is the dragged
+// node's candidate top-left, `w`/`h` its size, `otherNodes` every node it
+// could snap against (the rest of the map, minus whatever's being
+// dragged). Checks left/center/right against left/center/right (and the
+// same on y), independently per axis, and pulls the closest match within
+// tolerance into exact alignment. This is the actual point of snapping
+// here: sideAnchor() puts left/right connector anchors at a node's
+// vertical center and top/bottom anchors at its horizontal center, so two
+// nodes whose centers (or edges) land on the exact same x or y get a
+// connector that's a single straight segment instead of routeElbow's
+// 2-bend jog — see mapEdgeRouting.js.
+function snapPosition(x, y, w, h, otherNodes, zoom) {
+  const tol = SNAP_PX / zoom
+  const targetsX = []
+  const targetsY = []
+  otherNodes.forEach((n) => {
+    const { w: nw, h: nh } = nodeSize(n)
+    targetsX.push(n.x, n.x + nw / 2, n.x + nw)
+    targetsY.push(n.y, n.y + nh / 2, n.y + nh)
+  })
+  let snapX = null
+  let guideX = null
+  let bestDx = tol
+  ;[x, x + w / 2, x + w].forEach((cx) => {
+    targetsX.forEach((tx) => {
+      const d = Math.abs(cx - tx)
+      if (d < bestDx) {
+        bestDx = d
+        snapX = x + (tx - cx)
+        guideX = tx
+      }
+    })
+  })
+  let snapY = null
+  let guideY = null
+  let bestDy = tol
+  ;[y, y + h / 2, y + h].forEach((cy) => {
+    targetsY.forEach((ty) => {
+      const d = Math.abs(cy - ty)
+      if (d < bestDy) {
+        bestDy = d
+        snapY = y + (ty - cy)
+        guideY = ty
+      }
+    })
+  })
+  return {
+    x: snapX == null ? x : snapX,
+    y: snapY == null ? y : snapY,
+    guideX,
+    guideY
+  }
+}
+
 // Which side of each node an edge between them should visually leave
 // from/arrive at, purely from their relative position — used both to draw
 // existing edges and to figure out which of a node's 4 connector dots was
@@ -188,6 +244,7 @@ export default function MapView({ scriptId, script }) {
   panRef.current = pan
   const [connectPreview, setConnectPreview] = useState(null) // { fromId, x, y } in world coords
   const [selectionBox, setSelectionBox] = useState(null) // { x1, y1, x2, y2 } in world coords
+  const [snapGuides, setSnapGuides] = useState(null) // { x, y } world coords of the current alignment guide lines, or null on either axis when not snapped
   const [selectedEdgeId, setSelectedEdgeId] = useState(null)
   const [selectedNodeIds, setSelectedNodeIds] = useState([])
   const [ideaMenuOpen, setIdeaMenuOpen] = useState(false)
@@ -608,8 +665,32 @@ export default function MapView({ scriptId, script }) {
         setPan({ x: d.panStart.x + (e.clientX - d.startX), y: d.panStart.y + (e.clientY - d.startY) })
       } else if (d.type === 'node') {
         d.moved = true
-        const dx = (e.clientX - d.startX) / zoom
-        const dy = (e.clientY - d.startY) / zoom
+        let dx = (e.clientX - d.startX) / zoom
+        let dy = (e.clientY - d.startY) / zoom
+        // Alt held = snapping off for this drag, same convention as
+        // Figma/Sketch — an easy escape hatch for the rare time the user
+        // wants a deliberately off-grid position. Freshly read from the
+        // store (not the closured `script`, see this effect's own
+        // eslint-disable note below) since other nodes' positions must be
+        // current, not whatever they were when this effect last attached.
+        if (!e.altKey) {
+          const nodesNow = useStore.getState().scripts.find((sc) => sc.id === scriptId)?.mapLayout.nodes || {}
+          const primaryNode = nodesNow[d.sectionId]
+          if (primaryNode) {
+            const { w, h } = nodeSize(primaryNode)
+            const candX = d.nodeStart.x + dx
+            const candY = d.nodeStart.y + dy
+            const others = Object.entries(nodesNow)
+              .filter(([id]) => !d.groupIds.includes(id))
+              .map(([, n]) => n)
+            const snap = snapPosition(candX, candY, w, h, others, zoom)
+            dx += snap.x - candX
+            dy += snap.y - candY
+            setSnapGuides(snap.guideX != null || snap.guideY != null ? { x: snap.guideX, y: snap.guideY } : null)
+          }
+        } else {
+          setSnapGuides(null)
+        }
         d.groupIds.forEach((id) => {
           const start = d.groupStart[id]
           if (start) setMapNodePosition(scriptId, id, start.x + dx, start.y + dy)
@@ -667,6 +748,7 @@ export default function MapView({ scriptId, script }) {
       }
       dragRef.current = null
       setConnectPreview(null)
+      setSnapGuides(null)
       if (canvasRef.current) canvasRef.current.style.cursor = spaceDownRef.current ? 'grab' : ''
     }
     window.addEventListener('mousemove', onMouseMove)
@@ -905,6 +987,12 @@ export default function MapView({ scriptId, script }) {
                 const a = centerOf(nodes[connectPreview.fromId])
                 return <line x1={a.x} y1={a.y} x2={connectPreview.x} y2={connectPreview.y} className="map-edge map-edge-preview" />
               })()}
+            {snapGuides && snapGuides.x != null && (
+              <line x1={snapGuides.x} y1={-4000} x2={snapGuides.x} y2={4000} className="map-snap-guide" />
+            )}
+            {snapGuides && snapGuides.y != null && (
+              <line x1={-4000} y1={snapGuides.y} x2={4000} y2={snapGuides.y} className="map-snap-guide" />
+            )}
             {selectionBox && (
               <rect
                 className="map-selection-box"

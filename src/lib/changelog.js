@@ -172,6 +172,14 @@ export const CHANGELOG = {
     'Toolbar toggle buttons (like "Hide outlines") read calmer when active — less of a bright cyan glow',
     'Mind-map canvas background is back to the original dot pattern — the graph-paper line grid from 0.5.54 is gone',
     'New "Midnight" theme — same accent colors as Dark, every surface just a notch darker'
+  ],
+  '0.5.57': [
+    'Five new themes: MS-DOS (Windows 95 chrome), Frutiger Aero, Frutiger Aero Dark, Vaporwave, and Y2K Chrome — each with its own wallpaper, buttons, panels, mind-map look, and font',
+    'The window title bar now matches your theme — BijouDocs draws its own, including themed minimize/maximize/close buttons',
+    'Mind-map nodes snap into alignment with each other while you drag them, so connections line up straight — hold Alt to drag freely',
+    'Fixed the teleprompter being unreadable (dark text on black) in light themes and light custom themes',
+    'Fixed an empty gap between the Checklist and Bookmarks panels',
+    'Keyboard focus is now visible, and scrollbars, buttons, and corners got a polish pass across the app'
   ]
 }
 
