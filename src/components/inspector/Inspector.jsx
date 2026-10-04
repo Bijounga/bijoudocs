@@ -5,13 +5,15 @@ import SectionsTab from './SectionsTab.jsx'
 import CheckpointsTab from './CheckpointsTab.jsx'
 import ShortcutsTab from './ShortcutsTab.jsx'
 import ThemeTab from './ThemeTab.jsx'
+import Icon from '../icons.jsx'
 
+// Icon-only tabs — each name shows in the themed tooltip.
 const TABS = [
-  { id: 'categories', label: 'Categories' },
-  { id: 'sections', label: 'Sections' },
-  { id: 'checkpoints', label: 'Versions' },
-  { id: 'shortcuts', label: 'Keys' },
-  { id: 'theme', label: 'Theme' }
+  { id: 'categories', label: 'Categories', icon: 'tag' },
+  { id: 'sections', label: 'Sections', icon: 'list' },
+  { id: 'checkpoints', label: 'Versions', icon: 'history' },
+  { id: 'shortcuts', label: 'Keyboard shortcuts', icon: 'keys' },
+  { id: 'theme', label: 'Theme', icon: 'palette' }
 ]
 
 export default function Inspector({ scriptId, script }) {
@@ -27,8 +29,10 @@ export default function Inspector({ scriptId, script }) {
               key={t.id}
               className={'insp-tab' + (inspectorTab === t.id ? ' active' : '')}
               onClick={() => setInspectorTab(t.id)}
+              title={t.label}
+              aria-label={t.label}
             >
-              {t.label}
+              <Icon name={t.icon} size={15} />
             </button>
           ))}
         </div>

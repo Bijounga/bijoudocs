@@ -51,14 +51,12 @@ export default function ThemeTab() {
 
   return (
     <>
-      <div className="insp-hint" style={{ marginBottom: 10 }}>
-        Changes colors across the whole app. The Teleprompter stays dark regardless — meant for filming, not reading
-        comfort.
-      </div>
-      <label className="theme-contrast-row">
+      <label
+        className="theme-contrast-row"
+        title="Give the script column its own background — lighter on light themes, darker on dark ones — instead of blending into the canvas"
+      >
         <input type="checkbox" checked={editorPageContrast} onChange={toggleEditorPageContrast} />
-        Page contrast — give the script column its own background (lighter on light themes, darker on dark ones)
-        instead of blending into the canvas
+        Page contrast
       </label>
       {THEMES.map((t) => (
         <button key={t.id} className={'theme-row' + (theme === t.id ? ' active' : '')} onClick={() => setTheme(t.id)}>

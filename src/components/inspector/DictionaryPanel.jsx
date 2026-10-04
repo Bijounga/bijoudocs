@@ -24,10 +24,6 @@ export default function DictionaryPanel() {
 
   return (
     <div className="dict-panel">
-      <div className="sc-desc" style={{ marginBottom: 8 }}>
-        Words remembered via "Add to dictionary" on a misspelled word — stops the red squiggly underline for that
-        word. Forgetting one here brings the underline back.
-      </div>
       {words && words.length > 3 && (
         <div className="search-wrap" style={{ marginBottom: 8 }}>
           <Icon name="search" />

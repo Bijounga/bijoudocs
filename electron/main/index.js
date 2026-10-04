@@ -6,6 +6,7 @@ import fs from 'fs'
 import * as fileStore from './fileStore.js'
 import { migrateScript, newBlankScript } from './scriptSchema.js'
 import * as scriptWatcher from './scriptWatcher.js'
+import * as macUpdate from './macUpdate.js'
 
 const isDev = !app.isPackaged
 const isMac = process.platform === 'darwin'
@@ -232,26 +233,44 @@ function registerIpc(win) {
   })
 }
 
-// Checks GitHub Releases for a newer published version. On Windows this
-// downloads it silently in the background and tells the renderer once
-// it's ready to install (electron-updater's NSIS-based quitAndInstall
-// works cleanly there). On macOS, electron-updater's native path goes
-// through Squirrel.Mac, which requires the app to be code-signed — this
-// project has no Apple Developer certificate, so that path fails. Rather
-// than try to silently auto-apply an update Squirrel.Mac will refuse,
-// autoDownload is left off on Mac and 'update-available' instead offers a
-// direct download-the-dmg-and-open-it-in-Finder flow (see
-// update:downloadManualMac below) — not fully automatic, but no dead end.
+// Checks GitHub Releases for a newer published version and downloads it
+// in the background, then the renderer offers "Restart to update".
+// Windows: electron-updater does it all (NSIS). macOS: electron-updater
+// only finds the update — its own install path goes through Squirrel.Mac,
+// which needs an Apple-signed app — so macUpdate.js downloads the Release
+// .zip and swaps the app in place itself (same as Bijou Footage). If the
+// app can't replace itself (running from the disk image, or no write
+// access to its folder) it falls back to 'available-manual': download the
+// .dmg and open it in Finder (update:downloadManualMac below).
 // No-op in dev, where there's no packaged app/update feed to check against.
 function setupAutoUpdater(win) {
   if (isDev) return
   autoUpdater.autoDownload = !isMac
+  autoUpdater.autoInstallOnAppQuit = !isMac
   autoUpdater.on('checking-for-update', () => {
     win.webContents.send('update:status', { state: 'checking' })
   })
   autoUpdater.on('update-available', (info) => {
-    win.webContents.send('update:status', { state: isMac ? 'available-manual' : 'available', version: info.version })
+    if (!isMac) {
+      win.webContents.send('update:status', { state: 'available', version: info.version })
+      return
+    }
+    if (!macUpdate.canSelfUpdate()) {
+      win.webContents.send('update:status', { state: 'available-manual', version: info.version })
+      return
+    }
+    win.webContents.send('update:status', { state: 'available', version: info.version })
+    const base = `https://github.com/Bijounga/bijoudocs/releases/download/v${info.version}/`
+    macUpdate
+      .download(info, base, () => {})
+      .then(() => win.webContents.send('update:status', { state: 'downloaded', version: info.version }))
+      .catch((err) => {
+        console.error('BijouDocs: mac update download failed', err)
+        win.webContents.send('update:status', { state: 'error', message: err && err.message })
+      })
   })
+  // Quitting with a Mac update waiting installs it (without reopening).
+  if (isMac) app.on('will-quit', () => { if (macUpdate.isReady()) macUpdate.installAndRelaunch(false) })
   autoUpdater.on('update-not-available', () => {
     win.webContents.send('update:status', { state: 'not-available' })
   })
@@ -281,12 +300,16 @@ app.whenReady().then(() => {
   } catch (err) {
     console.error('BijouDocs: spellchecker language setup failed', err)
   }
+  // Eject the install disk image, drop old update downloads, and offer to
+  // move into Applications if launched from the .dmg.
+  if (isMac && !isDev) macUpdate.tidyOnLaunch().catch((err) => console.error('BijouDocs: mac tidy failed', err))
   const win = createWindow()
   registerIpc(win)
   scriptWatcher.startWatching(win)
   const checkNow = setupAutoUpdater(win)
 
   ipcMain.handle('update:installNow', () => {
+    if (isMac) return macUpdate.installAndRelaunch(true)
     // Both args default to false — without them the NSIS installer runs
     // its full interactive wizard (welcome screen, install-dir picker,
     // etc.) on every single update, not just first install. `true, true`

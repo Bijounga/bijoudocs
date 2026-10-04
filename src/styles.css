@@ -313,7 +313,6 @@
 [data-theme='dos'] .line-search-menu,
 [data-theme='dos'] .line-text,
 [data-theme='dos'] .line-text img,
-[data-theme='dos'] .logo .dot,
 [data-theme='dos'] .ls-row,
 [data-theme='dos'] .ls-search,
 [data-theme='dos'] .map-idea-menu,
@@ -478,12 +477,8 @@
   background: linear-gradient(to right, #000080, #1084d0);
   border-bottom: 2px solid #000000;
 }
-[data-theme='dos'] .topbar .logo,
 [data-theme='dos'] .title-input {
   color: #ffffff;
-}
-[data-theme='dos'] .logo .dot {
-  background: #ffffff;
 }
 /* Everything else directly in the titlebar that isn't a button (the
    save-status text, the version badge, the due-date field) — these all
@@ -494,6 +489,8 @@
 [data-theme='dos'] .topbar .version-badge,
 [data-theme='dos'] .topbar .saved-flash,
 [data-theme='dos'] .topbar .save-status,
+[data-theme='dos'] .topbar .tb-stat,
+[data-theme='dos'] .topbar .tb-zoom-value,
 [data-theme='dos'] .topbar .date-field {
   color: #ffffff !important;
   border-color: rgba(255, 255, 255, 0.6) !important;
@@ -770,19 +767,17 @@
   background: linear-gradient(to right, #ff71ce, #b967ff 55%, #6b4bd8) !important;
   border-bottom: 2px solid #1a0a3d;
 }
-[data-theme='vaporwave'] .topbar .logo,
 [data-theme='vaporwave'] .title-input {
   color: #ffffff !important;
 }
 [data-theme='vaporwave'] .topbar .version-badge,
 [data-theme='vaporwave'] .topbar .saved-flash,
 [data-theme='vaporwave'] .topbar .save-status,
+[data-theme='vaporwave'] .topbar .tb-stat,
+[data-theme='vaporwave'] .topbar .tb-zoom-value,
 [data-theme='vaporwave'] .topbar .date-field {
   color: #ffffff !important;
   border-color: rgba(255, 255, 255, 0.6) !important;
-}
-[data-theme='vaporwave'] .logo .dot {
-  background: #01cdfe;
 }
 /* Chunky flat retro panels: solid lavender with a hard purple outline,
    no bevel (that's DOS's language) and no glass (Aero's). */
@@ -1218,6 +1213,23 @@ body {
   text-shadow: var(--titlebar-text-shadow);
   white-space: nowrap;
 }
+/* Version / update-check badge, next to the app name. Takes the title
+   bar's own text color so it reads on every theme's bar. */
+.titlebar .version-badge {
+  -webkit-app-region: no-drag;
+  margin-left: 8px;
+  padding: 1px 6px;
+  font-size: 10px;
+  color: inherit !important;
+  opacity: 0.6;
+  border-color: color-mix(in srgb, currentColor 35%, transparent) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  text-shadow: var(--titlebar-text-shadow);
+}
+.titlebar .version-badge:hover {
+  opacity: 1;
+}
 .titlebar-captions {
   align-self: flex-start;
   margin-top: var(--caption-top);
@@ -1411,6 +1423,131 @@ body {
 [data-theme='y2kChrome'] .titlebar-caption {
   border-top: 1px solid var(--caption-border);
 }
+
+/* Themed hover tooltip (Tooltip.jsx takes over every `title` attribute so
+   the OS's own unthemed tooltip never shows). Tokens default to values
+   derived from the theme's own colors, so custom themes get a matching
+   tooltip for free; the novelty themes swap in their era's tooltip. */
+:root {
+  --tip-bg: color-mix(in srgb, var(--ink) 7%, var(--panel));
+  --tip-ink: var(--ink);
+  --tip-border: var(--line);
+  --tip-radius: 6px;
+  --tip-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+  --tip-font: var(--sans);
+  --tip-key-bg: var(--bg);
+  --tip-key-ink: var(--ink-dim);
+  --tip-key-border: var(--line);
+}
+:root[data-theme='highContrast'] {
+  --tip-bg: #000000;
+  --tip-border: #ffffff;
+  --tip-key-ink: #ffffff;
+}
+/* Windows 95: the pale-yellow box with a hard black border. */
+:root[data-theme='dos'] {
+  --tip-bg: #ffffe1;
+  --tip-ink: #000000;
+  --tip-border: #000000;
+  --tip-radius: 0;
+  --tip-shadow: none;
+  --tip-key-bg: #c0c0c0;
+  --tip-key-ink: #000000;
+  --tip-key-border: #808080;
+}
+/* Windows 7: white-to-lavender gradient, gray hairline, soft drop shadow. */
+:root[data-theme='aero'] {
+  --tip-bg: linear-gradient(180deg, #ffffff 0%, #e8eef8 100%);
+  --tip-ink: #1b2b3c;
+  --tip-border: #8a97a8;
+  --tip-radius: 3px;
+  --tip-shadow: 1px 2px 5px rgba(20, 50, 90, 0.3);
+  --tip-key-bg: #ffffff;
+  --tip-key-ink: #2a4a6a;
+  --tip-key-border: #b8c8da;
+}
+:root[data-theme='aeroDark'] {
+  --tip-bg: linear-gradient(180deg, #17243c 0%, #0d1729 100%);
+  --tip-ink: #eef4fb;
+  --tip-border: rgba(76, 194, 255, 0.45);
+  --tip-radius: 4px;
+  --tip-shadow: 0 0 14px rgba(76, 194, 255, 0.22), 0 6px 16px rgba(0, 0, 0, 0.5);
+  --tip-key-bg: rgba(76, 194, 255, 0.1);
+  --tip-key-ink: #9fdcff;
+  --tip-key-border: rgba(76, 194, 255, 0.35);
+}
+/* Vaporwave: deep purple card, neon-pink edge, hard cyan offset shadow. */
+:root[data-theme='vaporwave'] {
+  --tip-bg: #2a1a4a;
+  --tip-ink: #ffffff;
+  --tip-border: #ff71ce;
+  --tip-radius: 0;
+  --tip-shadow: 3px 3px 0 #01cdfe;
+  --tip-key-bg: #1a0f33;
+  --tip-key-ink: #ff9be0;
+  --tip-key-border: #ff71ce;
+}
+/* Y2K Chrome: a little amber LCD readout in a chrome bezel. */
+:root[data-theme='y2kChrome'] {
+  --tip-bg: #1a1406;
+  --tip-ink: #ffb000;
+  --tip-border: #7d838b;
+  --tip-radius: 4px;
+  --tip-shadow: 0 0 0 1px #e6e9ed, 0 4px 12px rgba(0, 0, 0, 0.35), inset 0 0 10px rgba(255, 176, 0, 0.12);
+  --tip-font: var(--mono);
+  --tip-key-bg: rgba(255, 176, 0, 0.12);
+  --tip-key-ink: #ffcf66;
+  --tip-key-border: rgba(255, 176, 0, 0.45);
+}
+.app-tooltip {
+  position: fixed;
+  z-index: 10000;
+  max-width: 300px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 9px;
+  background: var(--tip-bg);
+  color: var(--tip-ink);
+  border: 1px solid var(--tip-border);
+  border-radius: var(--tip-radius);
+  box-shadow: var(--tip-shadow);
+  font-family: var(--tip-font);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: pre-line;
+  pointer-events: none;
+  opacity: 0;
+}
+.app-tooltip.shown {
+  animation: app-tooltip-in 0.12s ease-out forwards;
+}
+.app-tooltip.above {
+  --tip-from: 3px;
+}
+@keyframes app-tooltip-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--tip-from, -3px));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.app-tooltip-key {
+  flex: 0 0 auto;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  line-height: 1;
+  padding: 3px 5px;
+  border-radius: calc(var(--tip-radius) * 0.6);
+  background: var(--tip-key-bg);
+  color: var(--tip-key-ink);
+  border: 1px solid var(--tip-key-border);
+  white-space: nowrap;
+}
 ::selection {
   background: color-mix(in srgb, var(--cyan) 25%, transparent);
 }
@@ -1461,30 +1598,13 @@ textarea {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   padding: 8px 16px;
   min-height: 52px;
   border-bottom: 1px solid var(--line);
   background: var(--panel);
   z-index: 20;
   flex-wrap: wrap;
-}
-.logo {
-  font-family: var(--mono);
-  font-weight: 600;
-  font-size: 14px;
-  letter-spacing: 0.1em;
-  color: var(--cyan);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 0 0 auto;
-}
-.logo .dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--cyan);
 }
 .divider-v {
   width: 1px;
@@ -1525,17 +1645,24 @@ textarea {
   border-color: var(--cyan);
   background: var(--panel-2);
 }
+.tb-save {
+  position: relative;
+  flex: 0 0 130px;
+  display: flex;
+  align-items: center;
+}
 .saved-flash {
+  position: absolute;
+  left: 0;
+  right: 0;
   font-family: var(--mono);
   font-size: 10.5px;
   color: var(--cyan);
   opacity: 0.85;
-  flex: 0 0 auto;
-  display: inline-block;
-  width: 130px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  visibility: hidden;
 }
 .save-status {
   font-family: var(--mono);
@@ -1548,6 +1675,12 @@ textarea {
 }
 .save-status.error {
   color: var(--danger);
+}
+.tb-save.flashing .save-status {
+  visibility: hidden;
+}
+.tb-save.flashing .saved-flash {
+  visibility: visible;
 }
 .save-history-modal {
   max-width: 480px;
@@ -1689,14 +1822,91 @@ textarea {
   color: var(--ink-dim);
 }
 
+/* Icon-only toolbar buttons (topbar, map toolbar). Square and borderless by
+   default so a long row of them reads as one quiet strip — the description
+   lives in the themed tooltip. Single-class selectors on purpose: the
+   novelty themes' `[data-theme] .icon-btn` bevels/gloss still win. */
+.tb-icon {
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-color: transparent;
+}
+.tb-icon:hover,
+.tb-icon:disabled:hover {
+  border-color: transparent;
+}
+.tb-icon.active {
+  border-color: color-mix(in srgb, var(--cyan) 45%, var(--line));
+}
+.tb-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 0 0 auto;
+}
+.tb-stats {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 0 0 auto;
+  padding: 0 4px;
+}
+.tb-stat {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+  white-space: nowrap;
+  cursor: default;
+}
+.tb-stat.up {
+  color: var(--cyan);
+}
+.tb-icon-menu {
+  width: auto;
+  padding: 0 6px 0 8px;
+  gap: 3px;
+}
+.tb-icon-caret {
+  opacity: 0.7;
+}
+.tb-zoom {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+.tb-zoom .tb-icon {
+  width: 24px;
+}
+.tb-zoom-value {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+  min-width: 36px;
+  text-align: center;
+}
+
 .tabbar {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 16px;
+  padding: 5px 16px;
+  min-height: 41px;
   border-bottom: 1px solid var(--line);
   background: var(--panel-2);
+}
+/* Section tabs scroll on their own; the view buttons stay pinned right. */
+.tabbar-tabs {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   overflow-x: auto;
 }
 .tab-chip {
@@ -1746,13 +1956,26 @@ textarea {
   min-width: 150px;
 }
 .export-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   padding: 8px 10px;
   border-radius: 6px;
   font-size: 12.5px;
   color: var(--ink);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.export-item svg {
+  color: var(--ink-faint);
 }
 .export-item:hover {
   background: var(--panel-2);
+}
+.export-menu-sep {
+  height: 1px;
+  margin: 4px 6px;
+  background: var(--line-soft);
 }
 
 .section-jump-menu {
@@ -2023,21 +2246,61 @@ textarea {
 .sb-due.overdue {
   color: var(--danger);
 }
-.sb-delete-btn {
-  background: transparent;
-  border: none;
-  color: var(--ink-faint);
-  font-size: 10.5px;
-  font-family: var(--mono);
-  padding: 2px 4px;
+/* Archive / delete — revealed on row hover, like the old text button. */
+.sb-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  flex: 0 0 auto;
   opacity: 0;
   transition: opacity 0.1s;
 }
-.script-item:hover .sb-delete-btn {
+.script-item:hover .sb-row-actions {
   opacity: 1;
 }
-.sb-delete-btn:hover {
+.sb-row-btn {
+  display: flex;
+  align-items: center;
+  background: transparent;
+  border: none;
+  color: var(--ink-faint);
+  padding: 2px 3px;
+  border-radius: 4px;
+}
+.sb-row-btn:hover {
+  color: var(--cyan);
+}
+.sb-row-btn.danger:hover {
   color: var(--danger);
+}
+.script-item.archived .st {
+  color: var(--ink-dim);
+  font-weight: 400;
+}
+.script-item.archived:not(.active) {
+  opacity: 0.75;
+}
+.sb-archive-toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  margin-top: 10px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+}
+.sb-archive-toggle:hover {
+  color: var(--ink-dim);
+}
+.sb-archive-chevron-closed {
+  transform: rotate(-90deg);
+}
+.sb-archive-count {
+  margin-left: auto;
+  font-size: 10px;
+  opacity: 0.8;
 }
 
 .editor-columns {
@@ -2138,13 +2401,6 @@ textarea {
 .margin-panel.collapsed.right {
   border-left: 1px solid var(--line-soft);
 }
-.margin-panel-collapsed-label {
-  writing-mode: vertical-rl;
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
 .margin-panel-head {
   display: flex;
   align-items: center;
@@ -2152,6 +2408,9 @@ textarea {
   margin-bottom: 12px;
 }
 .margin-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
   font-family: var(--mono);
   font-size: 11px;
   letter-spacing: 0.06em;
@@ -2824,7 +3083,10 @@ textarea {
 }
 .insp-tab {
   flex: 1;
-  padding: 12px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 11px 0 10px;
   text-align: center;
   font-size: 10.5px;
   font-weight: 500;
@@ -2845,7 +3107,7 @@ textarea {
 }
 .theme-contrast-row {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 8px;
   font-size: 11.5px;
   line-height: 1.5;
@@ -2969,6 +3231,9 @@ textarea {
   flex: 0 0 auto;
 }
 .insp-section-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 10.5px;
   font-weight: 600;
   text-transform: uppercase;
@@ -3165,14 +3430,6 @@ textarea {
   border-radius: 50%;
   flex: 0 0 auto;
 }
-.insp-hint {
-  font-size: 11.5px;
-  color: var(--ink-faint);
-  line-height: 1.5;
-  padding: 8px;
-  margin-top: 8px;
-  border-top: 1px solid var(--line-soft);
-}
 .sec-list-row {
   display: flex;
   align-items: center;
@@ -3228,6 +3485,9 @@ textarea {
   transition: width 0.2s ease;
 }
 .progress-bar-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   font-family: var(--mono);
   font-size: 10.5px;
   color: var(--ink-faint);
@@ -3559,10 +3819,25 @@ textarea {
   font-size: 12.5px;
   color: var(--ink);
 }
-.sc-desc {
-  font-size: 11px;
+.kbd-pill.static,
+.kbd-pill.static:hover {
+  border-color: var(--line-soft);
   color: var(--ink-faint);
-  margin-top: 2px;
+  background: transparent;
+  cursor: default;
+}
+/* "?" that carries an explanation in its tooltip (HelpTip.jsx). */
+.help-tip {
+  display: inline-flex;
+  align-items: center;
+  color: var(--ink-faint);
+  cursor: help;
+  opacity: 0.75;
+  vertical-align: middle;
+}
+.help-tip:hover {
+  color: var(--cyan);
+  opacity: 1;
 }
 .kbd-pill {
   font-family: var(--mono);
@@ -3756,18 +4031,23 @@ textarea {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
+  gap: 4px;
+  padding: 7px 16px;
   border-bottom: 1px solid var(--line-soft);
   background: var(--panel);
 }
-.map-hint {
-  margin-left: auto;
-  font-size: 11px;
+.map-help {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
   color: var(--ink-faint);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  cursor: help;
+}
+.map-help:hover {
+  color: var(--cyan);
 }
 .outline-search {
   flex: 0 0 200px;
@@ -3784,11 +4064,6 @@ textarea {
 .outline-search:focus {
   outline: none;
   border-color: var(--cyan);
-}
-.outline-hint {
-  font-size: 11px;
-  color: var(--ink-faint);
-  line-height: 1.5;
 }
 .map-canvas {
   flex: 1 1 auto;

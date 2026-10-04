@@ -14,6 +14,10 @@ import { checkSpelling } from '../lib/spellcheck.js'
 import { mergeExternalScript } from '../lib/externalMerge.js'
 
 const MAX_UNDO = 60
+// Which script to land on when there's no explicit choice (launch, or the
+// open one was deleted): most recently edited, but never an archived one
+// while any unarchived script exists.
+const byLandingOrder = (a, b) => (a.archived ? 1 : 0) - (b.archived ? 1 : 0) || b.updatedAt - a.updatedAt
 const saveTimers = {}
 let savedFlashTimer = null
 let updateStatusTimer = null
@@ -175,7 +179,7 @@ export const useStore = create(
         window.bijou.getAppVersion(),
         window.bijou.loadGlobalCategories()
       ])
-      const sorted = scripts.slice().sort((a, b) => b.updatedAt - a.updatedAt)
+      const sorted = scripts.slice().sort(byLandingOrder)
       set((s) => {
         s.scripts = scripts
         s.currentScriptId = sorted.length ? sorted[0].id : null
@@ -689,7 +693,7 @@ export const useStore = create(
       set((s) => {
         s.scripts = s.scripts.filter((sc) => sc.id !== id)
         if (s.currentScriptId === id) {
-          const sorted = s.scripts.slice().sort((a, b) => b.updatedAt - a.updatedAt)
+          const sorted = s.scripts.slice().sort(byLandingOrder)
           s.currentScriptId = sorted.length ? sorted[0].id : null
         }
         delete s.diskUpdatedAt[id]
@@ -706,6 +710,23 @@ export const useStore = create(
         }
       })
       get().scheduleSave(id, { flash: false })
+    },
+    // Archiving only tucks a finished script away into the sidebar's
+    // Archived group — nothing is deleted, and it stays fully editable.
+    toggleArchive(id) {
+      let title = ''
+      let archived = false
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === id)
+        if (!script) return
+        script.archived = !script.archived
+        script.archivedAt = script.archived ? Date.now() : null
+        script.updatedAt = Date.now()
+        title = script.title
+        archived = script.archived
+      })
+      get().scheduleSave(id, { flash: false })
+      if (title) get().flashSaved((archived ? 'Archived ' : 'Restored ') + '"' + title + '"')
     },
     setScriptDueDate(id, dueDate) {
       set((s) => {

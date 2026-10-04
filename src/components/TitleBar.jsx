@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import iconUrl from '../assets/titlebar-icon.png'
+import VersionBadge from './VersionBadge.jsx'
 
 // The window's own title bar, replacing the hidden native one (see
 // titleBarStyle in electron/main/index.js) so every theme can restyle it.
@@ -20,6 +21,7 @@ export default function TitleBar() {
     <div className={'titlebar' + (isMac ? ' mac' : '')}>
       {!isMac && <img className="titlebar-icon" src={iconUrl} alt="" draggable={false} />}
       <span className="titlebar-title">BijouDocs</span>
+      <VersionBadge />
       {!isMac && api?.windowMinimize && (
         <div className="titlebar-captions">
           <button className="titlebar-caption" tabIndex={-1} title="Minimize" onClick={() => api.windowMinimize()}>

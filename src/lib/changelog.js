@@ -180,6 +180,14 @@ export const CHANGELOG = {
     'Fixed the teleprompter being unreadable (dark text on black) in light themes and light custom themes',
     'Fixed an empty gap between the Checklist and Bookmarks panels',
     'Keyboard focus is now visible, and scrollbars, buttons, and corners got a polish pass across the app'
+  ],
+  '0.5.58': [
+    'Archive finished scripts — hover a script in the library (or right-click it) and hit the archive icon. Archived scripts move to a collapsible "Archived" group, stay fully editable, and come back with one click',
+    'Leaner toolbars: the topbar, map toolbar, inspector tabs and side rails are now icon buttons, so the topbar fits on one row',
+    'Hover any button for a description — tooltips now match your theme (including a classic yellow one in MS-DOS) and show keyboard shortcuts',
+    'Focus, Teleprompter, Map, Outline and Resume moved down to the right end of the tab bar',
+    'Long help paragraphs are gone — explanations live behind small "?" icons, and the built-in shortcuts are now a searchable list',
+    'Mac: updates now download in the background and install with one click on "Restart to update" — no more dragging into Applications (starting with the update after this one)'
   ]
 }
 

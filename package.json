@@ -1,6 +1,6 @@
 {
   "name": "bijoudocs",
-  "version": "0.5.57",
+  "version": "0.5.58",
   "description": "BijouDocs — a desktop script workspace for YouTube scripts",
   "main": "out/main/index.js",
   "author": "Bijou",
@@ -57,7 +57,9 @@
     "mac": {
       "target": [{ "target": "dmg", "arch": "universal" }, { "target": "zip", "arch": "universal" }],
       "icon": "build/icon.png",
-      "category": "public.app-category.productivity"
-    }
+      "category": "public.app-category.productivity",
+      "identity": null
+    },
+    "afterSign": "scripts/adhoc-sign.cjs"
   }
 }

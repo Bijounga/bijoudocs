@@ -1,12 +1,10 @@
 import React from 'react'
 import { useStore } from '../state/store.js'
 import Icon from './icons.jsx'
-import VersionBadge from './VersionBadge.jsx'
 import SaveStatus from './SaveStatus.jsx'
 import SectionJumpMenu from './SectionJumpMenu.jsx'
 import LineSearchMenu from './LineSearchMenu.jsx'
 import { formatTC, scriptTotalStats, dueDateInfo, totalWordCountAll } from '../lib/timecode.js'
-import { wasOutlineLastFocused } from '../state/lineRefs.js'
 
 export default function Topbar({ script }) {
   const setScriptTitle = useStore((s) => s.setScriptTitle)
@@ -27,8 +25,6 @@ export default function Topbar({ script }) {
   const hideNotes = useStore((s) => s.hideNotes)
   const toggleHideTags = useStore((s) => s.toggleHideTags)
   const toggleHideNotes = useStore((s) => s.toggleHideNotes)
-  const focusMode = useStore((s) => s.focusMode)
-  const toggleFocusMode = useStore((s) => s.toggleFocusMode)
   const sectionJumpOpen = useStore((s) => s.sectionJumpOpen)
   const toggleSectionJump = useStore((s) => s.toggleSectionJump)
   const lineSearchOpen = useStore((s) => s.lineSearchOpen)
@@ -37,61 +33,36 @@ export default function Topbar({ script }) {
   const toggleExportMenu = useStore((s) => s.toggleExportMenu)
   const exportScript = useStore((s) => s.exportScript)
   const importScript = useStore((s) => s.importScript)
-  const openTeleprompter = useStore((s) => s.openTeleprompter)
   const setScriptDueDate = useStore((s) => s.setScriptDueDate)
-  const mapViewOpen = useStore((s) => s.mapViewOpen)
-  const toggleMapView = useStore((s) => s.toggleMapView)
-  const mapSplitOpen = useStore((s) => s.mapSplitOpen)
-  const toggleMapSplit = useStore((s) => s.toggleMapSplit)
-  const outlineViewOpen = useStore((s) => s.outlineViewOpen)
-  const toggleOutlineView = useStore((s) => s.toggleOutlineView)
-  const outlineSplitOpen = useStore((s) => s.outlineSplitOpen)
-  const toggleOutlineSplit = useStore((s) => s.toggleOutlineSplit)
   const noteColor = useStore((s) => s.noteColor)
   const setNoteColor = useStore((s) => s.setNoteColor)
   const forceSave = useStore((s) => s.forceSave)
   const openSaveHistory = useStore((s) => s.openSaveHistory)
-  const jumpToResumeLine = useStore((s) => s.jumpToResumeLine)
-  const jumpToResumeOutlineNode = useStore((s) => s.jumpToResumeOutlineNode)
   const keybinds = useStore((s) => s.keybinds)
 
-  if (!script) {
-    return (
-      <div className="topbar">
-        <div className="logo"><span className="dot" />BIJOUDOCS</div>
-        <VersionBadge />
-      </div>
-    )
-  }
+  // The app name and version badge live in the title bar (TitleBar.jsx).
+  if (!script) return <div className="topbar" />
 
   const canUndo = undoScriptId === script.id && undoStack.length > 0
   const canRedo = undoScriptId === script.id && redoStack.length > 0
-  // In split mode, outlineViewOpen alone can't tell which side the resume
-  // action should target — disambiguate by whichever pane was last really
-  // focused (see wasOutlineLastFocused's own comment for why this can't
-  // just be a live activeElement check at click time).
-  function resumeJumpIsOutline() {
-    if (!outlineViewOpen) return false
-    if (!outlineSplitOpen) return true
-    const last = wasOutlineLastFocused()
-    return last === null ? true : last
-  }
   const { totalSeconds, totalWords } = scriptTotalStats(script)
 
   const due = dueDateInfo(script.dueDate)
   const wordsNow = totalWordCountAll(script)
   const todayDelta = script.dailyBaseline ? wordsNow - script.dailyBaseline.words : wordsNow
   const workLogTooltip =
-    'Today: ' + (todayDelta >= 0 ? '+' : '') + todayDelta + ' words' +
+    'Words written today: ' + (todayDelta >= 0 ? '+' : '') + todayDelta +
     (script.workLogHistory && script.workLogHistory.length
       ? '\n' + script.workLogHistory.slice(-7).reverse().map((h) => h.date + ': ' + (h.words >= 0 ? '+' : '') + h.words).join('\n')
       : '')
 
+  // Every button here is icon-only; its description lives in `title`, which
+  // Tooltip.jsx turns into a themed tooltip. A trailing "(ctrl+…)" becomes a
+  // key chip in that tooltip.
+  const kb = (id) => (keybinds[id] ? ' (' + keybinds[id] + ')' : '')
+
   return (
     <div className="topbar">
-      <div className="logo"><span className="dot" />BIJOUDOCS</div>
-      <VersionBadge />
-      <div className="divider-v" />
       <input
         className="title-input"
         value={script.title}
@@ -99,26 +70,35 @@ export default function Topbar({ script }) {
         onChange={(e) => setScriptTitle(script.id, e.target.value)}
         onBlur={() => commitScriptTitle(script.id)}
       />
-      <span className="saved-flash" style={{ visibility: savedFlash ? 'visible' : 'hidden' }}>{savedFlashText}</span>
-      <SaveStatus />
-      <button className="icon-btn" onClick={() => forceSave(script.id)} title="Save right now, and drop a checkpoint in the history">
-        Save now
-      </button>
-      <button className="icon-btn" onClick={() => openSaveHistory(script.id)} title="Browse and restore earlier saved versions">
-        History
-      </button>
-      <span
-        style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-faint)', whiteSpace: 'nowrap' }}
-        title="Estimated runtime and spoken word count for the whole script"
-      >
-        {formatTC(totalSeconds)} · {totalWords.toLocaleString()} words
-      </span>
-      <span
-        style={{ fontFamily: 'var(--mono)', fontSize: 11, color: todayDelta > 0 ? 'var(--cyan)' : 'var(--ink-faint)', whiteSpace: 'nowrap' }}
-        title={workLogTooltip}
-      >
-        {todayDelta >= 0 ? '+' : ''}{todayDelta} today
-      </span>
+      {/* The one-off flash ("Copied 3 lines") briefly covers the persistent
+          save status instead of reserving its own empty slot. */}
+      <div className={'tb-save' + (savedFlash ? ' flashing' : '')}>
+        <SaveStatus />
+        <span className="saved-flash">{savedFlashText}</span>
+      </div>
+      <div className="tb-group">
+        <button className="icon-btn tb-icon" onClick={() => forceSave(script.id)} title="Save now, and drop a checkpoint in the history">
+          <Icon name="save" />
+        </button>
+        <button className="icon-btn tb-icon" onClick={() => openSaveHistory(script.id)} title="Save history — browse and restore earlier versions">
+          <Icon name="history" />
+        </button>
+      </div>
+      <div className="topbar-spacer" />
+      <div className="tb-stats">
+        <span className="tb-stat" title="Estimated runtime of the whole script">
+          <Icon name="clock" size={12} />
+          {formatTC(totalSeconds)}
+        </span>
+        <span className="tb-stat" title="Spoken words in the whole script">
+          <Icon name="text" size={12} />
+          {totalWords.toLocaleString()}
+        </span>
+        <span className={'tb-stat' + (todayDelta > 0 ? ' up' : '')} title={workLogTooltip}>
+          {todayDelta >= 0 ? '+' : ''}
+          {todayDelta}
+        </span>
+      </div>
       <label className={'date-field' + (due && due.urgency ? ' ' + due.urgency : '')} title="Deadline / upload date">
         <Icon name="calendar" size={12} />
         <input
@@ -127,105 +107,107 @@ export default function Topbar({ script }) {
           onChange={(e) => setScriptDueDate(script.id, e.target.value)}
         />
       </label>
-      <div className="topbar-spacer" />
-      <button className="icon-btn" disabled={!canUndo} onClick={undo} title="Undo (Ctrl+Z)">
-        <Icon name="undo" />
-      </button>
-      <button className="icon-btn" disabled={!canRedo} onClick={redo} title="Redo (Ctrl+Shift+Z)">
-        <Icon name="redo" />
-      </button>
-      <div style={{ position: 'relative' }}>
-        <button className="icon-btn" data-menu-trigger="sectionJump" onClick={toggleSectionJump}>
-          <Icon name="search" /> Sections
+      <div className="divider-v" />
+      <div className="tb-group">
+        <button className="icon-btn tb-icon" disabled={!canUndo} onClick={undo} title="Undo (Ctrl+Z)">
+          <Icon name="undo" />
         </button>
-        {sectionJumpOpen && <SectionJumpMenu script={script} />}
-      </div>
-      <div style={{ position: 'relative' }}>
-        <button className="icon-btn" data-menu-trigger="lineSearch" onClick={toggleLineSearch}>
-          <Icon name="search" /> Search
+        <button className="icon-btn tb-icon" disabled={!canRedo} onClick={redo} title="Redo (Ctrl+Shift+Z)">
+          <Icon name="redo" />
         </button>
-        {lineSearchOpen && <LineSearchMenu script={script} />}
       </div>
-      <button className="icon-btn" onClick={() => collapseAll(script.id)}>
-        <Icon name="collapse" /> Collapse
-      </button>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 2, border: '1px solid var(--line)', borderRadius: 6, flex: '0 0 auto' }}>
-        <button className="icon-btn" style={{ border: 'none', padding: '7px 9px' }} onClick={zoomOut} title="Zoom out">&minus;</button>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-faint)', minWidth: 34, textAlign: 'center' }}>{Math.round(zoom * 100)}%</span>
-        <button className="icon-btn" style={{ border: 'none', padding: '7px 9px' }} onClick={zoomIn} title="Zoom in">+</button>
+      <div className="tb-group">
+        <div style={{ position: 'relative' }}>
+          <button
+            className={'icon-btn tb-icon' + (lineSearchOpen ? ' active' : '')}
+            data-menu-trigger="lineSearch"
+            onClick={toggleLineSearch}
+            title={'Search lines' + kb('search')}
+          >
+            <Icon name="search" />
+          </button>
+          {lineSearchOpen && <LineSearchMenu script={script} />}
+        </div>
+        <div style={{ position: 'relative' }}>
+          <button
+            className={'icon-btn tb-icon' + (sectionJumpOpen ? ' active' : '')}
+            data-menu-trigger="sectionJump"
+            onClick={toggleSectionJump}
+            title="Jump to a section"
+          >
+            <Icon name="list" />
+          </button>
+          {sectionJumpOpen && <SectionJumpMenu script={script} />}
+        </div>
+        <button className="icon-btn tb-icon" onClick={() => collapseAll(script.id)} title="Collapse every section">
+          <Icon name="collapse" />
+        </button>
       </div>
-      <button className={'icon-btn' + (hideTags ? ' active' : '')} onClick={toggleHideTags}>
-        <Icon name="eye" /> Tags
-      </button>
-      <button className={'icon-btn' + (hideNotes ? ' active' : '')} onClick={toggleHideNotes}>
-        <Icon name="note" /> Notes
-      </button>
-      <input
-        type="color"
-        className="note-color-input"
-        value={noteColor}
-        onChange={(e) => setNoteColor(e.target.value)}
-        title="Note color — applies everywhere notes show up"
-      />
-      <button className="icon-btn" onClick={importScript}>
-        <Icon name="upload" /> Import
-      </button>
+      <div className="tb-zoom">
+        <button className="icon-btn tb-icon" onClick={zoomOut} title="Zoom out">
+          <Icon name="minus" size={12} />
+        </button>
+        <span className="tb-zoom-value">{Math.round(zoom * 100)}%</span>
+        <button className="icon-btn tb-icon" onClick={zoomIn} title="Zoom in">
+          <Icon name="plus" size={12} />
+        </button>
+      </div>
+      <div className="tb-group">
+        <button
+          className={'icon-btn tb-icon' + (hideTags ? ' active' : '')}
+          onClick={toggleHideTags}
+          title={(hideTags ? 'Show tags' : 'Hide tags') + kb('hideTags')}
+        >
+          <Icon name={hideTags ? 'tagOff' : 'tag'} />
+        </button>
+        <button
+          className={'icon-btn tb-icon' + (hideNotes ? ' active' : '')}
+          onClick={toggleHideNotes}
+          title={(hideNotes ? 'Show notes' : 'Hide notes') + kb('hideNotes')}
+        >
+          <Icon name={hideNotes ? 'noteOff' : 'note'} />
+        </button>
+        <input
+          type="color"
+          className="note-color-input"
+          value={noteColor}
+          onChange={(e) => setNoteColor(e.target.value)}
+          title="Note color — applies everywhere notes show up"
+        />
+      </div>
       <div style={{ position: 'relative' }}>
-        <button className="icon-btn" data-menu-trigger="export" onClick={toggleExportMenu}>
-          <Icon name="download" /> Export
+        <button
+          className={'icon-btn tb-icon' + (exportMenuOpen ? ' active' : '')}
+          data-menu-trigger="export"
+          onClick={toggleExportMenu}
+          title="Import / export"
+        >
+          <Icon name="file" />
         </button>
         {exportMenuOpen && (
           <div className="export-menu">
-            <div className="export-item" onClick={() => exportScript(script.id, 'txt')}>Plain text (.txt)</div>
-            <div className="export-item" onClick={() => exportScript(script.id, 'md')}>Markdown (.md)</div>
-            <div className="export-item" onClick={() => exportScript(script.id, 'json')}>Full backup (.json)</div>
+            <div
+              className="export-item"
+              onClick={() => {
+                toggleExportMenu()
+                importScript()
+              }}
+            >
+              <Icon name="upload" size={12} /> Import a script…
+            </div>
+            <div className="export-menu-sep" />
+            <div className="export-item" onClick={() => exportScript(script.id, 'txt')}>
+              <Icon name="download" size={12} /> Plain text (.txt)
+            </div>
+            <div className="export-item" onClick={() => exportScript(script.id, 'md')}>
+              <Icon name="download" size={12} /> Markdown (.md)
+            </div>
+            <div className="export-item" onClick={() => exportScript(script.id, 'json')}>
+              <Icon name="download" size={12} /> Full backup (.json)
+            </div>
           </div>
         )}
       </div>
-      <button className={'icon-btn' + (focusMode ? ' active' : '')} onClick={toggleFocusMode}>
-        <Icon name="focus" /> Focus
-      </button>
-      <button className="icon-btn" onClick={openTeleprompter} title="Distraction-free reading view">
-        <Icon name="teleprompter" /> Teleprompter
-      </button>
-      <button className={'icon-btn' + (mapViewOpen ? ' active' : '')} onClick={toggleMapView} title="Zoom out to the whole video as cards">
-        <Icon name="map" /> Map
-      </button>
-      <button className={'icon-btn' + (outlineViewOpen ? ' active' : '')} onClick={toggleOutlineView} title="A flattened, editable list of the whole mind map">
-        <Icon name="menu" /> Outline
-      </button>
-      {mapViewOpen && (
-        <button
-          className={'icon-btn' + (mapSplitOpen ? ' active' : '')}
-          onClick={toggleMapSplit}
-          title="Show the script and the map side by side"
-        >
-          <Icon name="split" size={13} />
-        </button>
-      )}
-      {outlineViewOpen && (
-        <button
-          className={'icon-btn' + (outlineSplitOpen ? ' active' : '')}
-          onClick={toggleOutlineSplit}
-          title="Show the script and the outline side by side"
-        >
-          <Icon name="split" size={13} />
-        </button>
-      )}
-      <button
-        className="icon-btn"
-        disabled={resumeJumpIsOutline() ? !script.resumeOutlineNodeId : !script.resumeLineKey}
-        onClick={() => (resumeJumpIsOutline() ? jumpToResumeOutlineNode(script.id) : jumpToResumeLine(script.id))}
-        title={
-          'Jump to your resume point (' +
-          keybinds.jumpToResumePoint +
-          ') — right-click a line, or the bookmark icon on an Outline item, to set one (' +
-          keybinds.markResumePoint +
-          ')'
-        }
-      >
-        <Icon name="bookmark" size={13} /> Resume
-      </button>
     </div>
   )
 }

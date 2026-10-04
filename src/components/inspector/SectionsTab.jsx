@@ -1,6 +1,7 @@
 import React from 'react'
 import { useStore } from '../../state/store.js'
 import { useDropIndicator } from '../../hooks/useDropIndicator.js'
+import HelpTip from '../HelpTip.jsx'
 
 function SectionListRow({ scriptId, sec, i, total }) {
   const jumpToSection = useStore((s) => s.jumpToSection)
@@ -79,7 +80,16 @@ export default function SectionsTab({ scriptId, script }) {
           <div className="progress-bar-wrap">
             <div className="progress-bar-fill" style={{ width: pct + '%' }} />
           </div>
-          <div className="progress-bar-label">{doneCount}/{total} sections done</div>
+          <div className="progress-bar-label">
+            {doneCount}/{total} sections done
+            <HelpTip
+              text={[
+                'Click a section to jump to it; Ctrl-click to open it as its own tab.',
+                'Drag a row, or use the arrows, to reorder.',
+                "The checkbox tracks your own edit pass — check it when you're done with a section."
+              ].join('\n')}
+            />
+          </div>
         </div>
       )}
       {script.sections.length === 0 && (
@@ -88,9 +98,6 @@ export default function SectionsTab({ scriptId, script }) {
       {script.sections.map((sec, i) => (
         <SectionListRow key={sec.id} scriptId={scriptId} sec={sec} i={i} total={script.sections.length} />
       ))}
-      <div className="insp-hint">
-        This list stays put. Click a section to jump to it and highlight it in place; Ctrl-click to open it as its own tab. Drag a row, or use the arrows, to reorder. The checkbox tracks your own edit-pass progress — check it when you're done with a section.
-      </div>
     </>
   )
 }

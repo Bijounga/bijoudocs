@@ -3,6 +3,7 @@ import { useStore } from '../../state/store.js'
 import { flattenMapOrder } from '../../lib/mapGraph.js'
 import { sectionsHaveContent } from '../../lib/model.js'
 import Icon from '../icons.jsx'
+import HelpTip from '../HelpTip.jsx'
 
 function isIdeaNode(node) {
   return !!node && node.type === 'idea'
@@ -106,10 +107,11 @@ export default function OutlineView({ scriptId, script }) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
-        <div className="outline-hint">
-          A flattened, editable list of everything on the mind map — sections follow the main thread (if you've set one), then any
-          other connected chains, then anything not yet connected.
-        </div>
+        <div className="topbar-spacer" />
+        <HelpTip
+          className="map-help"
+          text="A flattened, editable list of everything on the mind map — sections follow the main thread (if you've set one), then any other connected chains, then anything not yet connected."
+        />
       </div>
       <div className="outline-list" style={{ zoom }} ref={listRef}>
         {(ordered.length === 0 || (q && !anyMatch)) && (

@@ -152,11 +152,6 @@ export default function CategoriesTab({ scriptId, script }) {
           ))}
         </>
       )}
-      <div className="insp-hint">
-        Click the search icon to view every line tagged that way across the script. The mic icon controls whether that
-        tag's lines count toward the runtime estimate and show up in the teleprompter — click it to toggle
-        spoken/silent.
-      </div>
     </>
   )
 }

@@ -840,19 +840,20 @@ export default function MapView({ scriptId, script }) {
   return (
     <div className="main map-main">
       <div className="map-toolbar">
-        <button className="icon-btn" onClick={handleAddSection} title={'Add section (' + keybinds.mapAddSection + ')'}>
-          <Icon name="idea" size={13} /> Add section
+        <button className="icon-btn tb-icon" onClick={handleAddSection} title={'Add section (' + keybinds.mapAddSection + ')'}>
+          <Icon name="addSection" />
         </button>
         <div className="map-idea-menu-wrap" style={{ position: 'relative' }}>
           <button
-            className="icon-btn"
+            className={'icon-btn tb-icon tb-icon-menu' + (ideaMenuOpen ? ' active' : '')}
             onClick={() => {
               setIdeaMenuOpen((v) => !v)
               setPresetManagerOpen(false)
             }}
             title={'Add idea node (' + keybinds.mapAddIdeaNode + ')'}
           >
-            <Icon name="note" size={13} /> Add idea node ▾
+            <Icon name="note" />
+            <Icon name="chevron" size={9} className="tb-icon-caret" />
           </button>
           {ideaMenuOpen && (
             <div className="map-idea-menu">
@@ -891,34 +892,54 @@ export default function MapView({ scriptId, script }) {
             />
           )}
         </div>
-        <button className="icon-btn" onClick={handleAddChapterNode} title="Add a chapter node — a group header for the Outline tab">
-          <Icon name="layers" size={13} /> Add chapter
+        <button className="icon-btn tb-icon" onClick={handleAddChapterNode} title="Add chapter — a group header for the Outline">
+          <Icon name="layers" />
         </button>
+        <div className="divider-v" />
         <button
-          className={'icon-btn' + (script.mapLayout.hideSummaries ? ' active' : '')}
+          className={'icon-btn tb-icon' + (script.mapLayout.hideSummaries ? ' active' : '')}
           onClick={() => toggleMapHideSummaries(scriptId)}
-          title={'Toggle summaries (' + keybinds.mapToggleSummaries + ')'}
+          title={(script.mapLayout.hideSummaries ? 'Show summaries' : 'Hide summaries') + ' (' + keybinds.mapToggleSummaries + ')'}
         >
-          <Icon name="eye" size={13} /> {script.mapLayout.hideSummaries ? 'Show summaries' : 'Hide summaries'}
+          <Icon name={script.mapLayout.hideSummaries ? 'eyeOff' : 'eye'} />
         </button>
         <button
-          className={'icon-btn' + (script.mapLayout.hideOutlines ? ' active' : '')}
+          className={'icon-btn tb-icon' + (script.mapLayout.hideOutlines ? ' active' : '')}
           onClick={() => toggleMapHideOutlines(scriptId)}
-          title="Turn each idea node's colored accent border off — the small status dot stays colored either way — a calmer, uniform look once a map has a lot of nodes"
+          title={
+            (script.mapLayout.hideOutlines ? 'Show' : 'Hide') +
+            " idea nodes' colored outlines — the status dot keeps its color either way"
+          }
         >
-          <Icon name="noColor" size={13} /> {script.mapLayout.hideOutlines ? 'Show outlines' : 'Hide outlines'}
+          <Icon name="noColor" />
         </button>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 2, border: '1px solid var(--line)', borderRadius: 6, flex: '0 0 auto' }}>
-          <button className="icon-btn" style={{ border: 'none', padding: '7px 9px' }} onClick={() => zoomByCenter(1 / 1.2)}>&minus;</button>
-          <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-faint)', minWidth: 34, textAlign: 'center' }}>{Math.round(zoom * 100)}%</span>
-          <button className="icon-btn" style={{ border: 'none', padding: '7px 9px' }} onClick={() => zoomByCenter(1.2)}>+</button>
+        <div className="divider-v" />
+        <div className="tb-zoom">
+          <button className="icon-btn tb-icon" onClick={() => zoomByCenter(1 / 1.2)} title="Zoom out">
+            <Icon name="minus" size={12} />
+          </button>
+          <span className="tb-zoom-value">{Math.round(zoom * 100)}%</span>
+          <button className="icon-btn tb-icon" onClick={() => zoomByCenter(1.2)} title="Zoom in">
+            <Icon name="plus" size={12} />
+          </button>
         </div>
-        <button className="icon-btn" onClick={recenterView} title="Fit every node on screen, centered">
-          <Icon name="focus" size={13} /> Recenter
+        <button className="icon-btn tb-icon" onClick={recenterView} title="Fit every node on screen">
+          <Icon name="fit" />
         </button>
-        <div className="map-hint">
-          Drag to select · right-click for options · Ctrl+C/V to duplicate · click or pull a connected dot to disconnect it
-        </div>
+        <div className="topbar-spacer" />
+        <span
+          className="map-help"
+          title={[
+            'Drag on empty space to select',
+            'Right-click for options',
+            'Ctrl+C / Ctrl+V to duplicate',
+            'Pull a connector dot onto another node to link them',
+            'Click or pull a connected dot to disconnect it',
+            'Hold Alt while dragging to skip snapping'
+          ].join('\n')}
+        >
+          <Icon name="help" size={15} />
+        </span>
       </div>
       <div
         className="map-canvas"

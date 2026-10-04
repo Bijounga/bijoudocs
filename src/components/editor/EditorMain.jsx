@@ -119,19 +119,19 @@ export default function EditorMain({ scriptId, script }) {
     <div className="main">
       <div className="editor-columns">
         <ResizableMarginStack side="left" anyOpen={leftMarginOpen || pinnedMarginOpen}>
-          <MarginPanel side="left" title="Timestamps" open={leftMarginOpen} onToggle={toggleLeftMargin}>
+          <MarginPanel side="left" title="Timestamps" icon="clock" open={leftMarginOpen} onToggle={toggleLeftMargin}>
             <TimestampLogPanel scriptId={scriptId} script={script} />
           </MarginPanel>
-          <MarginPanel side="left" title="Pinned" open={pinnedMarginOpen} onToggle={togglePinnedMargin}>
+          <MarginPanel side="left" title="Pinned" icon="pin" open={pinnedMarginOpen} onToggle={togglePinnedMargin}>
             <PinnedPanel scriptId={scriptId} script={script} side="left" />
           </MarginPanel>
         </ResizableMarginStack>
         {editor}
         <ResizableMarginStack side="right" anyOpen={rightMarginOpen || bookmarksMarginOpen}>
-          <MarginPanel side="right" title="Checklist" open={rightMarginOpen} onToggle={toggleRightMargin}>
+          <MarginPanel side="right" title="Checklist" icon="checklist" open={rightMarginOpen} onToggle={toggleRightMargin}>
             <ProjectChecklistPanel scriptId={scriptId} script={script} />
           </MarginPanel>
-          <MarginPanel side="right" title="Bookmarks" open={bookmarksMarginOpen} onToggle={toggleBookmarksMargin}>
+          <MarginPanel side="right" title="Bookmarks" icon="bookmark" open={bookmarksMarginOpen} onToggle={toggleBookmarksMargin}>
             <BookmarksPanel scriptId={scriptId} script={script} />
           </MarginPanel>
         </ResizableMarginStack>
