@@ -18,6 +18,7 @@ import SaveConflictBanner from './components/SaveConflictBanner.jsx'
 import { useGlobalKeydown } from './hooks/useGlobalKeydown.js'
 import { installGlobalDragSelectListeners } from './state/dragSelect.js'
 import { THEME_TOKENS } from './lib/themeTokens.js'
+import { activeVariant } from './lib/themeVariants.js'
 
 export default function App() {
   const loaded = useStore((s) => s.loaded)
@@ -25,6 +26,7 @@ export default function App() {
   const noteColor = useStore((s) => s.noteColor)
   const theme = useStore((s) => s.theme)
   const customThemes = useStore((s) => s.customThemes)
+  const themeVariants = useStore((s) => s.themeVariants)
   const editorPageContrast = useStore((s) => s.editorPageContrast)
   const scripts = useStore((s) => s.scripts)
   const currentScriptId = useStore((s) => s.currentScriptId)
@@ -77,6 +79,47 @@ export default function App() {
       else document.documentElement.style.removeProperty(key)
     })
   }, [theme, customThemes])
+
+  // Themes with background variations (see themeVariants.js) read the chosen
+  // image from these variables; every other theme clears them.
+  useEffect(() => {
+    const root = document.documentElement.style
+    const v = activeVariant(theme, themeVariants)
+    if (v) {
+      // Absolute, because a relative url() inside a custom property can
+      // resolve against the stylesheet's folder instead of the page's in
+      // the packaged build (where asset URLs are './assets/...').
+      // A variant is either an image (url) or pure CSS (css: gradients).
+      root.setProperty('--theme-wallpaper', v.css || 'url("' + new URL(v.url, document.baseURI).href + '")')
+      // Repeating tiles (Doodle Club) set their own size; photos cover.
+      if (v.tile) {
+        root.setProperty('--theme-wallpaper-size', v.tile + 'px ' + v.tile + 'px')
+        root.setProperty('--theme-wallpaper-repeat', 'repeat')
+      } else {
+        root.removeProperty('--theme-wallpaper-size')
+        root.removeProperty('--theme-wallpaper-repeat')
+      }
+      root.setProperty('--theme-wallpaper-pos', v.position || 'center')
+      root.setProperty('--theme-wallpaper-render', v.pixel ? 'pixelated' : 'auto')
+      // A theme's built-in tint (Aero's green/blue wash) belongs to its own
+      // default photo only; other variants opt out with overlay: false.
+      if (v.overlay === false) {
+        root.setProperty('--theme-wallpaper-overlay', 'none')
+        root.setProperty('--theme-overlay-display', 'none')
+      } else {
+        root.removeProperty('--theme-wallpaper-overlay')
+        root.removeProperty('--theme-overlay-display')
+      }
+    } else {
+      root.removeProperty('--theme-wallpaper-overlay')
+      root.removeProperty('--theme-overlay-display')
+      root.removeProperty('--theme-wallpaper-size')
+      root.removeProperty('--theme-wallpaper-repeat')
+      root.removeProperty('--theme-wallpaper')
+      root.removeProperty('--theme-wallpaper-pos')
+      root.removeProperty('--theme-wallpaper-render')
+    }
+  }, [theme, themeVariants])
 
   useEffect(() => {
     document.documentElement.setAttribute('data-editor-contrast', editorPageContrast ? 'on' : 'off')

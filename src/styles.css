@@ -247,7 +247,9 @@
    and needs no `background-attachment: fixed`; .main just goes
    transparent to let it show through. */
 [data-theme='dos'] .app-root {
-  background: url('./assets/dos-bg.jpg') center / cover no-repeat;
+  background: #008080 var(--theme-wallpaper, url('./assets/dos-bg.jpg')) no-repeat;
+  background-position: var(--theme-wallpaper-pos, center);
+  background-size: cover;
 }
 [data-theme='dos'] .main {
   background: transparent !important;
@@ -262,133 +264,133 @@
    if a future component adds a new rounded corner, it just won't be
    square under this theme until it's added here too, which is a fine
    failure mode (a stray rounded corner, not a performance regression). */
-[data-theme='dos'] .add-line-btn,
-[data-theme='dos'] .add-section-btn,
-[data-theme='dos'] .cat-add-btn,
-[data-theme='dos'] .cat-add-global,
-[data-theme='dos'] .cat-add-global-existing,
-[data-theme='dos'] .cat-add-row input[type='color'],
-[data-theme='dos'] .cat-add-row input[type='text'],
-[data-theme='dos'] .cat-label-input,
-[data-theme='dos'] .cat-row,
-[data-theme='dos'] .cat-spoken-btn,
-[data-theme='dos'] .cat-swatch,
-[data-theme='dos'] .cat-swatch-dot,
-[data-theme='dos'] .chapter-node-number,
-[data-theme='dos'] .check-item-btn,
-[data-theme='dos'] .checklist-add button,
-[data-theme='dos'] .checklist-add input,
-[data-theme='dos'] .checklist-item input[type='text'],
-[data-theme='dos'] .checklist-panel,
-[data-theme='dos'] .context-menu,
-[data-theme='dos'] .context-menu-item,
-[data-theme='dos'] .cp-compare-btn,
-[data-theme='dos'] .cp-draft button,
-[data-theme='dos'] .cp-draft input,
-[data-theme='dos'] .cp-item,
-[data-theme='dos'] .cp-newbtn,
-[data-theme='dos'] .date-field,
-[data-theme='dos'] .dict-word-list,
-[data-theme='dos'] .diff-add,
-[data-theme='dos'] .diff-del,
-[data-theme='dos'] .diff-modal,
-[data-theme='dos'] .done-indicator,
-[data-theme='dos'] .drop-indicator-after::after,
-[data-theme='dos'] .export-item,
-[data-theme='dos'] .export-menu,
-[data-theme='dos'] .filter-back,
-[data-theme='dos'] .icon-btn,
-[data-theme='dos'] .idea-node-bgcolor-input,
-[data-theme='dos'] .idea-node-bold,
-[data-theme='dos'] .idea-node-color-input,
-[data-theme='dos'] .idea-node-color-reset,
-[data-theme='dos'] .idea-node-delete,
-[data-theme='dos'] .idea-node-shape-inner,
-[data-theme='dos'] .idea-node-shape-inner.shape-pill,
-[data-theme='dos'] .idea-node-text,
-[data-theme='dos'] .jump-flash,
-[data-theme='dos'] .kbd-pill,
-[data-theme='dos'] .line,
-[data-theme='dos'] .line-btn,
-[data-theme='dos'] .line-search-menu,
-[data-theme='dos'] .line-text,
-[data-theme='dos'] .line-text img,
-[data-theme='dos'] .ls-row,
-[data-theme='dos'] .ls-search,
-[data-theme='dos'] .map-idea-menu,
-[data-theme='dos'] .map-idea-menu-item,
-[data-theme='dos'] .map-node,
-[data-theme='dos'] .map-node-btn,
-[data-theme='dos'] .map-node-connector,
-[data-theme='dos'] .map-node-dot,
-[data-theme='dos'] .map-node-extend,
-[data-theme='dos'] .map-node-order,
-[data-theme='dos'] .map-node-resize-corner,
-[data-theme='dos'] .map-node-summary,
-[data-theme='dos'] .map-preset-add-input,
-[data-theme='dos'] .map-preset-color-input,
-[data-theme='dos'] .map-preset-delete,
-[data-theme='dos'] .map-preset-label-input,
-[data-theme='dos'] .margin-panel-collapse,
-[data-theme='dos'] .new-script-btn,
-[data-theme='dos'] .note-box textarea,
-[data-theme='dos'] .note-color-input,
-[data-theme='dos'] .outline-item-text,
-[data-theme='dos'] .outline-search,
-[data-theme='dos'] .pin-dot,
-[data-theme='dos'] .pinned-card,
-[data-theme='dos'] .pinned-card-heading,
-[data-theme='dos'] .pinned-drop,
-[data-theme='dos'] .pinned-line-text,
-[data-theme='dos'] .progress-bar-fill,
-[data-theme='dos'] .progress-bar-wrap,
-[data-theme='dos'] .save-history-badge,
-[data-theme='dos'] .save-history-restore,
-[data-theme='dos'] .script-item,
-[data-theme='dos'] .search-wrap input,
-[data-theme='dos'] .sec-color-input,
-[data-theme='dos'] .sec-icon-btn,
-[data-theme='dos'] .sec-list-dot,
-[data-theme='dos'] .sec-list-move,
-[data-theme='dos'] .sec-list-row,
-[data-theme='dos'] .section-block.drag-over,
-[data-theme='dos'] .section-block.selected,
-[data-theme='dos'] .section-chip,
-[data-theme='dos'] .section-chip-dot,
-[data-theme='dos'] .section-jump-menu,
-[data-theme='dos'] .section-map-order,
-[data-theme='dos'] .shape-picker-btn,
-[data-theme='dos'] .shape-picker-menu,
-[data-theme='dos'] .shape-picker-option,
-[data-theme='dos'] .sj-dot,
-[data-theme='dos'] .sj-row,
-[data-theme='dos'] .sj-search,
-[data-theme='dos'] .synonym-menu,
-[data-theme='dos'] .synonym-menu-chip,
-[data-theme='dos'] .tab-chip,
-[data-theme='dos'] .tab-close,
-[data-theme='dos'] .tag-menu,
-[data-theme='dos'] .tag-menu-dot,
-[data-theme='dos'] .tag-menu-item,
-[data-theme='dos'] .tag-pill,
-[data-theme='dos'] .theme-editor,
-[data-theme='dos'] .theme-editor-name,
-[data-theme='dos'] .theme-editor-row input[type='color'],
-[data-theme='dos'] .theme-row,
-[data-theme='dos'] .theme-swatches,
-[data-theme='dos'] .timestamp-note,
-[data-theme='dos'] .timestamp-time,
-[data-theme='dos'] .title-input,
-[data-theme='dos'] .tp-btn,
-[data-theme='dos'] .tp-font-select,
-[data-theme='dos'] .tp-line,
-[data-theme='dos'] .update-banner,
-[data-theme='dos'] .update-banner-btn,
-[data-theme='dos'] .update-banner.conflict code,
-[data-theme='dos'] .version-badge,
-[data-theme='dos'] ::-webkit-scrollbar-thumb,
-[data-theme='dos'] [data-editor-contrast='on'] .editor-wrap,
-[data-theme='dos'] [data-editor-contrast='on'] .outline-list {
+:is([data-theme='dos'], [data-theme='minecraft']) .add-line-btn,
+:is([data-theme='dos'], [data-theme='minecraft']) .add-section-btn,
+:is([data-theme='dos'], [data-theme='minecraft']) .cat-add-btn,
+:is([data-theme='dos'], [data-theme='minecraft']) .cat-add-global,
+:is([data-theme='dos'], [data-theme='minecraft']) .cat-add-global-existing,
+:is([data-theme='dos'], [data-theme='minecraft']) .cat-add-row input[type='color'],
+:is([data-theme='dos'], [data-theme='minecraft']) .cat-add-row input[type='text'],
+:is([data-theme='dos'], [data-theme='minecraft']) .cat-label-input,
+:is([data-theme='dos'], [data-theme='minecraft']) .cat-row,
+:is([data-theme='dos'], [data-theme='minecraft']) .cat-spoken-btn,
+:is([data-theme='dos'], [data-theme='minecraft']) .cat-swatch,
+:is([data-theme='dos'], [data-theme='minecraft']) .cat-swatch-dot,
+:is([data-theme='dos'], [data-theme='minecraft']) .chapter-node-number,
+:is([data-theme='dos'], [data-theme='minecraft']) .check-item-btn,
+:is([data-theme='dos'], [data-theme='minecraft']) .checklist-add button,
+:is([data-theme='dos'], [data-theme='minecraft']) .checklist-add input,
+:is([data-theme='dos'], [data-theme='minecraft']) .checklist-item input[type='text'],
+:is([data-theme='dos'], [data-theme='minecraft']) .checklist-panel,
+:is([data-theme='dos'], [data-theme='minecraft']) .context-menu,
+:is([data-theme='dos'], [data-theme='minecraft']) .context-menu-item,
+:is([data-theme='dos'], [data-theme='minecraft']) .cp-compare-btn,
+:is([data-theme='dos'], [data-theme='minecraft']) .cp-draft button,
+:is([data-theme='dos'], [data-theme='minecraft']) .cp-draft input,
+:is([data-theme='dos'], [data-theme='minecraft']) .cp-item,
+:is([data-theme='dos'], [data-theme='minecraft']) .cp-newbtn,
+:is([data-theme='dos'], [data-theme='minecraft']) .date-field,
+:is([data-theme='dos'], [data-theme='minecraft']) .dict-word-list,
+:is([data-theme='dos'], [data-theme='minecraft']) .diff-add,
+:is([data-theme='dos'], [data-theme='minecraft']) .diff-del,
+:is([data-theme='dos'], [data-theme='minecraft']) .diff-modal,
+:is([data-theme='dos'], [data-theme='minecraft']) .done-indicator,
+:is([data-theme='dos'], [data-theme='minecraft']) .drop-indicator-after::after,
+:is([data-theme='dos'], [data-theme='minecraft']) .export-item,
+:is([data-theme='dos'], [data-theme='minecraft']) .export-menu,
+:is([data-theme='dos'], [data-theme='minecraft']) .filter-back,
+:is([data-theme='dos'], [data-theme='minecraft']) .icon-btn,
+:is([data-theme='dos'], [data-theme='minecraft']) .idea-node-bgcolor-input,
+:is([data-theme='dos'], [data-theme='minecraft']) .idea-node-bold,
+:is([data-theme='dos'], [data-theme='minecraft']) .idea-node-color-input,
+:is([data-theme='dos'], [data-theme='minecraft']) .idea-node-color-reset,
+:is([data-theme='dos'], [data-theme='minecraft']) .idea-node-delete,
+:is([data-theme='dos'], [data-theme='minecraft']) .idea-node-shape-inner,
+:is([data-theme='dos'], [data-theme='minecraft']) .idea-node-shape-inner.shape-pill,
+:is([data-theme='dos'], [data-theme='minecraft']) .idea-node-text,
+:is([data-theme='dos'], [data-theme='minecraft']) .jump-flash,
+:is([data-theme='dos'], [data-theme='minecraft']) .kbd-pill,
+:is([data-theme='dos'], [data-theme='minecraft']) .line,
+:is([data-theme='dos'], [data-theme='minecraft']) .line-btn,
+:is([data-theme='dos'], [data-theme='minecraft']) .line-search-menu,
+:is([data-theme='dos'], [data-theme='minecraft']) .line-text,
+:is([data-theme='dos'], [data-theme='minecraft']) .line-text img,
+:is([data-theme='dos'], [data-theme='minecraft']) .ls-row,
+:is([data-theme='dos'], [data-theme='minecraft']) .ls-search,
+:is([data-theme='dos'], [data-theme='minecraft']) .map-idea-menu,
+:is([data-theme='dos'], [data-theme='minecraft']) .map-idea-menu-item,
+:is([data-theme='dos'], [data-theme='minecraft']) .map-node,
+:is([data-theme='dos'], [data-theme='minecraft']) .map-node-btn,
+:is([data-theme='dos'], [data-theme='minecraft']) .map-node-connector,
+:is([data-theme='dos'], [data-theme='minecraft']) .map-node-dot,
+:is([data-theme='dos'], [data-theme='minecraft']) .map-node-extend,
+:is([data-theme='dos'], [data-theme='minecraft']) .map-node-order,
+:is([data-theme='dos'], [data-theme='minecraft']) .map-node-resize-corner,
+:is([data-theme='dos'], [data-theme='minecraft']) .map-node-summary,
+:is([data-theme='dos'], [data-theme='minecraft']) .map-preset-add-input,
+:is([data-theme='dos'], [data-theme='minecraft']) .map-preset-color-input,
+:is([data-theme='dos'], [data-theme='minecraft']) .map-preset-delete,
+:is([data-theme='dos'], [data-theme='minecraft']) .map-preset-label-input,
+:is([data-theme='dos'], [data-theme='minecraft']) .margin-panel-collapse,
+:is([data-theme='dos'], [data-theme='minecraft']) .new-script-btn,
+:is([data-theme='dos'], [data-theme='minecraft']) .note-box textarea,
+:is([data-theme='dos'], [data-theme='minecraft']) .note-color-input,
+:is([data-theme='dos'], [data-theme='minecraft']) .outline-item-text,
+:is([data-theme='dos'], [data-theme='minecraft']) .outline-search,
+:is([data-theme='dos'], [data-theme='minecraft']) .pin-dot,
+:is([data-theme='dos'], [data-theme='minecraft']) .pinned-card,
+:is([data-theme='dos'], [data-theme='minecraft']) .pinned-card-heading,
+:is([data-theme='dos'], [data-theme='minecraft']) .pinned-drop,
+:is([data-theme='dos'], [data-theme='minecraft']) .pinned-line-text,
+:is([data-theme='dos'], [data-theme='minecraft']) .progress-bar-fill,
+:is([data-theme='dos'], [data-theme='minecraft']) .progress-bar-wrap,
+:is([data-theme='dos'], [data-theme='minecraft']) .save-history-badge,
+:is([data-theme='dos'], [data-theme='minecraft']) .save-history-restore,
+:is([data-theme='dos'], [data-theme='minecraft']) .script-item,
+:is([data-theme='dos'], [data-theme='minecraft']) .search-wrap input,
+:is([data-theme='dos'], [data-theme='minecraft']) .sec-color-input,
+:is([data-theme='dos'], [data-theme='minecraft']) .sec-icon-btn,
+:is([data-theme='dos'], [data-theme='minecraft']) .sec-list-dot,
+:is([data-theme='dos'], [data-theme='minecraft']) .sec-list-move,
+:is([data-theme='dos'], [data-theme='minecraft']) .sec-list-row,
+:is([data-theme='dos'], [data-theme='minecraft']) .section-block.drag-over,
+:is([data-theme='dos'], [data-theme='minecraft']) .section-block.selected,
+:is([data-theme='dos'], [data-theme='minecraft']) .section-chip,
+:is([data-theme='dos'], [data-theme='minecraft']) .section-chip-dot,
+:is([data-theme='dos'], [data-theme='minecraft']) .section-jump-menu,
+:is([data-theme='dos'], [data-theme='minecraft']) .section-map-order,
+:is([data-theme='dos'], [data-theme='minecraft']) .shape-picker-btn,
+:is([data-theme='dos'], [data-theme='minecraft']) .shape-picker-menu,
+:is([data-theme='dos'], [data-theme='minecraft']) .shape-picker-option,
+:is([data-theme='dos'], [data-theme='minecraft']) .sj-dot,
+:is([data-theme='dos'], [data-theme='minecraft']) .sj-row,
+:is([data-theme='dos'], [data-theme='minecraft']) .sj-search,
+:is([data-theme='dos'], [data-theme='minecraft']) .synonym-menu,
+:is([data-theme='dos'], [data-theme='minecraft']) .synonym-menu-chip,
+:is([data-theme='dos'], [data-theme='minecraft']) .tab-chip,
+:is([data-theme='dos'], [data-theme='minecraft']) .tab-close,
+:is([data-theme='dos'], [data-theme='minecraft']) .tag-menu,
+:is([data-theme='dos'], [data-theme='minecraft']) .tag-menu-dot,
+:is([data-theme='dos'], [data-theme='minecraft']) .tag-menu-item,
+:is([data-theme='dos'], [data-theme='minecraft']) .tag-pill,
+:is([data-theme='dos'], [data-theme='minecraft']) .theme-editor,
+:is([data-theme='dos'], [data-theme='minecraft']) .theme-editor-name,
+:is([data-theme='dos'], [data-theme='minecraft']) .theme-editor-row input[type='color'],
+:is([data-theme='dos'], [data-theme='minecraft']) .theme-row,
+:is([data-theme='dos'], [data-theme='minecraft']) .theme-swatches,
+:is([data-theme='dos'], [data-theme='minecraft']) .timestamp-note,
+:is([data-theme='dos'], [data-theme='minecraft']) .timestamp-time,
+:is([data-theme='dos'], [data-theme='minecraft']) .title-input,
+:is([data-theme='dos'], [data-theme='minecraft']) .tp-btn,
+:is([data-theme='dos'], [data-theme='minecraft']) .tp-font-select,
+:is([data-theme='dos'], [data-theme='minecraft']) .tp-line,
+:is([data-theme='dos'], [data-theme='minecraft']) .update-banner,
+:is([data-theme='dos'], [data-theme='minecraft']) .update-banner-btn,
+:is([data-theme='dos'], [data-theme='minecraft']) .update-banner.conflict code,
+:is([data-theme='dos'], [data-theme='minecraft']) .version-badge,
+:is([data-theme='dos'], [data-theme='minecraft']) ::-webkit-scrollbar-thumb,
+:is([data-theme='dos'], [data-theme='minecraft']) [data-editor-contrast='on'] .editor-wrap,
+:is([data-theme='dos'], [data-theme='minecraft']) [data-editor-contrast='on'] .outline-list {
   border-radius: 0 !important;
 }
 /* The flourish a palette swap alone can't give it: genuine 3D bevels.
@@ -610,10 +612,17 @@
    literal. On .app-root with a transparent .main for the same reason as
    the DOS wallpaper above (painted once, not on every view switch). */
 [data-theme='aero'] .app-root {
-  background:
-    linear-gradient(to top, rgba(88, 190, 70, 0.6) 0%, rgba(120, 205, 90, 0.3) 14%, rgba(140, 215, 110, 0) 34%),
-    linear-gradient(180deg, rgba(6, 42, 69, 0.45) 0%, rgba(10, 77, 120, 0.2) 40%, rgba(255, 255, 255, 0) 100%),
-    url('./assets/aero-sky.jpg') center / cover no-repeat;
+  background-color: #6fb3e3;
+  background-image:
+    var(
+      --theme-wallpaper-overlay,
+      linear-gradient(to top, rgba(88, 190, 70, 0.6) 0%, rgba(120, 205, 90, 0.3) 14%, rgba(140, 215, 110, 0) 34%),
+      linear-gradient(180deg, rgba(6, 42, 69, 0.45) 0%, rgba(10, 77, 120, 0.2) 40%, rgba(255, 255, 255, 0) 100%)
+    ),
+    var(--theme-wallpaper, url('./assets/aero-sky.jpg'));
+  background-position: center, center, var(--theme-wallpaper-pos, center);
+  background-size: cover;
+  background-repeat: no-repeat;
 }
 [data-theme='aero'] .main {
   background: transparent !important;
@@ -724,9 +733,9 @@
   z-index: -2;
   pointer-events: none;
   background:
-    linear-gradient(to top, #1f0a45 0%, rgba(58, 20, 110, 0.9) 16%, rgba(120, 50, 160, 0.45) 30%, rgba(160, 90, 190, 0) 42%),
-    url('./assets/vapor-clouds.png') center / cover no-repeat;
-  image-rendering: pixelated;
+    var(--theme-wallpaper-overlay, linear-gradient(to top, #1f0a45 0%, rgba(58, 20, 110, 0.9) 16%, rgba(120, 50, 160, 0.45) 30%, rgba(160, 90, 190, 0) 42%)),
+    var(--theme-wallpaper, url('./assets/vapor-clouds.png')) var(--theme-wallpaper-pos, center) / cover no-repeat;
+  image-rendering: var(--theme-wallpaper-render, pixelated);
 }
 /* The neon perspective grid rising to the horizon: two repeating line
    gradients tilted back with a 3D rotation, faded out toward the top so
@@ -737,6 +746,7 @@
    45° with p=800 lands around 350px, roughly the bottom quarter. */
 [data-theme='vaporwave'] .app-root::before {
   content: '';
+  display: var(--theme-overlay-display, block);
   position: absolute;
   left: -50%;
   right: -50%;
@@ -880,7 +890,9 @@
    down, which rendered as a hard horizontal seam; extended to full height.
    On .app-root with a transparent .main, same as the other photo themes. */
 [data-theme='aeroDark'] .app-root {
-  background: #0a1120 url('./assets/aero-night.jpg') center / cover no-repeat;
+  background: #0a1120 var(--theme-wallpaper, url('./assets/aero-night.jpg')) no-repeat;
+  background-position: var(--theme-wallpaper-pos, center);
+  background-size: cover;
 }
 [data-theme='aeroDark'] .main {
   background: transparent !important;
@@ -1010,9 +1022,15 @@
 /* The player's case behind everything: a darker brushed metal, so the
    panels and the page read as separate parts mounted on it. */
 [data-theme='y2kChrome'] .app-root {
-  background:
+  background-color: #b3b9c0;
+  background-image: var(
+    --theme-wallpaper,
     repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.12) 0 1px, rgba(0, 0, 0, 0.04) 1px 2px),
-    linear-gradient(180deg, #c9ced4 0%, #b3b9c0 100%);
+    linear-gradient(180deg, #c9ced4 0%, #b3b9c0 100%)
+  );
+  background-size: var(--theme-wallpaper-size, cover);
+  background-position: var(--theme-wallpaper-pos, center);
+  background-repeat: var(--theme-wallpaper-repeat, no-repeat);
 }
 [data-theme='y2kChrome'] .main {
   background: transparent !important;
@@ -1284,6 +1302,1195 @@ body {
 .titlebar-close:active {
   background: var(--caption-close-bg-active);
 }
+/* ===================================================================
+   Minecraft and Terraria themes, built from the games' own textures:
+   a HUD-free Minecraft screenshot (mc-meadow.jpg), Minecraft dirt and
+   button sprites from PrismarineJS/minecraft-assets, and Terraria's own
+   Forest background layer with a ground strip of real tiles from
+   GreatGameDota/Terraria-Tile-Images, plus the user's own picks — all in
+   src/assets/bg, chosen per theme in the Theme tab (src/lib/themeVariants.js).
+   Fonts are the user's installed game fonts (Minecraft, Minecrafter,
+   Andy); the bundled OFL fonts below are only the fallback on machines
+   without them.
+   =================================================================== */
+@font-face {
+  font-family: 'Pixelify Sans';
+  src: url('./assets/fonts/pixelify-sans-latin-400-normal.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Pixelify Sans';
+  src: url('./assets/fonts/pixelify-sans-latin-700-normal.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Fredoka';
+  src: url('./assets/fonts/fredoka-latin-wght-normal.woff2') format('woff2');
+  font-weight: 300 700;
+  font-display: swap;
+}
+
+/* ---------- Minecraft ----------
+   The inventory/options-screen look: light-gray panels with the black
+   outline + white/dark-gray bevel, gray buttons that turn blue on hover
+   (yellow text, like the classic menu) and green when toggled on, a
+   dimmed dirt wallpaper behind everything, a parchment page for the
+   script, redstone wires on the map. Kept light-on-dark-ink so the page
+   and chrome share one set of tokens (the same approach as MS-DOS). */
+:root[data-theme='minecraft'] {
+  --bg: #2a2018;
+  --panel: #c6c6c6;
+  --panel-2: #b3b3b3;
+  --panel-3: #8b8b8b;
+  --ink: #1e1e1e;
+  --ink-dim: #363636;
+  --ink-faint: #4a4a4a;
+  --line: #373737;
+  --line-soft: #8b8b8b;
+  --cyan: #1d5a12;
+  --amber: #7a5200;
+  --pink: #8a1f55;
+  --danger: #b01818;
+  --green: #14561f;
+  --editor-page: #f2e9d2;
+  --sans: 'Minecraft', 'Pixelify Sans', 'Segoe UI', system-ui, sans-serif;
+  --mono: 'Minecraft', 'Pixelify Sans', 'JetBrains Mono', monospace;
+  --mc-heading: 'Minecrafter', 'Minecraft', 'Pixelify Sans', sans-serif;
+}
+/* Ligatures off: the fallback Pixelify Sans's "fl" ligature draws
+   "Confluence" as "ConAuence". */
+[data-theme='minecraft'] body {
+  font-weight: 400;
+  font-feature-settings: 'liga' 0, 'calt' 0;
+  font-variant-ligatures: none;
+  letter-spacing: 0;
+}
+/* Dirt wallpaper on its own pixelated layer (image-rendering is inherited,
+   so it can't go on .app-root itself without pixelating pasted images). */
+[data-theme='minecraft'] .app-root {
+  position: relative;
+  isolation: isolate;
+  background: #2a2018;
+}
+/* Above-ground: a HUD-free in-game screenshot (a meadow with a lone birch
+   under blocky clouds, from the Minecraft wiki's Meadow article). A real
+   render, so it scales smoothly rather than pixelated. */
+[data-theme='minecraft'] .app-root::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: #8fb4f6 var(--theme-wallpaper, url('./assets/bg/mc-meadow.webp')) no-repeat;
+  background-position: var(--theme-wallpaper-pos, center);
+  background-size: cover;
+  image-rendering: var(--theme-wallpaper-render, auto);
+}
+/* Headings in Minecrafter, the blocky title-screen face. */
+[data-theme='minecraft'] .section-heading-input,
+[data-theme='minecraft'] .title-input,
+[data-theme='minecraft'] .map-node-heading,
+[data-theme='minecraft'] .map-node-heading-input,
+[data-theme='minecraft'] .chapter-node-label,
+[data-theme='minecraft'] .idea-node-title,
+[data-theme='minecraft'] .pinned-card-heading {
+  font-family: var(--mc-heading) !important;
+  font-weight: 400 !important;
+  letter-spacing: 0.04em;
+}
+[data-theme='minecraft'] .main {
+  background: transparent !important;
+}
+[data-theme='minecraft'] .editor-wrap,
+[data-theme='minecraft'] .outline-list {
+  background: var(--editor-page) !important;
+  border: 2px solid #1a1208 !important;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.45) !important;
+}
+/* Inventory panels: black outline, white top-left / dark bottom-right bevel. */
+[data-theme='minecraft'] .sidebar,
+[data-theme='minecraft'] .inspector,
+[data-theme='minecraft'] .margin-stack,
+[data-theme='minecraft'] .diff-modal,
+[data-theme='minecraft'] .export-menu,
+[data-theme='minecraft'] .section-jump-menu,
+[data-theme='minecraft'] .context-menu,
+[data-theme='minecraft'] .tag-menu,
+[data-theme='minecraft'] .line-search-menu,
+[data-theme='minecraft'] .synonym-menu,
+[data-theme='minecraft'] .map-idea-menu,
+[data-theme='minecraft'] .shape-picker-menu {
+  background: var(--panel) !important;
+  border: 2px solid #000 !important;
+  box-shadow: inset 2px 2px 0 #fff, inset -2px -2px 0 #555 !important;
+}
+[data-theme='minecraft'] .export-menu,
+[data-theme='minecraft'] .section-jump-menu,
+[data-theme='minecraft'] .context-menu,
+[data-theme='minecraft'] .tag-menu,
+[data-theme='minecraft'] .line-search-menu,
+[data-theme='minecraft'] .synonym-menu,
+[data-theme='minecraft'] .map-idea-menu,
+[data-theme='minecraft'] .shape-picker-menu {
+  box-shadow: inset 2px 2px 0 #fff, inset -2px -2px 0 #555, 4px 4px 0 rgba(0, 0, 0, 0.45) !important;
+}
+[data-theme='minecraft'] .tabbar {
+  background: #8b8b8b !important;
+  border-bottom: 2px solid #000 !important;
+}
+/* Dimmed dirt header (the real dirt texture), like the options screen. */
+[data-theme='minecraft'] .topbar {
+  background: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('./assets/mc-dirt.png') 0 0 / 64px 64px;
+  image-rendering: pixelated;
+  border-bottom: 2px solid #000;
+}
+[data-theme='minecraft'] .title-input,
+[data-theme='minecraft'] .topbar .saved-flash,
+[data-theme='minecraft'] .topbar .save-status,
+[data-theme='minecraft'] .topbar .tb-stat,
+[data-theme='minecraft'] .topbar .tb-zoom-value,
+[data-theme='minecraft'] .topbar .date-field {
+  color: #ffffff !important;
+  text-shadow: 1px 1px 0 #000;
+}
+[data-theme='minecraft'] .topbar .date-field {
+  border-color: rgba(255, 255, 255, 0.55) !important;
+}
+/* Buttons are the game's own button sprite (a 200x20 nine-slice with a
+   3px border), drawn at 2x; hover is the white-framed highlighted sprite
+   with the classic yellow text; "on" is the same sprite tinted green
+   (the game has no toggled state). */
+[data-theme='minecraft'] .icon-btn,
+[data-theme='minecraft'] .tab-chip,
+[data-theme='minecraft'] .new-script-btn {
+  background: none !important;
+  color: #ffffff !important;
+  border: 6px solid transparent !important;
+  border-image: url('./assets/mc-button.png') 3 fill / 6px stretch !important;
+  box-shadow: none !important;
+  image-rendering: pixelated;
+  text-shadow: 2px 2px 0 #3f3f3f;
+}
+[data-theme='minecraft'] .icon-btn:hover,
+[data-theme='minecraft'] .tab-chip:hover,
+[data-theme='minecraft'] .new-script-btn:hover {
+  border-image-source: url('./assets/mc-button-hover.png') !important;
+  color: #ffffa0 !important;
+}
+[data-theme='minecraft'] .icon-btn.active,
+[data-theme='minecraft'] .tab-chip.active {
+  border-image-source: url('./assets/mc-button-on.png') !important;
+  color: #ffffff !important;
+}
+[data-theme='minecraft'] .tab-chip .tab-close {
+  color: #ffffff;
+}
+[data-theme='minecraft'] .timeline-segment.done .timeline-segment-label {
+  color: #0f3d08;
+}
+/* Amber "+" buttons carry dark ink by default — too dim on this brown. */
+[data-theme='minecraft'] .checklist-add button,
+[data-theme='minecraft'] .timestamp-add button,
+[data-theme='minecraft'] .cp-draft button {
+  color: #ffffff !important;
+  border: 2px solid #000 !important;
+}
+[data-theme='minecraft'] .icon-btn:disabled,
+[data-theme='minecraft'] .icon-btn:disabled:hover {
+  border-image-source: url('./assets/mc-button-disabled.png') !important;
+  color: #a0a0a0 !important;
+  text-shadow: none;
+}
+/* Text fields: black with a light-gray frame, like the chat/search box. */
+[data-theme='minecraft'] .search-wrap input,
+[data-theme='minecraft'] .sj-search,
+[data-theme='minecraft'] .ls-search,
+[data-theme='minecraft'] .outline-search {
+  background: #000 !important;
+  color: #ffffff !important;
+  border: 2px solid #a0a0a0 !important;
+}
+[data-theme='minecraft'] .search-wrap input::placeholder,
+[data-theme='minecraft'] .sj-search::placeholder,
+[data-theme='minecraft'] .ls-search::placeholder,
+[data-theme='minecraft'] .outline-search::placeholder {
+  color: #8a8a8a;
+}
+[data-theme='minecraft'] .search-wrap svg {
+  color: #b0b0b0;
+}
+/* Selected library row: dark slot with the white outline of the world list. */
+[data-theme='minecraft'] .script-item.active,
+[data-theme='minecraft'] .theme-row.active {
+  background: #3b3b3b !important;
+  border: 2px solid #ffffff !important;
+}
+[data-theme='minecraft'] .script-item.active .st,
+[data-theme='minecraft'] .script-item.active .sm,
+[data-theme='minecraft'] .theme-row.active .theme-row-label {
+  color: #ffffff !important;
+}
+[data-theme='minecraft'] .script-item.active .sb-due {
+  color: #ff8a80 !important;
+}
+/* Map: dark stone, gray inventory-panel nodes, redstone wires. */
+[data-theme='minecraft'] .map-canvas {
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px) 0 0 / 22px 22px, #262626 !important;
+}
+[data-theme='minecraft'] .map-node {
+  background: #c6c6c6 !important;
+  border: 2px solid #000 !important;
+  box-shadow: inset 2px 2px 0 #fff, inset -2px -2px 0 #555, 3px 3px 0 rgba(0, 0, 0, 0.5) !important;
+}
+[data-theme='minecraft'] .map-node.is-selected {
+  box-shadow: inset 2px 2px 0 #fff, inset -2px -2px 0 #555, 0 0 0 3px #ffffff, 3px 3px 0 3px rgba(0, 0, 0, 0.5) !important;
+}
+[data-theme='minecraft'] .map-node-connector {
+  background: #b01818 !important;
+  border: 2px solid #000 !important;
+}
+[data-theme='minecraft'] .map-edges-svg {
+  --ink-faint: #c42a1e;
+  --cyan: #ff5a46;
+}
+[data-theme='minecraft'] .map-edge {
+  stroke: #c42a1e;
+}
+[data-theme='minecraft'] .map-edge.is-lit {
+  stroke: #ff5a46;
+}
+[data-theme='minecraft'] ::-webkit-scrollbar-thumb {
+  background: #707070;
+  border: 2px solid #000;
+}
+/* The title bar: dirt, white pixel text, gray bevelled caption keys. */
+[data-theme='minecraft'] .titlebar {
+  background: linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55)), url('./assets/mc-dirt.png') 0 0 / 48px 48px;
+  image-rendering: pixelated;
+}
+[data-theme='minecraft'] .titlebar-icon {
+  image-rendering: auto;
+}
+:root[data-theme='minecraft'] {
+  --titlebar-border: #000000;
+  --titlebar-text: #ffffff;
+  --titlebar-text-shadow: 1px 1px 0 #000000;
+  --titlebar-weight: 400;
+  --caption-top: 6px;
+  --caption-width: 20px;
+  --caption-close-width: 20px;
+  --caption-height: 18px;
+  --caption-gap: 3px;
+  --caption-inset: 6px;
+  --caption-border: #000000;
+  --caption-bg: #707070;
+  --caption-bg-hover: #5f6bb8;
+  --caption-bg-active: #3a7a22;
+  --caption-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.45), inset -1px -1px 0 rgba(0, 0, 0, 0.5);
+  --caption-icon: #ffffff;
+  --caption-stroke: 2;
+  --caption-close-border: #000000;
+  --caption-close-bg: #9b2c2c;
+  --caption-close-bg-hover: #c43030;
+  --caption-close-bg-active: #7a1f1f;
+  /* The classic Minecraft tooltip: near-black with a purple frame. */
+  --tip-bg: #100010;
+  --tip-ink: #ffffff;
+  --tip-border: #3a0f8f;
+  --tip-radius: 0;
+  --tip-shadow: none;
+  --tip-key-bg: #2b2b2b;
+  --tip-key-ink: #a8a8a8;
+  --tip-key-border: #5a5a5a;
+}
+:root[data-theme='minecraft'] .teleprompter-body {
+  --cyan: #55ff55;
+}
+
+/* ---------- Terraria ----------
+   Blue inventory panels with a dark outline and a gold "selected" frame,
+   white text in Andy with the game's black outline on every label, the
+   game's pine-forest background over real grass/dirt/stone tiles behind
+   it all, red wires on the map. */
+:root[data-theme='terraria'] {
+  --bg: #20245e;
+  --panel: #353a85;
+  --panel-2: #3f4597;
+  --panel-3: #4c53ad;
+  --ink: #ffffff;
+  --ink-dim: #dfe2ff;
+  --ink-faint: #b3b9f0;
+  --line: #12154a;
+  --line-soft: #2a2f74;
+  --cyan: #ffd84a;
+  --amber: #ffb03a;
+  --pink: #ff6b86;
+  --danger: #ff5c5c;
+  --green: #67e07a;
+  --editor-page: #242869;
+  --sans: 'Andy', 'Fredoka', 'Trebuchet MS', system-ui, sans-serif;
+  --mono: 'Andy', 'Fredoka', 'Trebuchet MS', system-ui, sans-serif;
+  --tp-outline: -1px -1px 0 #0a0b30, 1px -1px 0 #0a0b30, -1px 1px 0 #0a0b30, 1px 1px 0 #0a0b30, 0 2px 0 #0a0b30;
+}
+[data-theme='terraria'] body {
+  font-weight: 500;
+  letter-spacing: 0;
+}
+[data-theme='terraria'] .app-root {
+  position: relative;
+  isolation: isolate;
+  background: #4a90df;
+}
+[data-theme='terraria'] .app-root::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: #9ecdf6 var(--theme-wallpaper, url('./assets/bg/tr-pine-forest.webp')) no-repeat;
+  background-position: var(--theme-wallpaper-pos, center bottom);
+  background-size: cover;
+  image-rendering: var(--theme-wallpaper-render, auto);
+}
+[data-theme='terraria'] .main {
+  background: transparent !important;
+}
+[data-theme='terraria'] .editor-wrap,
+[data-theme='terraria'] .outline-list {
+  background: var(--editor-page) !important;
+  border: 2px solid #0e1040 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 0 0 2px #5a60c8, 0 8px 24px rgba(0, 0, 0, 0.45) !important;
+}
+[data-theme='terraria'] .sidebar,
+[data-theme='terraria'] .inspector,
+[data-theme='terraria'] .margin-stack,
+[data-theme='terraria'] .tabbar {
+  background: var(--panel) !important;
+  border-color: #12154a !important;
+  box-shadow: inset 0 0 0 1px #5d63c9 !important;
+}
+[data-theme='terraria'] .diff-modal,
+[data-theme='terraria'] .export-menu,
+[data-theme='terraria'] .section-jump-menu,
+[data-theme='terraria'] .context-menu,
+[data-theme='terraria'] .tag-menu,
+[data-theme='terraria'] .line-search-menu,
+[data-theme='terraria'] .synonym-menu,
+[data-theme='terraria'] .map-idea-menu,
+[data-theme='terraria'] .shape-picker-menu {
+  background: var(--panel) !important;
+  border: 2px solid #12154a !important;
+  border-radius: 8px !important;
+  box-shadow: inset 0 0 0 1px #5d63c9, 0 8px 20px rgba(0, 0, 0, 0.5) !important;
+}
+[data-theme='terraria'] .topbar {
+  background: linear-gradient(180deg, #4f56bd, #353a85) !important;
+  border-bottom: 2px solid #12154a !important;
+}
+[data-theme='terraria'] .topbar .saved-flash,
+[data-theme='terraria'] .topbar .save-status,
+[data-theme='terraria'] .topbar .tb-stat,
+[data-theme='terraria'] .topbar .tb-zoom-value {
+  color: #e8eaff !important;
+}
+/* Inventory-slot buttons; hover brightens, on = gold frame. */
+[data-theme='terraria'] .icon-btn,
+[data-theme='terraria'] .tab-chip,
+[data-theme='terraria'] .new-script-btn {
+  background: #3f4197 !important;
+  color: #ffffff !important;
+  border: 2px solid #12154a !important;
+  border-radius: 6px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28) !important;
+}
+[data-theme='terraria'] .icon-btn:hover,
+[data-theme='terraria'] .tab-chip:hover,
+[data-theme='terraria'] .new-script-btn:hover {
+  background: #5359c4 !important;
+  border-color: #ffffff !important;
+}
+[data-theme='terraria'] .icon-btn.active,
+[data-theme='terraria'] .tab-chip.active {
+  background: #5f66d8 !important;
+  border-color: #ffd84a !important;
+  box-shadow: 0 0 0 1px #ffd84a, inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+}
+[data-theme='terraria'] .icon-btn:disabled,
+[data-theme='terraria'] .icon-btn:disabled:hover {
+  background: #2c3069 !important;
+  border-color: #12154a !important;
+  color: #8a90d0 !important;
+}
+/* The game's black text outline, on labels only (not on script text). */
+[data-theme='terraria'] .icon-btn,
+[data-theme='terraria'] .tab-chip,
+[data-theme='terraria'] .new-script-btn,
+[data-theme='terraria'] .script-item .st,
+[data-theme='terraria'] .sb-section-label,
+[data-theme='terraria'] .insp-tab,
+[data-theme='terraria'] .insp-section-title,
+[data-theme='terraria'] .margin-panel-title,
+[data-theme='terraria'] .theme-row-label,
+[data-theme='terraria'] .topbar .tb-stat,
+[data-theme='terraria'] .topbar .save-status,
+[data-theme='terraria'] .titlebar-title {
+  text-shadow: var(--tp-outline);
+}
+[data-theme='terraria'] .script-item.active,
+[data-theme='terraria'] .theme-row.active {
+  background: #5359c4 !important;
+  border-color: #ffd84a !important;
+  box-shadow: 0 0 0 1px #ffd84a !important;
+}
+[data-theme='terraria'] .map-canvas {
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.09) 1px, transparent 1px) 0 0 / 22px 22px, #14173f !important;
+}
+[data-theme='terraria'] .map-node {
+  background: #353a85 !important;
+  border: 2px solid #12154a !important;
+  border-radius: 8px !important;
+  box-shadow: inset 0 0 0 1px #5d63c9, 0 4px 10px rgba(0, 0, 0, 0.45) !important;
+}
+[data-theme='terraria'] .map-node.is-selected {
+  box-shadow: 0 0 0 2px #ffd84a, inset 0 0 0 1px #5d63c9, 0 4px 10px rgba(0, 0, 0, 0.45) !important;
+}
+[data-theme='terraria'] .map-node-connector {
+  background: #ffd84a !important;
+  border: 2px solid #12154a !important;
+}
+[data-theme='terraria'] .map-edges-svg {
+  --ink-faint: #ff6d5e;
+  --cyan: #ffd84a;
+}
+[data-theme='terraria'] .map-edge {
+  stroke: #ff6d5e;
+}
+[data-theme='terraria'] .map-edge.is-lit {
+  stroke: #ffd84a;
+}
+[data-theme='terraria'] ::-webkit-scrollbar-thumb {
+  background: #5d63c9;
+  border-radius: 6px;
+}
+:root[data-theme='terraria'] {
+  --titlebar-bg: linear-gradient(180deg, #5057c2, #353a85);
+  --titlebar-border: #12154a;
+  --titlebar-text: #ffffff;
+  --titlebar-text-shadow: var(--tp-outline);
+  --titlebar-weight: 600;
+  --caption-top: 5px;
+  --caption-width: 24px;
+  --caption-close-width: 24px;
+  --caption-height: 20px;
+  --caption-gap: 3px;
+  --caption-inset: 8px;
+  --caption-radius: 5px;
+  --caption-border: #12154a;
+  --caption-bg: #3f4197;
+  --caption-bg-hover: #5560d0;
+  --caption-bg-active: #6a70e0;
+  --caption-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  --caption-icon: #ffffff;
+  --caption-stroke: 2;
+  --caption-close-border: #12154a;
+  --caption-close-bg: #c23b3b;
+  --caption-close-bg-hover: #ff5c5c;
+  --caption-close-bg-active: #a22a2a;
+  --tip-bg: #1b1e5a;
+  --tip-ink: #ffffff;
+  --tip-border: #0a0b34;
+  --tip-radius: 6px;
+  --tip-shadow: 0 0 0 1px #5a60c8, 0 6px 16px rgba(0, 0, 0, 0.5);
+  --tip-key-bg: #353a85;
+  --tip-key-ink: #dfe2ff;
+  --tip-key-border: #5d63c9;
+}
+[data-theme='terraria'] .app-tooltip-body {
+  text-shadow: var(--tp-outline);
+}
+:root[data-theme='terraria'] .teleprompter-body {
+  --cyan: #ffd84a;
+}
+
+/* ---------- Windows XP (Luna Blue) ----------
+   Bliss behind everything; the topbar is the blue taskbar, panels are the
+   beige #ECE9D8 window body, the sidebar is Explorer's blue task pane with
+   a light-blue group box, buttons are the rounded XP push buttons with the
+   orange hover glow, selection is the #316AC5 highlight, tooltips are the
+   yellow balloon, and the title bar is Luna's glossy blue bar with the
+   red close button. Tahoma throughout, as in XP. */
+:root[data-theme='xp'] {
+  --bg: #3a6ea5;
+  --panel: #ece9d8;
+  --panel-2: #f4f3ee;
+  --panel-3: #d6d2c2;
+  --ink: #000000;
+  --ink-dim: #2b2b2b;
+  --ink-faint: #555555;
+  --line: #aca899;
+  --line-soft: #d6d2c2;
+  --cyan: #1c4fb8;
+  --amber: #b87800;
+  --pink: #b0306b;
+  --danger: #c1121f;
+  --green: #2e7d32;
+  --editor-page: #ffffff;
+  --sans: 'Tahoma', 'Segoe UI', Verdana, sans-serif;
+}
+/* Tahoma has no medium weight; same hairline-stroke trick as MS-DOS. */
+[data-theme='xp'] body {
+  font-weight: 400;
+  -webkit-text-stroke: 0.25px currentColor;
+}
+[data-theme='xp'] .app-root {
+  background: #3a6ea5 var(--theme-wallpaper, url('./assets/bg/xp-bliss.webp')) no-repeat;
+  background-position: var(--theme-wallpaper-pos, center);
+  background-size: cover;
+}
+[data-theme='xp'] .main {
+  background: transparent !important;
+}
+[data-theme='xp'] .editor-wrap,
+[data-theme='xp'] .outline-list {
+  background: var(--editor-page) !important;
+  border: 1px solid #7f9db9 !important;
+  border-radius: 4px !important;
+  box-shadow: 2px 3px 8px rgba(0, 0, 0, 0.35) !important;
+}
+/* The taskbar. */
+[data-theme='xp'] .topbar {
+  background: linear-gradient(180deg, #3168d5 0%, #4993e6 4%, #2157d7 8%, #2663e0 14%, #245edb 90%, #1941a5 100%) !important;
+  border-bottom: 1px solid #0c2c8c !important;
+}
+[data-theme='xp'] .title-input,
+[data-theme='xp'] .topbar .saved-flash,
+[data-theme='xp'] .topbar .save-status,
+[data-theme='xp'] .topbar .tb-stat,
+[data-theme='xp'] .topbar .tb-zoom-value,
+[data-theme='xp'] .topbar .date-field {
+  color: #ffffff !important;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.35);
+}
+[data-theme='xp'] .topbar .date-field {
+  border-color: rgba(255, 255, 255, 0.5) !important;
+}
+/* Taskbar buttons. */
+[data-theme='xp'] .topbar .icon-btn {
+  background: linear-gradient(180deg, #3c81f3 0%, #3b7ff0 50%, #2b6de6 100%) !important;
+  border: 1px solid #1d4dbc !important;
+  border-radius: 3px !important;
+  color: #ffffff !important;
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.35) !important;
+}
+[data-theme='xp'] .topbar .icon-btn:hover {
+  background: linear-gradient(180deg, #5a98f7 0%, #4b8df4 50%, #3a7cee 100%) !important;
+}
+[data-theme='xp'] .topbar .icon-btn.active,
+[data-theme='xp'] .topbar .icon-btn:active {
+  background: linear-gradient(180deg, #1e52b7 0%, #2559c4 100%) !important;
+  box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.45) !important;
+}
+[data-theme='xp'] .topbar .icon-btn:disabled {
+  opacity: 0.55;
+}
+/* XP push buttons everywhere else. */
+[data-theme='xp'] .icon-btn,
+[data-theme='xp'] .tab-chip,
+[data-theme='xp'] .new-script-btn {
+  background: linear-gradient(180deg, #ffffff 0%, #f4f3ee 60%, #e4e1d5 100%) !important;
+  border: 1px solid #003c74 !important;
+  border-radius: 3px !important;
+  color: #000000 !important;
+}
+[data-theme='xp'] .icon-btn:hover,
+[data-theme='xp'] .tab-chip:hover,
+[data-theme='xp'] .new-script-btn:hover {
+  box-shadow: inset 0 0 0 1px #fff0cf, inset 0 -2px 0 #f8b636, inset 0 2px 0 #fdd889 !important;
+}
+[data-theme='xp'] .icon-btn.active,
+[data-theme='xp'] .tab-chip.active {
+  background: linear-gradient(180deg, #e3e2da 0%, #e9e8e1 100%) !important;
+  box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.25) !important;
+}
+/* The amber add buttons become ordinary XP push buttons. */
+[data-theme='xp'] .checklist-add button {
+  background: linear-gradient(180deg, #ffffff 0%, #f4f3ee 60%, #e4e1d5 100%) !important;
+  border: 1px solid #003c74 !important;
+  border-radius: 3px !important;
+  color: #000000 !important;
+}
+[data-theme='xp'] .tabbar {
+  background: linear-gradient(180deg, #f6f5ef 0%, #ece9d8 100%) !important;
+  border-bottom: 1px solid #aca899 !important;
+}
+/* Explorer's task pane: blue gradient, light-blue group box with a
+   white-to-blue header bar. */
+[data-theme='xp'] .sidebar {
+  background: linear-gradient(180deg, #7ba2e7 0%, #6375d6 100%) !important;
+  border-right: 1px solid #3f5fba !important;
+}
+[data-theme='xp'] .sb-list {
+  margin: 0 10px 10px;
+  background: #d6dff7;
+  border: 1px solid #ffffff;
+  border-radius: 4px;
+  padding-bottom: 6px;
+}
+[data-theme='xp'] .sb-section-label {
+  background: linear-gradient(90deg, #ffffff 0%, #c6d3f7 100%);
+  color: #215dc6 !important;
+  font-family: var(--sans);
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  font-size: 11.5px;
+  border-radius: 3px 3px 0 0;
+  padding: 6px 10px;
+}
+[data-theme='xp'] .sb-storage,
+[data-theme='xp'] .sb-storage-btn {
+  color: #ffffff !important;
+}
+[data-theme='xp'] .search-wrap input,
+[data-theme='xp'] .sj-search,
+[data-theme='xp'] .ls-search,
+[data-theme='xp'] .outline-search {
+  background: #ffffff !important;
+  border: 1px solid #7f9db9 !important;
+  border-radius: 0 !important;
+  color: #000000 !important;
+}
+[data-theme='xp'] .inspector,
+[data-theme='xp'] .margin-stack {
+  background: var(--panel) !important;
+  border-color: #aca899 !important;
+}
+/* Tabs: the selected one is white with XP's orange top highlight. */
+[data-theme='xp'] .insp-tab.active {
+  background: #ffffff;
+  color: #000000;
+  border-bottom-color: transparent;
+  box-shadow: inset 0 2px 0 #e68b2c, inset 0 3px 0 #ffc73c;
+}
+/* Selection highlight. */
+[data-theme='xp'] .script-item.active,
+[data-theme='xp'] .theme-row.active {
+  background: #316ac5 !important;
+  border-color: #316ac5 !important;
+}
+[data-theme='xp'] .script-item.active .st,
+[data-theme='xp'] .script-item.active .sm,
+[data-theme='xp'] .theme-row.active .theme-row-label {
+  color: #ffffff !important;
+}
+[data-theme='xp'] .script-item.active .sb-due {
+  color: #ffd2d2 !important;
+}
+/* Menus: white with a grey frame and a soft drop shadow. */
+[data-theme='xp'] .context-menu,
+[data-theme='xp'] .export-menu,
+[data-theme='xp'] .section-jump-menu,
+[data-theme='xp'] .line-search-menu,
+[data-theme='xp'] .tag-menu,
+[data-theme='xp'] .synonym-menu,
+[data-theme='xp'] .map-idea-menu,
+[data-theme='xp'] .shape-picker-menu {
+  background: #ffffff !important;
+  border: 1px solid #aca899 !important;
+  border-radius: 0 !important;
+  box-shadow: 2px 2px 3px rgba(0, 0, 0, 0.35) !important;
+}
+/* Map: the default blue XP desktop, beige window-cards. */
+[data-theme='xp'] .map-canvas {
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.16) 1px, transparent 1px) 0 0 / 22px 22px, linear-gradient(180deg, #3a6ea5 0%, #2c5d97 100%) !important;
+}
+[data-theme='xp'] .map-node {
+  background: #ece9d8 !important;
+  border: 1px solid #0831d9 !important;
+  border-radius: 6px !important;
+  box-shadow: 2px 3px 6px rgba(0, 0, 0, 0.4) !important;
+}
+[data-theme='xp'] .map-node.is-selected {
+  box-shadow: 0 0 0 2px #f8b636, 2px 3px 6px rgba(0, 0, 0, 0.4) !important;
+}
+[data-theme='xp'] .map-edges-svg {
+  --ink-faint: #ffffff;
+  --cyan: #ffd84a;
+}
+[data-theme='xp'] .map-edge {
+  stroke: rgba(255, 255, 255, 0.85);
+}
+[data-theme='xp'] .map-edge.is-lit {
+  stroke: #ffd84a;
+}
+[data-theme='xp'] ::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg, #c8d6fb 0%, #b6c8f6 100%);
+  border: 1px solid #93a9e3;
+  border-radius: 3px;
+}
+/* Luna title bar: glossy blue, bold Trebuchet title, white-framed blue
+   caption keys, the red close key. */
+:root[data-theme='xp'] {
+  --titlebar-bg: linear-gradient(180deg, #0997ff 0%, #0053ee 8%, #0050ee 40%, #0066ff 88%, #0066ff 93%, #005bff 95%, #003dd7 96%, #003dd7 100%);
+  --titlebar-border: #0831d9;
+  --titlebar-text: #ffffff;
+  --titlebar-text-shadow: 1px 1px 0 #0f1089;
+  --titlebar-weight: 700;
+  --caption-top: 5px;
+  --caption-width: 21px;
+  --caption-close-width: 21px;
+  --caption-height: 21px;
+  --caption-gap: 2px;
+  --caption-inset: 6px;
+  --caption-radius: 3px;
+  --caption-border: #ffffff;
+  --caption-bg: linear-gradient(180deg, #5f9cff 0%, #2c6ff7 50%, #1d5ff0 100%);
+  --caption-bg-hover: linear-gradient(180deg, #8bb7ff 0%, #4c8bfd 50%, #3478f8 100%);
+  --caption-bg-active: linear-gradient(180deg, #1a4fc4 0%, #2a64d8 100%);
+  --caption-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.45);
+  --caption-icon: #ffffff;
+  --caption-stroke: 2;
+  --caption-close-border: #ffffff;
+  --caption-close-bg: linear-gradient(180deg, #e68b6c 0%, #d6533a 50%, #c7432a 100%);
+  --caption-close-bg-hover: linear-gradient(180deg, #f6a88d 0%, #e56a4f 50%, #d65037 100%);
+  --caption-close-bg-active: linear-gradient(180deg, #b13a22 0%, #c7432a 100%);
+  /* The yellow balloon tooltip. */
+  --tip-bg: #ffffe1;
+  --tip-ink: #000000;
+  --tip-border: #000000;
+  --tip-radius: 5px;
+  --tip-shadow: 2px 2px 3px rgba(0, 0, 0, 0.35);
+  --tip-key-bg: #ece9d8;
+  --tip-key-ink: #000000;
+  --tip-key-border: #aca899;
+}
+/* Trebuchet maps the app-wide ss03 feature to small caps, so it's off here. */
+[data-theme='xp'] .titlebar-title {
+  font-family: 'Trebuchet MS', Tahoma, sans-serif;
+  font-size: 13px;
+  font-feature-settings: normal;
+}
+:root[data-theme='xp'] .teleprompter-body {
+  --cyan: #6fa8ff;
+}
+
+/* ---------- Y2K Gunmetal ----------
+   Y2K Chrome's media-player hardware in dark anodised aluminium and black
+   chrome, ported from Bijou Footage's y2kDark: brushed gunmetal panels with
+   corner screws, black-chrome push-buttons with key travel, amber LCD for
+   selections and the mind map, Bahnschrift labels. */
+:root[data-theme='y2kGunmetal'] {
+  --bg: #1c1f23;
+  --panel: #26292e;
+  --panel-2: #2f3338;
+  --panel-3: #3a3e45;
+  --ink: #e6e8eb;
+  --ink-dim: #a9afb7;
+  --ink-faint: #8a9099;
+  --line: #3f444b;
+  --line-soft: #30343a;
+  --cyan: #ffa526;
+  --amber: #e0b24a;
+  --pink: #e46aa3;
+  --danger: #ff6b5a;
+  --green: #4fcf7a;
+  --editor-page: #212428;
+  --sans: 'Bahnschrift', 'Segoe UI', system-ui, sans-serif;
+  --y2k-screws:
+    linear-gradient(45deg, transparent 38%, #2a2e33 38% 62%, transparent 62%) left 8px top 8px / 4px 4px no-repeat,
+    radial-gradient(circle, #8c939c 0 2.6px, #15171a 3px 3.8px, transparent 4.3px) left 5px top 5px / 10px 10px no-repeat,
+    linear-gradient(45deg, transparent 38%, #2a2e33 38% 62%, transparent 62%) right 8px top 8px / 4px 4px no-repeat,
+    radial-gradient(circle, #8c939c 0 2.6px, #15171a 3px 3.8px, transparent 4.3px) right 5px top 5px / 10px 10px no-repeat,
+    linear-gradient(45deg, transparent 38%, #2a2e33 38% 62%, transparent 62%) left 8px bottom 8px / 4px 4px no-repeat,
+    radial-gradient(circle, #8c939c 0 2.6px, #15171a 3px 3.8px, transparent 4.3px) left 5px bottom 5px / 10px 10px no-repeat,
+    linear-gradient(45deg, transparent 38%, #2a2e33 38% 62%, transparent 62%) right 8px bottom 8px / 4px 4px no-repeat,
+    radial-gradient(circle, #8c939c 0 2.6px, #15171a 3px 3.8px, transparent 4.3px) right 5px bottom 5px / 10px 10px no-repeat;
+  --y2k-brushed:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.05) 0 1px, rgba(0, 0, 0, 0.1) 1px 3px),
+    linear-gradient(90deg, #2c3036 0%, #3a3e45 45%, #2d3137 100%);
+  --y2k-lcd: radial-gradient(ellipse 100% 90% at 50% 45%, #2e1a02 0%, #170c00 70%, #0b0600 100%);
+}
+[data-theme='y2kGunmetal'] .app-root {
+  background-image: var(
+    --theme-wallpaper,
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.04) 0 1px, rgba(0, 0, 0, 0.08) 1px 2px),
+    linear-gradient(180deg, #2a2e34 0%, #16191d 100%)
+  );
+  background-color: #16191d;
+  background-size: var(--theme-wallpaper-size, cover);
+  background-position: var(--theme-wallpaper-pos, center);
+  background-repeat: var(--theme-wallpaper-repeat, no-repeat);
+}
+[data-theme='y2kGunmetal'] .main {
+  background: transparent !important;
+}
+[data-theme='y2kGunmetal'] .editor-wrap,
+[data-theme='y2kGunmetal'] .outline-list {
+  background: var(--editor-page) !important;
+  border: 1px solid #0b0c0e !important;
+  border-radius: 6px !important;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6), 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+}
+[data-theme='y2kGunmetal'] .topbar {
+  background:
+    var(--y2k-screws),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.05) 0 1px, rgba(0, 0, 0, 0.1) 1px 2px),
+    linear-gradient(180deg, #454a52 0%, #30343a 55%, #26292e 100%) !important;
+  border-bottom: 1px solid #0b0c0e !important;
+}
+[data-theme='y2kGunmetal'] .sidebar,
+[data-theme='y2kGunmetal'] .inspector,
+[data-theme='y2kGunmetal'] .margin-stack {
+  background: var(--y2k-screws), var(--y2k-brushed) !important;
+  border-color: #0b0c0e !important;
+}
+[data-theme='y2kGunmetal'] .tabbar,
+[data-theme='y2kGunmetal'] .diff-modal,
+[data-theme='y2kGunmetal'] .export-menu,
+[data-theme='y2kGunmetal'] .section-jump-menu {
+  background: var(--y2k-brushed) !important;
+  border-color: #0b0c0e !important;
+}
+[data-theme='y2kGunmetal'] .icon-btn,
+[data-theme='y2kGunmetal'] .tab-chip {
+  background: linear-gradient(180deg, #5a616a 0%, #3d4249 48%, #272a2f 52%, #353940 100%) !important;
+  border: 1px solid #0c0d0f !important;
+  border-radius: 5px !important;
+  color: #e6e8eb !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.55) !important;
+}
+[data-theme='y2kGunmetal'] .icon-btn:hover,
+[data-theme='y2kGunmetal'] .tab-chip:hover {
+  background: linear-gradient(180deg, #69707a 0%, #4a5058 48%, #31353b 52%, #40454c 100%) !important;
+}
+[data-theme='y2kGunmetal'] .icon-btn:active,
+[data-theme='y2kGunmetal'] .tab-chip:active {
+  transform: translateY(1px);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6) !important;
+}
+[data-theme='y2kGunmetal'] .icon-btn.active,
+[data-theme='y2kGunmetal'] .tab-chip.active {
+  background: linear-gradient(180deg, #1c1f23 0%, #2a2e33 100%) !important;
+  color: #ffb347 !important;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 160, 0, 0.55), 0 0 8px rgba(255, 160, 0, 0.3) !important;
+}
+[data-theme='y2kGunmetal'] .script-item.active,
+[data-theme='y2kGunmetal'] .theme-row.active {
+  background: var(--y2k-lcd) !important;
+  border-color: #0b0c0e !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07), inset 0 2px 8px rgba(0, 0, 0, 0.8) !important;
+}
+[data-theme='y2kGunmetal'] .script-item.active .st,
+[data-theme='y2kGunmetal'] .theme-row.active .theme-row-label {
+  color: #ffb347 !important;
+}
+[data-theme='y2kGunmetal'] .script-item.active .sm {
+  color: #d18a2c !important;
+}
+[data-theme='y2kGunmetal'] .map-canvas {
+  background:
+    radial-gradient(circle, rgba(255, 176, 0, 0.3) 1px, transparent 1px) 0 0 / 22px 22px,
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.3) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.3) 0 1px, transparent 1px 3px),
+    var(--y2k-lcd) !important;
+}
+[data-theme='y2kGunmetal'] .map-node {
+  background:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.05) 0 1px, rgba(0, 0, 0, 0.1) 1px 3px),
+    linear-gradient(180deg, #3e434a 0%, #2a2d33 100%) !important;
+  border: 1px solid #0c0d0f !important;
+  border-radius: 6px !important;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+}
+[data-theme='y2kGunmetal'] .map-node.is-selected {
+  box-shadow: 0 0 0 2px #ffb000, 0 0 12px rgba(255, 176, 0, 0.45), 0 3px 10px rgba(0, 0, 0, 0.7) !important;
+}
+[data-theme='y2kGunmetal'] .map-node-connector,
+[data-theme='y2kGunmetal'] .map-node-dot {
+  background: conic-gradient(from 20deg, #6f767f, #2c3036, #5c636c, #24272c, #6f767f) !important;
+  border: 1px solid #0c0d0f !important;
+}
+[data-theme='y2kGunmetal'] .map-edges-svg {
+  --ink-faint: #ffb000;
+  --cyan: #ffe2a3;
+}
+[data-theme='y2kGunmetal'] .map-edge {
+  stroke: #ffb000;
+}
+[data-theme='y2kGunmetal'] .map-edge.is-lit {
+  stroke: #ffe2a3;
+}
+:root[data-theme='y2kGunmetal'] {
+  --titlebar-bg: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.05) 0 1px, rgba(0, 0, 0, 0.1) 1px 2px), linear-gradient(180deg, #4a4f57 0%, #30343a 55%, #24272c 100%);
+  --titlebar-border: #0b0c0e;
+  --titlebar-text: #e6e8eb;
+  --titlebar-text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.6);
+  --titlebar-weight: 600;
+  --caption-top: 6px;
+  --caption-width: 26px;
+  --caption-close-width: 26px;
+  --caption-height: 20px;
+  --caption-gap: 4px;
+  --caption-inset: 8px;
+  --caption-radius: 5px;
+  --caption-border: #0c0d0f;
+  --caption-bg: linear-gradient(180deg, #5a616a 0%, #3d4249 45%, #272a2f 50%, #353940 100%);
+  --caption-bg-hover: linear-gradient(180deg, #69707a 0%, #4a5058 45%, #31353b 50%, #40454c 100%);
+  --caption-bg-active: linear-gradient(180deg, #1c1f23 0%, #2a2e33 100%);
+  --caption-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 1px rgba(0, 0, 0, 0.5);
+  --caption-icon: #e6e8eb;
+  --caption-stroke: 1.6;
+  --caption-close-border: #0c0d0f;
+  --caption-close-bg: linear-gradient(180deg, #5a616a 0%, #3d4249 45%, #272a2f 50%, #353940 100%);
+  --caption-close-bg-hover: linear-gradient(180deg, #ff9a88 0%, #e0452c 50%, #c9321a 100%);
+  --caption-close-bg-active: linear-gradient(180deg, #d9533c 0%, #a82814 100%);
+  --caption-close-shadow-hover: 0 0 6px rgba(230, 60, 30, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  /* Tooltips: the same amber LCD readout as Y2K Chrome. */
+  --tip-bg: #1a1406;
+  --tip-ink: #ffb000;
+  --tip-border: #0b0c0e;
+  --tip-radius: 4px;
+  --tip-shadow: 0 0 0 1px #4a4f57, 0 4px 12px rgba(0, 0, 0, 0.55), inset 0 0 10px rgba(255, 176, 0, 0.12);
+  --tip-font: var(--mono);
+  --tip-key-bg: rgba(255, 176, 0, 0.12);
+  --tip-key-ink: #ffcf66;
+  --tip-key-border: rgba(255, 176, 0, 0.45);
+}
+[data-theme='y2kGunmetal'] .titlebar-caption {
+  border-top: 1px solid var(--caption-border);
+}
+:root[data-theme='y2kGunmetal'] .teleprompter-body {
+  --cyan: #ffb347;
+}
+
+/* ---------- Doodle Club ----------
+   Bijou Doodle's theme (also in Bijou Footage): the skribbl.io-style blue
+   doodle wallpaper, cream paper panels drawn with a thick ink outline,
+   crayon-box pastel buttons, a light-blue "on", marker-yellow highlights,
+   headings in Comic Sans. */
+:root[data-theme='doodleClub'] {
+  --bg: #fffbe9;
+  --panel: #fffbe9;
+  --panel-2: #ffffff;
+  --panel-3: #f5ecc4;
+  --ink: #202031;
+  --ink-dim: #4a4960;
+  --ink-faint: #6a6879;
+  --line: #d6cca6;
+  --line-soft: #ece3c2;
+  --cyan: #1f5fbf;
+  --amber: #aa5100;
+  --pink: #b92a65;
+  --danger: #c8302b;
+  --green: #23782a;
+  --editor-page: #fffdf4;
+  --sans: 'Trebuchet MS', 'Segoe UI', sans-serif;
+  --doodle-font: 'Comic Sans MS', 'Chalkboard SE', 'Trebuchet MS', cursive;
+  --doodle-ink: #27283b;
+}
+/* Trebuchet maps the app-wide ss03 feature to small caps. */
+[data-theme='doodleClub'] body {
+  font-feature-settings: normal;
+}
+[data-theme='doodleClub'] .app-root {
+  background-color: #2459a6;
+  background-image: var(--theme-wallpaper, url('./assets/bg/doodle-blue.png'));
+  background-size: var(--theme-wallpaper-size, 400px 400px);
+  background-position: var(--theme-wallpaper-pos, 0 0);
+  background-repeat: var(--theme-wallpaper-repeat, repeat);
+}
+[data-theme='doodleClub'] .main {
+  background: transparent !important;
+}
+[data-theme='doodleClub'] .editor-wrap,
+[data-theme='doodleClub'] .outline-list {
+  background: var(--editor-page) !important;
+  border: 2.5px solid var(--doodle-ink) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 0 rgba(23, 43, 80, 0.55) !important;
+}
+[data-theme='doodleClub'] .topbar {
+  background: #fffbe9 !important;
+  border-bottom: 2.5px solid var(--doodle-ink) !important;
+}
+[data-theme='doodleClub'] .tabbar {
+  background: #f4e8ad !important;
+  border-bottom: 2px solid var(--doodle-ink) !important;
+}
+[data-theme='doodleClub'] .sidebar {
+  background: #fffbe9 !important;
+  border-right: 2.5px solid var(--doodle-ink) !important;
+}
+[data-theme='doodleClub'] .inspector {
+  background: #fffbe9 !important;
+  border-left: 2.5px solid var(--doodle-ink) !important;
+}
+[data-theme='doodleClub'] .margin-stack {
+  background: #fffbe9 !important;
+  border: 2.5px solid var(--doodle-ink) !important;
+  border-radius: 12px;
+}
+[data-theme='doodleClub'] .context-menu,
+[data-theme='doodleClub'] .export-menu,
+[data-theme='doodleClub'] .section-jump-menu,
+[data-theme='doodleClub'] .line-search-menu,
+[data-theme='doodleClub'] .tag-menu,
+[data-theme='doodleClub'] .synonym-menu,
+[data-theme='doodleClub'] .map-idea-menu,
+[data-theme='doodleClub'] .shape-picker-menu,
+[data-theme='doodleClub'] .diff-modal {
+  background: #fffbe9 !important;
+  border: 2px solid var(--doodle-ink) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 3px 0 rgba(23, 43, 80, 0.55) !important;
+}
+/* Ink-outlined crayon-box buttons, alternating pastels. */
+[data-theme='doodleClub'] .icon-btn,
+[data-theme='doodleClub'] .tab-chip,
+[data-theme='doodleClub'] .new-script-btn {
+  background: #fffbe9 !important;
+  border: 1.5px solid var(--doodle-ink) !important;
+  border-radius: 6px !important;
+  color: #202031 !important;
+  box-shadow: inset 1px 1px #fff, inset -1px -2px #cbc5a7 !important;
+}
+[data-theme='doodleClub'] .tb-group > .icon-btn:nth-child(3n + 2),
+[data-theme='doodleClub'] .tb-group > div:nth-child(3n + 2) > .icon-btn {
+  background: #d7edff !important;
+}
+[data-theme='doodleClub'] .tb-group > .icon-btn:nth-child(3n),
+[data-theme='doodleClub'] .tb-group > div:nth-child(3n) > .icon-btn {
+  background: #f2dcf4 !important;
+}
+[data-theme='doodleClub'] .icon-btn:hover,
+[data-theme='doodleClub'] .tab-chip:hover,
+[data-theme='doodleClub'] .new-script-btn:hover {
+  background: #fff0a8 !important;
+}
+[data-theme='doodleClub'] .icon-btn:active,
+[data-theme='doodleClub'] .tab-chip:active {
+  transform: translateY(1px);
+}
+[data-theme='doodleClub'] .icon-btn.active,
+[data-theme='doodleClub'] .tab-chip.active {
+  background: #cfe3ff !important;
+  color: #13284d !important;
+  box-shadow: inset 0 -2px #8fb3e8 !important;
+}
+/* The amber add buttons become marker-yellow ink-outlined buttons. */
+[data-theme='doodleClub'] .checklist-add button {
+  background: #ffe45c !important;
+  color: #202031 !important;
+  border: 1.5px solid var(--doodle-ink) !important;
+  box-shadow: inset 0 -2px #d4ad26 !important;
+}
+[data-theme='doodleClub'] .script-item.active,
+[data-theme='doodleClub'] .theme-row.active {
+  background: #cfe3ff !important;
+  border-color: var(--doodle-ink) !important;
+  box-shadow: inset 0 0 0 2px var(--doodle-ink) !important;
+}
+[data-theme='doodleClub'] .search-wrap input,
+[data-theme='doodleClub'] .sj-search,
+[data-theme='doodleClub'] .ls-search,
+[data-theme='doodleClub'] .outline-search {
+  background: #ffffff !important;
+  border: 1.5px solid var(--doodle-ink) !important;
+}
+/* Headings in the doodle hand. */
+[data-theme='doodleClub'] .section-heading-input,
+[data-theme='doodleClub'] .title-input,
+[data-theme='doodleClub'] .margin-panel-title,
+[data-theme='doodleClub'] .sb-section-label,
+[data-theme='doodleClub'] .insp-section-title,
+[data-theme='doodleClub'] .map-node-heading,
+[data-theme='doodleClub'] .map-node-heading-input,
+[data-theme='doodleClub'] .chapter-node-label,
+[data-theme='doodleClub'] .idea-node-title,
+[data-theme='doodleClub'] .titlebar-title {
+  font-family: var(--doodle-font) !important;
+  font-feature-settings: normal;
+}
+/* The map sits on the doodle wallpaper; nodes are paper cards. */
+[data-theme='doodleClub'] .map-canvas {
+  background-color: #2459a6 !important;
+  background-image: var(--theme-wallpaper, url('./assets/bg/doodle-blue.png')) !important;
+  background-size: var(--theme-wallpaper-size, 400px 400px) !important;
+  background-repeat: repeat !important;
+}
+[data-theme='doodleClub'] .map-node {
+  background: #fffbe9 !important;
+  border: 2px solid var(--doodle-ink) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 3px 0 rgba(23, 43, 80, 0.55) !important;
+}
+[data-theme='doodleClub'] .map-node.is-selected {
+  box-shadow: 0 0 0 3px #ffe45c, 0 3px 0 rgba(23, 43, 80, 0.55) !important;
+}
+[data-theme='doodleClub'] .map-node-connector {
+  background: #ffe45c !important;
+  border: 1.5px solid var(--doodle-ink) !important;
+}
+[data-theme='doodleClub'] .map-edges-svg {
+  --ink-faint: #fffbe9;
+  --cyan: #ffe45c;
+}
+[data-theme='doodleClub'] .map-edge {
+  stroke: #fffbe9;
+}
+[data-theme='doodleClub'] .map-edge.is-lit {
+  stroke: #ffe45c;
+}
+[data-theme='doodleClub'] ::selection {
+  background: #ffe45c;
+  color: #202031;
+}
+:root[data-theme='doodleClub'] {
+  --titlebar-bg: #28549a;
+  --titlebar-border: #172b50;
+  --titlebar-text: #fffbe9;
+  --titlebar-weight: 700;
+  --caption-top: 4px;
+  --caption-height: 23px;
+  --caption-width: 28px;
+  --caption-close-width: 30px;
+  --caption-gap: 5px;
+  --caption-inset: 7px;
+  --caption-radius: 2px;
+  --caption-border: #18253d;
+  --caption-bg: #fffbe9;
+  --caption-bg-hover: #ffe475;
+  --caption-bg-active: #e3ca64;
+  --caption-shadow: inset 1px 1px #fff, inset -1px -1px #aaa48d;
+  --caption-icon: #202031;
+  --caption-stroke: 1.5;
+  --caption-close-border: #18253d;
+  --caption-close-bg: #f5bcc7;
+  --caption-close-bg-hover: #e64566;
+  --caption-close-bg-active: #d95c78;
+  /* A paper sticky-note tooltip. */
+  --tip-bg: #fffbe9;
+  --tip-ink: #202031;
+  --tip-border: #27283b;
+  --tip-radius: 8px;
+  --tip-shadow: 0 3px 0 rgba(23, 43, 80, 0.45);
+  --tip-key-bg: #ffe45c;
+  --tip-key-ink: #202031;
+  --tip-key-border: #27283b;
+}
+[data-theme='doodleClub'] .titlebar {
+  border-bottom: 2px solid #172b50;
+}
+[data-theme='doodleClub'] .titlebar-caption {
+  border: 1px solid #18253d;
+}
+:root[data-theme='doodleClub'] .teleprompter-body {
+  --cyan: #ffe45c;
+}
+
 /* MS-DOS: the Windows 95 navy titlebar gradient with gray beveled caption
    squares, matching the theme's own topbar. */
 :root[data-theme='dos'] {
@@ -3118,6 +4325,35 @@ textarea {
 .theme-contrast-row input {
   margin-top: 2px;
   flex: 0 0 auto;
+}
+/* Background variations: thumbnails under the
+   active theme row. */
+.theme-variants {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 6px;
+  margin: -2px 0 10px;
+  padding: 8px;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  background: var(--panel-2);
+}
+.theme-variant {
+  aspect-ratio: 16 / 10;
+  border: 2px solid transparent;
+  border-radius: 5px;
+  background-size: cover;
+  background-position: center;
+  cursor: pointer;
+  padding: 0;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35);
+}
+.theme-variant:hover {
+  border-color: var(--ink-faint);
+}
+.theme-variant.active {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 1px var(--cyan);
 }
 .theme-row {
   display: flex;

@@ -1,0 +1,19 @@
+Background photos from Wikimedia Commons, resized and re-encoded for BijouDocs.
+Each keeps its original license (CC0 / public domain / CC BY / CC BY-SA as listed).
+
+aero-lavender.webp — "Lavender field - panoramio.jpg" by Santiago Puig Vilado… — CC BY-SA 3.0 — https://commons.wikimedia.org/wiki/File%3ALavender_field_-_panoramio.jpg
+aero-waterfall.webp — "Charming forest waterfall (Unsplash).jpg" by Nathan Anderson nathananderson — CC0 — https://commons.wikimedia.org/wiki/File%3ACharming_forest_waterfall_(Unsplash).jpg
+aero-glacier.webp — "Warm Skies Over Glacier Lagoon - Iceland.jpg" by Eric Kilby — CC BY-SA 2.0 — https://commons.wikimedia.org/wiki/File%3AWarm_Skies_Over_Glacier_Lagoon_-_Iceland.jpg
+aero-palm.webp — "Koh Mak (island), Thailand, Palm trees on the beach.jpg" by Vyacheslav Argenberg — CC BY 4.0 — https://commons.wikimedia.org/wiki/File%3AKoh_Mak_(island)%2C_Thailand%2C_Palm_trees_on_the_beach.jpg
+aero-hills.webp — "Vayang Rolling Hills, Batanes, Philippines.jpg" by Johnkevinreglos — CC BY-SA 4.0 — https://commons.wikimedia.org/wiki/File%3AVayang_Rolling_Hills%2C_Batanes%2C_Philippines.jpg
+aerodark-aurora.webp — "Lofoten, Norway (Unsplash).jpg" by Johannes Groll followhansi — CC0 — https://commons.wikimedia.org/wiki/File%3ALofoten%2C_Norway_(Unsplash).jpg
+aerodark-dusk.webp — "1 singapore city skyline dusk panorama 2011.jpg" by chenisyuan — CC BY-SA 4.0 — https://commons.wikimedia.org/wiki/File%3A1_singapore_city_skyline_dusk_panorama_2011.jpg
+aerodark-leaves.webp — "Translucent leaf in macro 1 (Unsplash).jpg" by Rodion Kutsaev frostroomhead — CC0 — https://commons.wikimedia.org/wiki/File%3ATranslucent_leaf_in_macro_1_(Unsplash).jpg
+xp-crater-lake.webp — "Crater Lake July 2024-5.jpg" by Stephen Foiles — CC BY 2.0 — https://commons.wikimedia.org/wiki/File%3ACrater_Lake_July_2024-5.jpg
+xp-creek.webp — "Hosoozawa mountain stream and Shioji primeval forest in Ueno village, Gunma prefecture. C.jpg" by さかおり — CC BY-SA 4.0 — https://commons.wikimedia.org/wiki/File%3AHosoozawa_mountain_stream_and_Shioji_primeval_forest_in_Ueno_village%2C_Gunma_prefecture._C.jpg
+xp-alpine-meadow.webp — "Bearhat Mountain and Hidden Lake - Glacier National Park.jpg" by aparlette — CC BY 2.0 — https://commons.wikimedia.org/wiki/File%3ABearhat_Mountain_and_Hidden_Lake_-_Glacier_National_Park.jpg
+xp-coastal-grass.webp — "South Stack Lighthouse on the Edge of the Cliffs – Anglesey, Wales.jpg" by TXGemGem — CC BY-SA 4.0 — https://commons.wikimedia.org/wiki/File%3ASouth_Stack_Lighthouse_on_the_Edge_of_the_Cliffs_%E2%80%93_Anglesey%2C_Wales.jpg
+xp-mountain-lake.webp — "Lake Kinney mit Mount Whitehorn.jpg" by Florian Fuchs — CC BY 3.0 — https://commons.wikimedia.org/wiki/File%3ALake_Kinney_mit_Mount_Whitehorn.jpg
+xp-open-road.webp — "Mountain road in Jasper (Unsplash).jpg" by Gabriel Santiago gabrielssantiago — CC0 — https://commons.wikimedia.org/wiki/File%3AMountain_road_in_Jasper_(Unsplash).jpg
+vapor-pink-palms.webp — "Colour swirls in the sky.jpg" by Damola Mustapha — CC BY-SA 4.0 — https://commons.wikimedia.org/wiki/File%3AColour_swirls_in_the_sky.jpg
+vapor-palm-silhouettes.webp — "Venice Beach palm trees at sunset (Unsplash).jpg" by Stuart Guest-Smith sguestsmith — CC0 — https://commons.wikimedia.org/wiki/File%3AVenice_Beach_palm_trees_at_sunset_(Unsplash).jpg

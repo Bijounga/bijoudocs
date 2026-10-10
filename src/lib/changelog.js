@@ -188,6 +188,12 @@ export const CHANGELOG = {
     'Focus, Teleprompter, Map, Outline and Resume moved down to the right end of the tab bar',
     'Long help paragraphs are gone — explanations live behind small "?" icons, and the built-in shortcuts are now a searchable list',
     'Mac: updates now download in the background and install with one click on "Restart to update" — no more dragging into Applications (starting with the update after this one)'
+  ],
+  '0.5.59': [
+    'Five new themes: Minecraft (real dirt, buttons and fonts), Terraria (the Andy font and biome backdrops), Windows XP, Y2K Gunmetal (from Bijou Footage), and Doodle Club (from Bijou Doodle)',
+    'Background variations — pick a theme, then choose its backdrop from the thumbnails underneath it. Every wallpaper theme has several: Windows 7 and Vista for Frutiger Aero, aurora for Aero Dark, game scenes for Minecraft and Terraria, sunset grids for Vaporwave, diamond plate and carbon for the Y2K themes, and doodles, notebook, graph, dot-grid and legal-pad paper for Doodle Club',
+    'Each theme remembers which background you picked',
+    'Fixed bundled fonts being blocked from loading'
   ]
 }
 

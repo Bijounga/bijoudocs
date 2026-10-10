@@ -146,6 +146,9 @@ export const useStore = create(
     noteColor: '#f2a65a',
     theme: 'dark',
     editorPageContrast: true,
+    // Chosen background variation per theme, e.g. { minecraft: 'cave' } —
+    // see src/lib/themeVariants.js.
+    themeVariants: {},
     // User-made themes — a theme id here is 'custom:' + this entry's own
     // id, so `theme` can point at either a built-in (a plain id, handled
     // via the data-theme attribute + styles.css) or one of these (handled
@@ -194,6 +197,7 @@ export const useStore = create(
         if (settings && settings.noteColor) s.noteColor = settings.noteColor
         if (settings && settings.theme) s.theme = settings.theme
         if (settings && typeof settings.editorPageContrast === 'boolean') s.editorPageContrast = settings.editorPageContrast
+        if (settings && settings.themeVariants && typeof settings.themeVariants === 'object') s.themeVariants = settings.themeVariants
         if (settings && Array.isArray(settings.customThemes)) s.customThemes = settings.customThemes
         if (settings && typeof settings.zoom === 'number') s.zoom = settings.zoom
         if (settings && settings.leftMarginWidth) s.leftMarginWidth = settings.leftMarginWidth
@@ -379,6 +383,7 @@ export const useStore = create(
         noteColor: s.noteColor,
         theme: s.theme,
         editorPageContrast: s.editorPageContrast,
+        themeVariants: s.themeVariants,
         customThemes: s.customThemes,
         zoom: s.zoom,
         leftMarginWidth: s.leftMarginWidth,
@@ -401,6 +406,12 @@ export const useStore = create(
     setTheme(theme) {
       set((s) => {
         s.theme = theme
+      })
+      get().saveAppSettings()
+    },
+    setThemeVariant(theme, variantId) {
+      set((s) => {
+        s.themeVariants[theme] = variantId
       })
       get().saveAppSettings()
     },

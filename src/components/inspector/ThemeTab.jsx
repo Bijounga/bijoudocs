@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useStore } from '../../state/store.js'
 import Icon from '../icons.jsx'
 import { THEME_TOKENS, DEFAULT_CUSTOM_THEME_COLORS } from '../../lib/themeTokens.js'
+import { THEME_VARIANTS, activeVariant } from '../../lib/themeVariants.js'
 
 // Swatch colors are hardcoded here (not read from CSS vars) so every theme's
 // preview renders correctly regardless of which theme is currently active —
@@ -14,6 +15,11 @@ const THEMES = [
   { id: 'vaporwave', label: 'Vaporwave', swatches: ['#2b1055', '#e8d9ff', '#2a1a4a', '#ff4fb8'] },
   { id: 'aeroDark', label: 'Frutiger Aero Dark', swatches: ['#0a1120', '#16223a', '#eef4fb', '#4cc2ff'] },
   { id: 'y2kChrome', label: 'Y2K Chrome', swatches: ['#cdd1d6', '#eef0f2', '#14171b', '#c9640a'] },
+  { id: 'y2kGunmetal', label: 'Y2K Gunmetal', swatches: ['#1c1f23', '#26292e', '#e6e8eb', '#ffa526'] },
+  { id: 'minecraft', label: 'Minecraft', swatches: ['#2a2018', '#c6c6c6', '#1e1e1e', '#3a7a22'] },
+  { id: 'terraria', label: 'Terraria', swatches: ['#4a90df', '#353a85', '#ffffff', '#ffd84a'] },
+  { id: 'xp', label: 'Windows XP', swatches: ['#245edb', '#ece9d8', '#000000', '#316ac5'] },
+  { id: 'doodleClub', label: 'Doodle Club', swatches: ['#2459a6', '#fffbe9', '#202031', '#ffe45c'] },
   { id: 'light', label: 'MacBook Light', swatches: ['#e5e5e7', '#f7f7f8', '#1d1d1f', '#005bb8'] },
   { id: 'fable', label: 'Fable', swatches: ['#b9a26c', '#e8d9ab', '#3b2a17', '#9c2b2b'] },
   { id: 'fantasy', label: 'Earthen', swatches: ['#1a120b', '#241a10', '#f0e0c0', '#d4af37'] },
@@ -28,6 +34,8 @@ const PREVIEW_KEYS = ['--bg', '--panel', '--ink', '--cyan']
 export default function ThemeTab() {
   const theme = useStore((s) => s.theme)
   const setTheme = useStore((s) => s.setTheme)
+  const themeVariants = useStore((s) => s.themeVariants)
+  const setThemeVariant = useStore((s) => s.setThemeVariant)
   const editorPageContrast = useStore((s) => s.editorPageContrast)
   const toggleEditorPageContrast = useStore((s) => s.toggleEditorPageContrast)
   const customThemes = useStore((s) => s.customThemes)
@@ -59,15 +67,31 @@ export default function ThemeTab() {
         Page contrast
       </label>
       {THEMES.map((t) => (
-        <button key={t.id} className={'theme-row' + (theme === t.id ? ' active' : '')} onClick={() => setTheme(t.id)}>
-          <div className="theme-swatches">
-            {t.swatches.map((c, i) => (
-              <span key={i} className="theme-swatch" style={{ background: c }} />
-            ))}
-          </div>
-          <span className="theme-row-label">{t.label}</span>
-          {theme === t.id && <Icon name="check" size={14} className="theme-row-check" />}
-        </button>
+        <React.Fragment key={t.id}>
+          <button className={'theme-row' + (theme === t.id ? ' active' : '')} onClick={() => setTheme(t.id)}>
+            <div className="theme-swatches">
+              {t.swatches.map((c, i) => (
+                <span key={i} className="theme-swatch" style={{ background: c }} />
+              ))}
+            </div>
+            <span className="theme-row-label">{t.label}</span>
+            {theme === t.id && <Icon name="check" size={14} className="theme-row-check" />}
+          </button>
+          {theme === t.id && THEME_VARIANTS[t.id] && (
+            <div className="theme-variants">
+              {THEME_VARIANTS[t.id].map((v) => (
+                <button
+                  key={v.id}
+                  className={'theme-variant' + (activeVariant(t.id, themeVariants).id === v.id ? ' active' : '')}
+                  style={{ backgroundImage: v.css || 'url("' + v.url + '")', imageRendering: v.pixel ? 'pixelated' : 'auto' }}
+                  onClick={() => setThemeVariant(t.id, v.id)}
+                  title={v.label}
+                  aria-label={v.label}
+                />
+              ))}
+            </div>
+          )}
+        </React.Fragment>
       ))}
 
       {customThemes.length > 0 && <div className="insp-section-title">Your themes</div>}
