@@ -20,6 +20,7 @@ const THEMES = [
   { id: 'terraria', label: 'Terraria', swatches: ['#4a90df', '#353a85', '#ffffff', '#ffd84a'] },
   { id: 'xp', label: 'Windows XP', swatches: ['#245edb', '#ece9d8', '#000000', '#316ac5'] },
   { id: 'doodleClub', label: 'Doodle Club', swatches: ['#2459a6', '#fffbe9', '#202031', '#ffe45c'] },
+  { id: 'tiki', label: 'Tiki', swatches: ['#2a1407', '#ffd36b', '#19c3d3', '#ff8a1f'] },
   { id: 'light', label: 'MacBook Light', swatches: ['#e5e5e7', '#f7f7f8', '#1d1d1f', '#005bb8'] },
   { id: 'fable', label: 'Fable', swatches: ['#b9a26c', '#e8d9ab', '#3b2a17', '#9c2b2b'] },
   { id: 'fantasy', label: 'Earthen', swatches: ['#1a120b', '#241a10', '#f0e0c0', '#d4af37'] },

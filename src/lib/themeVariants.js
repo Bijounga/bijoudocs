@@ -63,6 +63,23 @@ import paperLined from '../assets/bg/paper-lined.png'
 import paperGraph from '../assets/bg/paper-graph.png'
 import paperDots from '../assets/bg/paper-dots.png'
 import paperLegal from '../assets/bg/paper-legal.png'
+import tikiTotemWall from '../assets/bg/tiki-totem-wall.png'
+import tikiTotemWallNight from '../assets/bg/tiki-totem-wall-night.png'
+import tikiPlankWallDark from '../assets/bg/tiki-plank-wall-dark.png'
+import tikiPalmLawn from '../assets/bg/tiki-palm-lawn.webp'
+import tikiStatues from '../assets/bg/tiki-statues.webp'
+import tikiTorch from '../assets/bg/tiki-torch.webp'
+import tikiBambooWall from '../assets/bg/tiki-bamboo-wall.webp'
+import tikiBeachHuts from '../assets/bg/tiki-beach-huts.webp'
+import tikiNaPali from '../assets/bg/tiki-na-pali.webp'
+import tikiHibiscus from '../assets/bg/tiki-hibiscus.webp'
+import tikiMonstera from '../assets/bg/tiki-monstera.webp'
+import tikiBambooForest from '../assets/bg/tiki-bamboo-forest.webp'
+import tikiAlohaNavy from '../assets/bg/tiki-aloha-navy.png'
+import tikiAlohaRed from '../assets/bg/tiki-aloha-red.png'
+import tikiCabin from '../assets/bg/tiki-cabin.webp'
+import tikiLogCabin from '../assets/bg/tiki-log-cabin.webp'
+import tikiPlankWall from '../assets/bg/tiki-plank-wall.png'
 
 // Pure-CSS backgrounds (no image): the Y2K themes' own metal and the amber
 // LCD back wall from Bijou Footage.
@@ -211,6 +228,27 @@ export const THEME_VARIANTS = {
     { id: 'dripstone-cave', label: 'Dripstone cave', url: mcDripstoneCave },
     { id: 'dirt', label: 'Dirt', url: mcDirt },
     { id: 'dirt-vignette', label: 'Dirt (dark edges)', url: mcDirtVignette }
+  ],
+  // The painted totem-face wall (a tile) first, then beach and tiki-bar photos,
+  // the aloha-shirt prints (tiles), then cabin.
+  tiki: [
+    { id: 'totem-wall', label: 'Totem wall', url: tikiTotemWall, tile: 480 },
+    { id: 'totem-wall-night', label: 'Totem wall (night)', url: tikiTotemWallNight, tile: 480 },
+    { id: 'palm-lawn', label: 'Palm lawn', url: tikiPalmLawn },
+    { id: 'tiki-statues', label: 'Tiki statues', url: tikiStatues },
+    { id: 'torch', label: 'Tiki torch', url: tikiTorch },
+    { id: 'bamboo-wall', label: 'Tiki bar wall', url: tikiBambooWall },
+    { id: 'beach-huts', label: 'Beach huts', url: tikiBeachHuts },
+    { id: 'na-pali', label: 'Na Pali coast', url: tikiNaPali },
+    { id: 'hibiscus', label: 'Hibiscus', url: tikiHibiscus },
+    { id: 'monstera', label: 'Monstera', url: tikiMonstera },
+    { id: 'bamboo-forest', label: 'Bamboo forest', url: tikiBambooForest },
+    { id: 'aloha-navy', label: 'Aloha print', url: tikiAlohaNavy, tile: 480 },
+    { id: 'aloha-red', label: 'Red aloha print', url: tikiAlohaRed, tile: 480 },
+    { id: 'cabin', label: 'Cabin', url: tikiCabin },
+    { id: 'log-cabin', label: 'Log cabin', url: tikiLogCabin },
+    { id: 'plank-wall', label: 'Plank wall', url: tikiPlankWall, tile: [512, 256] },
+    { id: 'plank-wall-dark', label: 'Dark plank wall', url: tikiPlankWallDark, tile: [512, 256] }
   ]
 }
 

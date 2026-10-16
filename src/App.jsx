@@ -91,9 +91,11 @@ export default function App() {
       // the packaged build (where asset URLs are './assets/...').
       // A variant is either an image (url) or pure CSS (css: gradients).
       root.setProperty('--theme-wallpaper', v.css || 'url("' + new URL(v.url, document.baseURI).href + '")')
-      // Repeating tiles (Doodle Club) set their own size; photos cover.
+      // Repeating tiles (Doodle Club) set their own size, a number for a
+      // square tile or [width, height]; photos cover.
       if (v.tile) {
-        root.setProperty('--theme-wallpaper-size', v.tile + 'px ' + v.tile + 'px')
+        const [tw, th] = Array.isArray(v.tile) ? v.tile : [v.tile, v.tile]
+        root.setProperty('--theme-wallpaper-size', tw + 'px ' + th + 'px')
         root.setProperty('--theme-wallpaper-repeat', 'repeat')
       } else {
         root.removeProperty('--theme-wallpaper-size')

@@ -2491,6 +2491,390 @@ body {
   --cyan: #ffe45c;
 }
 
+/* ---------- Tiki ----------
+   Hawaiian tiki bar / beach cabin: a dark koa-wood title bar and topbar,
+   a bamboo tab bar, woven lauhala side panels, cream pages trimmed in koa,
+   lagoon-teal accents, hibiscus-pink selection, Kavoon carved-sign headings,
+   and photo / aloha-print backgrounds. */
+@font-face {
+  font-family: 'Kavoon';
+  src: url('./assets/fonts/kavoon-latin-400-normal.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+:root[data-theme='tiki'] {
+  --bg: #fbf3e2;
+  --panel: #fbf3e2;
+  --panel-2: #fffaf0;
+  --panel-3: #f1e2c2;
+  --ink: #2b1a0e;
+  --ink-dim: #4a3019;
+  --ink-faint: #5c4128;
+  --line: #d9c39b;
+  --line-soft: #eadbbd;
+  --cyan: #07808a;
+  --amber: #b85400;
+  --pink: #d62f55;
+  --danger: #c8322a;
+  --green: #1f8a3a;
+  --editor-page: #fffcf5;
+  --tiki-font: 'Kavoon', 'Segoe UI', sans-serif;
+  /* Rounded, friendly body type to match the cartoon trim (bundled Fredoka). */
+  --sans: 'Fredoka', 'Segoe UI', system-ui, sans-serif;
+  --tiki-koa: #2a1407;
+  --tiki-ink: #160a03;
+  --tiki-cream: #fbf0d8;
+  /* The paint box: wumpa orange, sun yellow, lagoon, jungle, hibiscus. */
+  --tiki-orange: #ff8a1f;
+  --tiki-yellow: #ffd23f;
+  --tiki-lagoon: #19c3d3;
+  --tiki-jungle: #3fbf55;
+  --tiki-hibiscus: #e8365d;
+  --tiki-straw: #ffd36b;
+}
+[data-theme='tiki'] .app-root {
+  background-color: #2f6d6a;
+  background-image: var(--theme-wallpaper, url('./assets/bg/tiki-palm-lawn.webp'));
+  background-size: var(--theme-wallpaper-size, cover);
+  background-position: var(--theme-wallpaper-pos, center);
+  background-repeat: var(--theme-wallpaper-repeat, no-repeat);
+}
+[data-theme='tiki'] .main {
+  background: transparent !important;
+}
+/* Pages are chunky stickers: thick ink outline, a hard drop shadow, and a
+   painted totem band across the top. */
+[data-theme='tiki'] .editor-wrap,
+[data-theme='tiki'] .outline-list {
+  background: url('./assets/tiki-band.png') 0 0 / 96px 14px repeat-x, var(--editor-page) !important;
+  background-origin: border-box !important;
+  border: 3px solid var(--tiki-ink) !important;
+  border-top: 14px solid transparent !important;
+  border-radius: 12px !important;
+  box-shadow: 6px 6px 0 var(--tiki-ink) !important;
+}
+/* Koa wood topbar with a painted totem band along its lower edge. */
+[data-theme='tiki'] .topbar {
+  background: url('./assets/tiki-band.png') 0 100% / 96px 14px repeat-x, #2a1407 url('./assets/tiki-koa.png') 0 0 / 512px 128px repeat !important;
+  background-origin: border-box !important;
+  border-bottom: 14px solid transparent !important;
+  box-shadow: 0 3px 0 var(--tiki-ink);
+}
+[data-theme='tiki'] .title-input,
+[data-theme='tiki'] .topbar .saved-flash,
+[data-theme='tiki'] .topbar .save-status,
+[data-theme='tiki'] .topbar .tb-stat,
+[data-theme='tiki'] .topbar .tb-zoom-value,
+[data-theme='tiki'] .topbar .date-field {
+  color: var(--tiki-cream) !important;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+}
+/* The script title is painted like the TIKI BAR sign: sun-yellow letters, a
+   thick dark outline, a hard shadow. */
+[data-theme='tiki'] .topbar .title-input {
+  color: var(--tiki-yellow) !important;
+  font-size: 19px !important;
+  -webkit-text-stroke: 4px var(--tiki-ink);
+  paint-order: stroke fill;
+  text-shadow: 0 3px 0 var(--tiki-ink) !important;
+  letter-spacing: 0.02em;
+}
+[data-theme='tiki'] .topbar .date-field {
+  border-color: rgba(251, 240, 216, 0.45) !important;
+  background: rgba(0, 0, 0, 0.18) !important;
+}
+/* Jungle-green bamboo tab bar. */
+[data-theme='tiki'] .tabbar {
+  background: #3fbf55 url('./assets/tiki-bamboo-green.png') 0 50% / 240px 32px repeat !important;
+  border-bottom: 3px solid var(--tiki-ink) !important;
+}
+/* Woven straw-gold side panels, trimmed with a painted band down the edge. */
+[data-theme='tiki'] .sidebar,
+[data-theme='tiki'] .inspector {
+  background-color: var(--tiki-straw) !important;
+  background-image: url('./assets/tiki-lauhala.png') !important;
+  background-size: 48px 48px !important;
+  background-blend-mode: multiply;
+}
+[data-theme='tiki'] .sidebar {
+  border-right: 12px solid transparent !important;
+  border-image: url('./assets/tiki-band-v.png') 0 28 0 0 / 0 12px 0 0 round !important;
+}
+[data-theme='tiki'] .inspector {
+  border-left: 12px solid transparent !important;
+  border-image: url('./assets/tiki-band-v.png') 0 0 0 28 / 0 0 0 12px round !important;
+}
+[data-theme='tiki'] .margin-stack {
+  background: var(--panel) !important;
+  border: 3px solid var(--tiki-ink) !important;
+  border-radius: 12px;
+  box-shadow: 4px 4px 0 var(--tiki-ink);
+}
+[data-theme='tiki'] .context-menu,
+[data-theme='tiki'] .export-menu,
+[data-theme='tiki'] .section-jump-menu,
+[data-theme='tiki'] .line-search-menu,
+[data-theme='tiki'] .tag-menu,
+[data-theme='tiki'] .synonym-menu,
+[data-theme='tiki'] .map-idea-menu,
+[data-theme='tiki'] .shape-picker-menu,
+[data-theme='tiki'] .diff-modal {
+  background: var(--panel-2) !important;
+  border: 3px solid var(--tiki-ink) !important;
+  border-radius: 10px !important;
+  box-shadow: 5px 5px 0 var(--tiki-ink) !important;
+}
+/* Buttons are chunky arcade keys: bright paint, a thick ink outline, a hard
+   shadow they sink into when pressed, and a springy hop on hover. */
+[data-theme='tiki'] .icon-btn,
+[data-theme='tiki'] .tab-chip,
+[data-theme='tiki'] .new-script-btn {
+  background: linear-gradient(180deg, #fffaf0 0%, #ffe9b8 100%) !important;
+  border: 2px solid var(--tiki-ink) !important;
+  border-radius: 8px !important;
+  color: var(--ink) !important;
+  box-shadow: 0 3px 0 var(--tiki-ink) !important;
+  transition: transform 0.14s cubic-bezier(0.3, 1.7, 0.5, 1), box-shadow 0.14s, background 0.12s;
+}
+[data-theme='tiki'] .icon-btn:hover,
+[data-theme='tiki'] .tab-chip:hover,
+[data-theme='tiki'] .new-script-btn:hover {
+  background: linear-gradient(180deg, #fff3cf 0%, #ffd36b 100%) !important;
+  transform: translateY(-2px) rotate(-1.5deg);
+  box-shadow: 0 5px 0 var(--tiki-ink) !important;
+}
+[data-theme='tiki'] .icon-btn:active,
+[data-theme='tiki'] .tab-chip:active,
+[data-theme='tiki'] .new-script-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--tiki-ink) !important;
+}
+[data-theme='tiki'] .icon-btn.active,
+[data-theme='tiki'] .tab-chip.active {
+  background: linear-gradient(180deg, #7ff0e6 0%, #19c3d3 100%) !important;
+  color: #04282b !important;
+}
+/* On the koa topbar the keys are wumpa orange. */
+[data-theme='tiki'] .topbar .icon-btn {
+  background: linear-gradient(180deg, #ffb347 0%, #ff8a1f 100%) !important;
+  color: var(--tiki-ink) !important;
+}
+[data-theme='tiki'] .topbar .icon-btn:hover {
+  background: linear-gradient(180deg, #ffd27a 0%, #ffa033 100%) !important;
+}
+[data-theme='tiki'] .topbar .icon-btn.active {
+  background: linear-gradient(180deg, #8ff5c4 0%, #3fbf55 100%) !important;
+  color: #05290f !important;
+}
+[data-theme='tiki'] .topbar .icon-btn:disabled {
+  opacity: 0.45;
+  transform: none;
+}
+/* The amber add buttons become hibiscus buttons. */
+[data-theme='tiki'] .checklist-add button {
+  background: linear-gradient(180deg, #ff5f82 0%, #e8365d 100%) !important;
+  color: #ffffff !important;
+  border: 2px solid var(--tiki-ink) !important;
+  box-shadow: 0 2px 0 var(--tiki-ink) !important;
+}
+/* Script cards: stickers on the straw mat; the open one is lagoon blue. */
+[data-theme='tiki'] .script-item {
+  background: #fffaf0 !important;
+  border: 2px solid var(--tiki-ink) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 3px 0 var(--tiki-ink);
+  transition: transform 0.14s cubic-bezier(0.3, 1.7, 0.5, 1), box-shadow 0.14s;
+}
+[data-theme='tiki'] .script-item:hover {
+  transform: translateY(-2px) rotate(-0.6deg);
+  box-shadow: 0 5px 0 var(--tiki-ink);
+}
+[data-theme='tiki'] .script-item.active,
+[data-theme='tiki'] .theme-row.active {
+  background: linear-gradient(180deg, #8ff0e8 0%, #19c3d3 100%) !important;
+  border-color: var(--tiki-ink) !important;
+  box-shadow: 0 3px 0 var(--tiki-ink) !important;
+}
+[data-theme='tiki'] .script-item.active * {
+  color: #04282b !important;
+}
+[data-theme='tiki'] .search-wrap input,
+[data-theme='tiki'] .sj-search,
+[data-theme='tiki'] .ls-search,
+[data-theme='tiki'] .outline-search {
+  background: #fffcf5 !important;
+  border: 2px solid var(--tiki-ink) !important;
+  border-radius: 8px !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-theme='tiki'] .icon-btn,
+  [data-theme='tiki'] .tab-chip,
+  [data-theme='tiki'] .new-script-btn,
+  [data-theme='tiki'] .script-item {
+    transition: none;
+  }
+  [data-theme='tiki'] .icon-btn:hover,
+  [data-theme='tiki'] .tab-chip:hover,
+  [data-theme='tiki'] .new-script-btn:hover,
+  [data-theme='tiki'] .script-item:hover {
+    transform: none;
+  }
+}
+/* Headings carved like a tiki-bar sign. */
+[data-theme='tiki'] .section-heading-input,
+[data-theme='tiki'] .margin-panel-title,
+[data-theme='tiki'] .sb-section-label,
+[data-theme='tiki'] .insp-section-title,
+[data-theme='tiki'] .map-node-heading,
+[data-theme='tiki'] .map-node-heading-input,
+[data-theme='tiki'] .chapter-node-label,
+[data-theme='tiki'] .idea-node-title,
+[data-theme='tiki'] .titlebar-title {
+  font-family: var(--tiki-font) !important;
+  font-weight: 400 !important;
+  letter-spacing: 0.02em;
+}
+[data-theme='tiki'] .title-input {
+  font-family: var(--tiki-font) !important;
+  font-weight: 400 !important;
+}
+/* Each section opens with a carved koa sign: sun-yellow lettering, ink
+   outline, hard shadow. The tokens are re-pointed inside it so every icon
+   and the timecode turn light on the dark wood without per-element rules. */
+[data-theme='tiki'] .section-head {
+  --ink: #ffe9a8;
+  --ink-dim: #f0cf86;
+  --ink-faint: #e2bf78;
+  background: #2a1407 url('./assets/tiki-koa.png') 0 0 / 512px 128px repeat;
+  border: 3px solid var(--tiki-ink);
+  border-radius: 10px;
+  box-shadow: 0 4px 0 var(--tiki-ink);
+  padding: 7px 12px;
+  margin: 18px 0 10px;
+  align-items: center;
+}
+[data-theme='tiki'] .section-head .section-heading-input {
+  color: var(--tiki-yellow) !important;
+  font-size: 17px !important;
+  -webkit-text-stroke: 3.5px var(--tiki-ink);
+  paint-order: stroke fill;
+  text-shadow: 0 2px 0 var(--tiki-ink);
+}
+[data-theme='tiki'] .section-block.struck-all .section-head .section-heading-input {
+  -webkit-text-stroke-width: 3px;
+}
+/* The map sits on the wallpaper; nodes are cream cards with koa trim. */
+[data-theme='tiki'] .map-canvas {
+  background-color: #2f6d6a !important;
+  /* A dark lagoon veil keeps the connector lines readable over a busy wall. */
+  background-image: linear-gradient(rgba(5, 32, 36, 0.42), rgba(5, 32, 36, 0.42)), var(--theme-wallpaper, url('./assets/bg/tiki-palm-lawn.webp')) !important;
+  background-size: auto, var(--theme-wallpaper-size, cover) !important;
+  background-position: 0 0, var(--theme-wallpaper-pos, center) !important;
+  background-repeat: no-repeat, var(--theme-wallpaper-repeat, no-repeat) !important;
+}
+/* The section timeline is a "level select" strip: each stage a painted tile. */
+[data-theme='tiki'] .section-timeline {
+  height: 30px;
+  background: var(--tiki-ink);
+  border-bottom: 3px solid var(--tiki-ink);
+}
+[data-theme='tiki'] .timeline-segment {
+  border-right: 3px solid var(--tiki-ink);
+  background: var(--tiki-orange);
+}
+[data-theme='tiki'] .timeline-segment:nth-child(5n + 2) { background: var(--tiki-yellow); }
+[data-theme='tiki'] .timeline-segment:nth-child(5n + 3) { background: var(--tiki-lagoon); }
+[data-theme='tiki'] .timeline-segment:nth-child(5n + 4) { background: var(--tiki-jungle); }
+[data-theme='tiki'] .timeline-segment:nth-child(5n + 5) { background: #ff6f91; }
+[data-theme='tiki'] .timeline-segment:hover {
+  filter: brightness(1.12) saturate(1.1);
+}
+[data-theme='tiki'] .timeline-segment-label {
+  font-family: var(--tiki-font);
+  font-size: 11px;
+  color: var(--tiki-ink);
+  letter-spacing: 0.03em;
+}
+[data-theme='tiki'] .timeline-segment.done {
+  background-image: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.28) 0 6px, transparent 6px 12px);
+}
+[data-theme='tiki'] .timeline-segment.done .timeline-segment-label {
+  color: var(--tiki-ink);
+}
+[data-theme='tiki'] .map-node {
+  background: var(--editor-page) !important;
+  border: 3px solid var(--tiki-ink) !important;
+  border-radius: 12px !important;
+  box-shadow: 4px 4px 0 var(--tiki-ink) !important;
+}
+[data-theme='tiki'] .map-node.is-selected {
+  box-shadow: 0 0 0 4px var(--tiki-orange), 4px 4px 0 4px var(--tiki-ink) !important;
+}
+[data-theme='tiki'] .map-node-connector {
+  background: var(--tiki-orange) !important;
+  border: 2px solid var(--tiki-ink) !important;
+}
+[data-theme='tiki'] .map-edges-svg {
+  --ink-faint: #fbf0d8;
+  --cyan: #f7a541;
+}
+[data-theme='tiki'] .map-edge {
+  stroke: #fbf0d8;
+  filter: drop-shadow(0 0 2px var(--tiki-ink)) drop-shadow(0 2px 0 var(--tiki-ink));
+}
+[data-theme='tiki'] .map-edge.is-lit {
+  stroke: var(--tiki-yellow);
+}
+[data-theme='tiki'] ::selection {
+  background: #f6b3c0;
+  color: #2b1a0e;
+}
+:root[data-theme='tiki'] {
+  --titlebar-bg: #2a1407;
+  --titlebar-border: #160a03;
+  --titlebar-text: #fbf0d8;
+  --titlebar-weight: 400;
+  --caption-top: 5px;
+  --caption-height: 21px;
+  --caption-width: 28px;
+  --caption-close-width: 30px;
+  --caption-gap: 5px;
+  --caption-inset: 7px;
+  --caption-radius: 6px;
+  --caption-border: #160a03;
+  --caption-bg: #ffd23f;
+  --caption-bg-hover: #ffe680;
+  --caption-bg-active: #e8b400;
+  --caption-shadow: 0 2px 0 #160a03;
+  --caption-icon: #160a03;
+  --caption-stroke: 2;
+  --caption-close-border: #160a03;
+  --caption-close-bg: #e8365d;
+  --caption-close-bg-hover: #ff5f82;
+  --caption-close-bg-active: #b8223f;
+  /* A bamboo-and-cream tiki menu card. */
+  --tip-bg: #fffaf0;
+  --tip-ink: #2b1a0e;
+  --tip-border: #6b3a1a;
+  --tip-radius: 6px;
+  --tip-shadow: 0 4px 12px rgba(30, 14, 4, 0.35);
+  --tip-key-bg: #d4f0ec;
+  --tip-key-ink: #08393c;
+  --tip-key-border: #0b5e62;
+}
+/* Image set here, not in --titlebar-bg: a relative url() inside a custom
+   property can resolve against the wrong folder in the packaged build. */
+[data-theme='tiki'] .titlebar {
+  background: #2a1407 url('./assets/tiki-koa.png') 0 64px / 512px 128px repeat;
+  border-bottom: 2px solid #160a03;
+}
+[data-theme='tiki'] .titlebar-title {
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
+}
+:root[data-theme='tiki'] .teleprompter-body {
+  --cyan: #f7a541;
+}
+
 /* MS-DOS: the Windows 95 navy titlebar gradient with gray beveled caption
    squares, matching the theme's own topbar. */
 :root[data-theme='dos'] {

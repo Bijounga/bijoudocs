@@ -194,6 +194,10 @@ export const CHANGELOG = {
     'Background variations — pick a theme, then choose its backdrop from the thumbnails underneath it. Every wallpaper theme has several: Windows 7 and Vista for Frutiger Aero, aurora for Aero Dark, game scenes for Minecraft and Terraria, sunset grids for Vaporwave, diamond plate and carbon for the Y2K themes, and doodles, notebook, graph, dot-grid and legal-pad paper for Doodle Club',
     'Each theme remembers which background you picked',
     'Fixed bundled fonts being blocked from loading'
+  ],
+  '0.5.60': [
+    'New Tiki theme: a koa-wood title bar and topbar, a bamboo tab bar, woven lauhala side panels, cream pages trimmed in koa, and carved tiki-sign headings',
+    '17 Tiki backgrounds to pick from — totem walls, beach and tiki-bar photos, hibiscus and monstera, two aloha-shirt prints, and cabin interiors and plank walls'
   ]
 }
 

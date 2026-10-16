@@ -17,3 +17,17 @@ xp-mountain-lake.webp — "Lake Kinney mit Mount Whitehorn.jpg" by Florian Fuchs
 xp-open-road.webp — "Mountain road in Jasper (Unsplash).jpg" by Gabriel Santiago gabrielssantiago — CC0 — https://commons.wikimedia.org/wiki/File%3AMountain_road_in_Jasper_(Unsplash).jpg
 vapor-pink-palms.webp — "Colour swirls in the sky.jpg" by Damola Mustapha — CC BY-SA 4.0 — https://commons.wikimedia.org/wiki/File%3AColour_swirls_in_the_sky.jpg
 vapor-palm-silhouettes.webp — "Venice Beach palm trees at sunset (Unsplash).jpg" by Stuart Guest-Smith sguestsmith — CC0 — https://commons.wikimedia.org/wiki/File%3AVenice_Beach_palm_trees_at_sunset_(Unsplash).jpg
+tiki-statues.webp — "Sacred Gods - Puʻuhonua o Hōnaunau National Historical Park.jpg" by Mary Wang — CC BY-SA 4.0 — https://commons.wikimedia.org/wiki/File%3ASacred_Gods_-_Pu%CA%BBuhonua_o_H%C5%8Dnaunau_National_Historical_Park.jpg
+tiki-torch.webp — "Tiki Time (Unsplash).jpg" by Kevin Finneran mauimaniacs — CC0 — https://commons.wikimedia.org/wiki/File%3ATiki_Time_(Unsplash).jpg
+tiki-bamboo-wall.webp — "Tiki Carving (6265264076).jpg" by Sam Howzit — CC BY 2.0 — https://commons.wikimedia.org/wiki/File%3ATiki_Carving_(6265264076).jpg
+tiki-palm-lawn.webp — "2021-10-07 17 26 29 Coconut palms and lawn near the beach at Poipu Beach Park in Poipu, Kauai, Hawaii.jpg" by Famartin — CC BY-SA 4.0 — https://commons.wikimedia.org/wiki/File%3A2021-10-07_17_26_29_Coconut_palms_and_lawn_near_the_beach_at_Poipu_Beach_Park_in_Poipu%2C_Kauai%2C_Hawaii.jpg
+tiki-na-pali.webp — "Milolii valley Na Pali coast Kauai Hawaii (45554347574).jpg" by dronepicr — CC BY 2.0 — https://commons.wikimedia.org/wiki/File%3AMilolii_valley_Na_Pali_coast_Kauai_Hawaii_(45554347574).jpg
+tiki-beach-huts.webp — "DZ6 2673 Golden hour at the beach - palm-thatched huts gentle waves and a sunset that slows time.jpg" by PattayaPatrol — CC BY-SA 4.0 — https://commons.wikimedia.org/wiki/File%3ADZ6_2673_Golden_hour_at_the_beach_-_palm-thatched_huts_gentle_waves_and_a_sunset_that_slows_time.jpg
+tiki-hibiscus.webp — "Hibiscus 00526.JPG" by Vengolis — CC BY-SA 4.0 — https://commons.wikimedia.org/wiki/File%3AHibiscus_00526.JPG
+tiki-monstera.webp — "Fruit Salad Plant (Monstera deliciosa) 2.jpg" by Mokkie — CC BY-SA 3.0 — https://commons.wikimedia.org/wiki/File%3AFruit_Salad_Plant_(Monstera_deliciosa)_2.jpg
+tiki-bamboo-forest.webp — "Arashiyama Bamboo Grove (Unsplash).jpg" by Erol Ahmed erol — CC0 — https://commons.wikimedia.org/wiki/File%3AArashiyama_Bamboo_Grove_(Unsplash).jpg
+tiki-cabin.webp — "Leangkollen Hotel in Asker, Norway. A conference hotel originally designed by architect Wilhelm K. Essendrop 1941 as a log cabin residence for Vidkun Quisling. Fire place, rocking chair, etc. Photo 2019-03-31. 45.jpg" by Wolfmann — CC BY-SA 4.0 — https://commons.wikimedia.org/wiki/File%3ALeangkollen_Hotel_in_Asker%2C_Norway._A_conference_hotel_originally_designed_by_architect_Wilhelm_K._Essendrop_1941_as_a_log_cabin_residence_for_Vidkun_Quisling._Fire_place%2C_rocking_chair%2C_etc._Photo_2019-03-31._45.jpg
+tiki-log-cabin.webp — "Lake Agnes Cabin.JPG" by Paul5097 — CC BY-SA 3.0 — https://commons.wikimedia.org/wiki/File%3ALake_Agnes_Cabin.JPG
+
+tiki-totem-wall.png, ../tiki-band.png, ../tiki-band-v.png, ../tiki-bamboo-green.png — original artwork drawn for BijouDocs (SVG rendered with sharp; the green bamboo is the Tiki bamboo texture hue-shifted); no third-party source.
+tiki-totem-wall-night.png, tiki-plank-wall-dark.png — darkened (sharp brightness/hue) versions of tiki-totem-wall.png and tiki-plank-wall.png.
