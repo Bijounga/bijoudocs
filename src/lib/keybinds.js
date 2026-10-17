@@ -26,6 +26,7 @@ export const DEFAULT_KEYBINDS = {
   mapAddIdeaNode: 'ctrl+shift+i',
   duplicate: 'ctrl+d',
   mapLinkNodes: 'ctrl+shift+e',
+  mapUnlinkNodes: 'ctrl+alt+e',
   mapSelectDownstream: 'ctrl+shift+.',
   mapSelectUpstream: 'ctrl+shift+,',
   mapSelectConnected: 'ctrl+shift+/',
@@ -77,6 +78,11 @@ export const SHORTCUT_META = [
     id: 'mapLinkNodes',
     label: 'Link selected mind-map nodes',
     desc: 'With 2+ nodes selected on the mind map, connects them into one chain in selection order — one press instead of dragging each edge by hand.'
+  },
+  {
+    id: 'mapUnlinkNodes',
+    label: 'Unlink selected mind-map nodes',
+    desc: 'With 2+ nodes selected on the mind map, removes every connection between them. Connections to nodes outside the selection stay.'
   },
   {
     id: 'mapSelectDownstream',

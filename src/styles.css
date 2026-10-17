@@ -6991,8 +6991,20 @@ body.is-resizing-panel {
   color: var(--ink);
   cursor: pointer;
 }
-.map-idea-menu-item:hover {
+.map-idea-menu-item:hover,
+.map-idea-menu-item.highlighted {
   background: var(--panel-2);
+}
+/* Opened by the keybind: floats at the cursor (position set inline). */
+.map-idea-menu.at-cursor {
+  z-index: 1000;
+}
+.map-idea-num {
+  margin-left: auto;
+  padding-left: 12px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--ink-faint);
 }
 .map-idea-menu-manage {
   color: var(--ink-faint);
@@ -7115,6 +7127,17 @@ body.is-resizing-panel {
 }
 .context-menu-item:hover {
   background: var(--panel-2);
+}
+.context-menu-item.has-shortcut {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.context-menu-shortcut {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--ink-faint);
 }
 .context-menu-item.danger:hover {
   color: var(--danger);

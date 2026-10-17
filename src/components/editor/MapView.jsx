@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useStore } from '../../state/store.js'
 import { comboFromEvent } from '../../lib/keybinds.js'
 import { sectionsHaveContent } from '../../lib/model.js'
@@ -241,6 +242,7 @@ export default function MapView({ scriptId, script }) {
   const duplicateSections = useStore((s) => s.duplicateSections)
   const duplicateIdeaNode = useStore((s) => s.duplicateIdeaNode)
   const linkMapNodesInOrder = useStore((s) => s.linkMapNodesInOrder)
+  const unlinkMapNodes = useStore((s) => s.unlinkMapNodes)
   const ideaNodePresets = useStore((s) => s.ideaNodePresets)
   const addIdeaNodePreset = useStore((s) => s.addIdeaNodePreset)
   const deleteIdeaNodePreset = useStore((s) => s.deleteIdeaNodePreset)
@@ -259,6 +261,12 @@ export default function MapView({ scriptId, script }) {
   const [selectedEdgeId, setSelectedEdgeId] = useState(null)
   const [selectedNodeIds, setSelectedNodeIds] = useState([])
   const [ideaMenuOpen, setIdeaMenuOpen] = useState(false)
+  // Opened by the keybind with the mouse over the map: the menu appears at
+  // the cursor ({x, y} screen, world = where the node goes); null = the
+  // toolbar dropdown. Highlighted row for arrow keys / Enter.
+  const [ideaMenuAt, setIdeaMenuAt] = useState(null)
+  const [ideaMenuIndex, setIdeaMenuIndex] = useState(0)
+  const pointerRef = useRef(null) // last mouse position over the canvas (screen px)
   const [presetManagerOpen, setPresetManagerOpen] = useState(false)
   const spaceDownRef = useRef(false)
   const mapClipboardRef = useRef([]) // [{id, type: 'section'|'idea'}] — Ctrl+C/V within the map, not the app-wide line clipboard
@@ -305,7 +313,7 @@ export default function MapView({ scriptId, script }) {
   useEffect(() => {
     if (!ideaMenuOpen) return
     function onDocMouseDown(e) {
-      if (!e.target.closest('.map-idea-menu-wrap')) setIdeaMenuOpen(false)
+      if (!e.target.closest('.map-idea-menu-wrap, .map-idea-menu')) setIdeaMenuOpen(false)
     }
     document.addEventListener('mousedown', onDocMouseDown)
     return () => document.removeEventListener('mousedown', onDocMouseDown)
@@ -359,6 +367,12 @@ export default function MapView({ scriptId, script }) {
       }
       const st = useStore.getState()
       const combo = comboFromEvent(e)
+      // Keybinds can be rebound to a plain key (e.g. "e" to link nodes). A
+      // plain character typed into a text field — or a focused dropdown,
+      // where letters jump between options — is just typing, never a map
+      // shortcut.
+      const plainKey = !e.ctrlKey && !e.metaKey && !e.altKey && e.key.length === 1
+      if (plainKey && (isEditingText || (active && active.tagName === 'SELECT'))) return
 
       // While the idea-node menu is open, a number picks an item directly
       // (1 = Blank, 2+ = presets in order) — a keybind-driven way to spawn
@@ -369,10 +383,23 @@ export default function MapView({ scriptId, script }) {
           setIdeaMenuOpen(false)
           return
         }
+        // Arrow keys move the highlight (Blank + every preset), Enter picks it.
+        const count = ideaNodePresets.length + 1
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+          e.preventDefault()
+          setIdeaMenuIndex((i) => (i + (e.key === 'ArrowDown' ? 1 : count - 1)) % count)
+          return
+        }
+        if (e.key === 'Enter') {
+          e.preventDefault()
+          const i = Math.min(ideaMenuIndex, count - 1)
+          handleAddIdeaNode(i === 0 ? undefined : ideaNodePresets[i - 1], ideaMenuAt && ideaMenuAt.world)
+          return
+        }
         const n = parseInt(e.key, 10)
         if (!isNaN(n) && n >= 1 && n <= ideaNodePresets.length + 1) {
           e.preventDefault()
-          handleAddIdeaNode(n === 1 ? undefined : ideaNodePresets[n - 2])
+          handleAddIdeaNode(n === 1 ? undefined : ideaNodePresets[n - 2], ideaMenuAt && ideaMenuAt.world)
           return
         }
       }
@@ -398,8 +425,20 @@ export default function MapView({ scriptId, script }) {
       }
       if (combo === st.keybinds.mapAddIdeaNode) {
         e.preventDefault()
-        setIdeaMenuOpen((v) => !v)
+        if (e.repeat) return
         setPresetManagerOpen(false)
+        if (ideaMenuOpen) {
+          setIdeaMenuOpen(false)
+          return
+        }
+        // At the mouse if it's over the map (the node goes there too),
+        // otherwise under the toolbar button.
+        const ptr = pointerRef.current
+        const rect = canvasRef.current && canvasRef.current.getBoundingClientRect()
+        const inside = ptr && rect && ptr.x >= rect.left && ptr.x <= rect.right && ptr.y >= rect.top && ptr.y <= rect.bottom
+        setIdeaMenuAt(inside ? { x: ptr.x, y: ptr.y, world: screenToWorld(ptr.x, ptr.y) } : null)
+        setIdeaMenuIndex(0)
+        setIdeaMenuOpen(true)
         return
       }
       if (!isEditingText && combo === 'ctrl+c' && validSelectedNodeIds.length) {
@@ -448,7 +487,12 @@ export default function MapView({ scriptId, script }) {
       }
       if (!isEditingText && combo === st.keybinds.mapLinkNodes && validSelectedNodeIds.length >= 2) {
         e.preventDefault()
-        linkMapNodesInOrder(scriptId, validSelectedNodeIds)
+        // Holding the key down auto-repeats; the first press already linked them.
+        if (!e.repeat) linkMapNodesInOrder(scriptId, validSelectedNodeIds)
+      }
+      if (!isEditingText && combo === st.keybinds.mapUnlinkNodes && validSelectedNodeIds.length >= 2) {
+        e.preventDefault()
+        if (!e.repeat) unlinkMapNodes(scriptId, validSelectedNodeIds)
       }
       if (!isEditingText && combo === st.keybinds.mapSelectDownstream && validSelectedNodeIds.length) {
         e.preventDefault()
@@ -476,7 +520,7 @@ export default function MapView({ scriptId, script }) {
       document.removeEventListener('keyup', onKeyUp)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedEdgeId, validSelectedNodeIds, scriptId, removeMapEdge, pan, zoom, ideaMenuOpen, ideaNodePresets])
+  }, [selectedEdgeId, validSelectedNodeIds, scriptId, removeMapEdge, pan, zoom, ideaMenuOpen, ideaMenuAt, ideaMenuIndex, ideaNodePresets])
 
   // Reads pan/zoom from the refs (always current) rather than closing over
   // the state values directly, so this stays correct even when called from
@@ -809,6 +853,22 @@ export default function MapView({ scriptId, script }) {
     return at && Number.isFinite(at.x) && Number.isFinite(at.y) ? at : viewportCenterWorld()
   }
 
+  // At the cursor the menu goes to <body> (fixed positioning inside a
+  // toolbar with a backdrop-filter, as some themes have, would be relative
+  // to the toolbar instead of the window).
+  const floatIfAtCursor = (el) => (ideaMenuAt ? createPortal(el, document.body) : el)
+
+  // The floating idea menu's spot: at the cursor, kept on screen.
+  function cursorMenuStyle(at, rows) {
+    const w = 190
+    const h = Math.min(280, rows * 32 + 12)
+    return {
+      position: 'fixed',
+      left: Math.max(8, Math.min(at.x, window.innerWidth - w - 8)),
+      top: Math.max(8, Math.min(at.y, window.innerHeight - h - 8))
+    }
+  }
+
   function handleAddSection(at) {
     const world = placementPoint(at)
     if (!world) return
@@ -873,6 +933,8 @@ export default function MapView({ scriptId, script }) {
           <button
             className={'icon-btn tb-icon tb-icon-menu' + (ideaMenuOpen ? ' active' : '')}
             onClick={() => {
+              setIdeaMenuAt(null)
+              setIdeaMenuIndex(0)
               setIdeaMenuOpen((v) => !v)
               setPresetManagerOpen(false)
             }}
@@ -881,20 +943,23 @@ export default function MapView({ scriptId, script }) {
             <Icon name="note" />
             <Icon name="chevron" size={9} className="tb-icon-caret" />
           </button>
-          {ideaMenuOpen && (
-            <div className="map-idea-menu">
-              <div className="map-idea-menu-item" onClick={() => handleAddIdeaNode()}>
-                <span className="map-idea-swatch" style={{ color: 'var(--ink-faint)' }}>
-                  <Icon name={SHAPES[0].icon} size={13} />
-                </span>
-                Blank
-              </div>
-              {ideaNodePresets.map((preset) => (
-                <div key={preset.id} className="map-idea-menu-item" onClick={() => handleAddIdeaNode(preset)}>
-                  <span className="map-idea-swatch" style={{ color: preset.color }}>
-                    <Icon name={(SHAPES.find((s) => s.id === (preset.shape || 'rectangle')) || SHAPES[0]).icon} size={13} />
+          {ideaMenuOpen && floatIfAtCursor(
+            <div
+              className={'map-idea-menu' + (ideaMenuAt ? ' at-cursor' : '')}
+              style={ideaMenuAt ? cursorMenuStyle(ideaMenuAt, ideaNodePresets.length + 2) : undefined}
+            >
+              {[null, ...ideaNodePresets].map((preset, i) => (
+                <div
+                  key={preset ? preset.id : 'blank'}
+                  className={'map-idea-menu-item' + (i === ideaMenuIndex ? ' highlighted' : '')}
+                  onMouseEnter={() => setIdeaMenuIndex(i)}
+                  onClick={() => handleAddIdeaNode(preset || undefined, ideaMenuAt && ideaMenuAt.world)}
+                >
+                  <span className="map-idea-swatch" style={{ color: preset ? preset.color : 'var(--ink-faint)' }}>
+                    <Icon name={((preset && SHAPES.find((s) => s.id === (preset.shape || 'rectangle'))) || SHAPES[0]).icon} size={13} />
                   </span>
-                  {preset.label}
+                  {preset ? preset.label : 'Blank'}
+                  {i < 9 && <span className="map-idea-num">{i + 1}</span>}
                 </div>
               ))}
               <div
@@ -977,6 +1042,8 @@ export default function MapView({ scriptId, script }) {
       <div
         className="map-canvas"
         ref={canvasRef}
+        onMouseMove={(e) => (pointerRef.current = { x: e.clientX, y: e.clientY })}
+        onMouseLeave={() => (pointerRef.current = null)}
         onWheel={handleWheel}
         onMouseDown={handleCanvasMouseDown}
         onContextMenu={handleCanvasContextMenu}

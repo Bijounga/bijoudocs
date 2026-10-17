@@ -39,6 +39,10 @@ export default function ContextMenu() {
   const alignMapNodesToLine = useStore((s) => s.alignMapNodesToLine)
   const snapMapNodesToGrid = useStore((s) => s.snapMapNodesToGrid)
   const spaceMapNodesEvenly = useStore((s) => s.spaceMapNodesEvenly)
+  const linkMapNodesInOrder = useStore((s) => s.linkMapNodesInOrder)
+  const linkMapNodesByPosition = useStore((s) => s.linkMapNodesByPosition)
+  const unlinkMapNodes = useStore((s) => s.unlinkMapNodes)
+  const keybinds = useStore((s) => s.keybinds)
   const scripts = useStore((s) => s.scripts)
   const openScript = useStore((s) => s.openScript)
   const togglePin = useStore((s) => s.togglePin)
@@ -211,6 +215,14 @@ export default function ContextMenu() {
           }
         : null,
       { separator: true },
+      // Connect a multi-node selection: in the order it was picked (the
+      // keybind's behaviour), or by where the nodes sit.
+      ids.length > 1 ? { label: 'Connect in the order selected', shortcut: keybinds.mapLinkNodes, onClick: act(() => linkMapNodesInOrder(menu.scriptId, ids)) } : null,
+      ids.length > 1 ? { label: 'Connect by position', onClick: act(() => linkMapNodesByPosition(menu.scriptId, ids)) } : null,
+      ids.length > 1 && script.mapLayout.edges.some((e) => ids.includes(e.from) && ids.includes(e.to))
+        ? { label: 'Disconnect these', shortcut: keybinds.mapUnlinkNodes, onClick: act(() => unlinkMapNodes(menu.scriptId, ids)) }
+        : null,
+      ids.length > 1 ? { separator: true } : null,
       { label: 'Select everything after this', onClick: act(() => requestMapSelection(menu.scriptId, selectConnectedNodes(menu.scriptId, ids, 'forward'))) },
       { label: 'Select everything before this', onClick: act(() => requestMapSelection(menu.scriptId, selectConnectedNodes(menu.scriptId, ids, 'backward'))) },
       { label: 'Select everything connected', onClick: act(() => requestMapSelection(menu.scriptId, selectConnectedNodes(menu.scriptId, ids, 'both'))) },
@@ -297,10 +309,11 @@ export default function ContextMenu() {
         ) : (
           <div
             key={i}
-            className={'context-menu-item' + (it.danger ? ' danger' : '') + (it.suggestion ? ' suggestion' : '') + (it.disabled ? ' disabled' : '')}
+            className={'context-menu-item' + (it.danger ? ' danger' : '') + (it.suggestion ? ' suggestion' : '') + (it.disabled ? ' disabled' : '') + (it.shortcut ? ' has-shortcut' : '')}
             onClick={it.disabled ? undefined : it.onClick}
           >
             {it.label}
+            {it.shortcut && <span className="context-menu-shortcut">{it.shortcut}</span>}
           </div>
         )
       )}

@@ -214,6 +214,12 @@ export const CHANGELOG = {
     'Drag the right-hand panel’s left edge to make it wider or narrower (double-click to reset)',
     'Hide just the script library on the left with the new tab-bar button or Ctrl+Shift+Q',
     'Terraria theme: the bars and panels now step from light to dark instead of all being one blue'
+  ],
+  '0.5.64': [
+    'The Add idea node shortcut now opens its menu right at your mouse on the mind map — pick with the arrow keys and Enter, a click, or a number, and the node appears where your cursor was',
+    'Right-click 2+ selected mind-map nodes to connect them (in the order you selected them, or by position) or disconnect them',
+    'New Unlink shortcut (Ctrl+Alt+E) removes the connections between the selected nodes',
+    'Fixed mind-map shortcuts bound to a single letter firing while you typed that letter in a node, summary or search box'
   ]
 }
 

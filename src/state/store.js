@@ -2898,6 +2898,40 @@ export const useStore = create(
       })
       get().scheduleSave(scriptId, { flash: false })
     },
+    // Same chain, but ordered by where the nodes sit — left to right, or
+    // top to bottom, whichever way the selection is spread more (the same
+    // rule as alignMapNodesToLine). A drag-box selection has no meaningful
+    // "selection order", so this is the one that reads as intended there.
+    linkMapNodesByPosition(scriptId, ids) {
+      const script = get().scripts.find((sc) => sc.id === scriptId)
+      if (!script) return
+      const placed = ids.filter((id) => script.mapLayout.nodes[id])
+      if (placed.length < 2) return
+      const ns = placed.map((id) => script.mapLayout.nodes[id])
+      const spread = (k) => Math.max(...ns.map((n) => n[k])) - Math.min(...ns.map((n) => n[k]))
+      const [a, b] = spread('x') >= spread('y') ? ['x', 'y'] : ['y', 'x']
+      const ordered = placed.slice().sort((p, q) => {
+        const np = script.mapLayout.nodes[p]
+        const nq = script.mapLayout.nodes[q]
+        return np[a] - nq[a] || np[b] - nq[b]
+      })
+      get().linkMapNodesInOrder(scriptId, ordered)
+    },
+    // Removes every connection between two nodes of the selection (either
+    // direction); connections to nodes outside it stay.
+    unlinkMapNodes(scriptId, ids) {
+      const set_ = new Set(ids)
+      const script = get().scripts.find((sc) => sc.id === scriptId)
+      if (!script || !script.mapLayout.edges.some((e) => set_.has(e.from) && set_.has(e.to))) return
+      get().pushUndo(scriptId)
+      set((s) => {
+        const sc = s.scripts.find((x) => x.id === scriptId)
+        if (!sc) return
+        sc.mapLayout.edges = sc.mapLayout.edges.filter((e) => !(set_.has(e.from) && set_.has(e.to)))
+        sc.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+    },
     // Three separate "straighten out a selection" moves, each its own
     // right-click action rather than one combined behavior — the user asked
     // for all three as distinct options, not one auto-layout.
