@@ -79,6 +79,14 @@ export function useGlobalKeydown() {
       }
 
       const combo = comboFromEvent(e)
+      // The notepad toggles from anywhere; inside it, everything else is just
+      // typing (Ctrl+Z must undo its text, not the script).
+      if (combo === st.keybinds.toggleScratchpad) {
+        e.preventDefault()
+        st.toggleScratchpad()
+        return
+      }
+      if (e.target && e.target.closest && e.target.closest('.scratchpad')) return
       const active = document.activeElement
       const activeLineKey = active && active.dataset ? active.dataset.lineKey : null
       const activeHeadingFor = active && active.dataset ? active.dataset.headingFor : null

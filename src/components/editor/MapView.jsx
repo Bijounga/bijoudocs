@@ -213,6 +213,8 @@ export default function MapView({ scriptId, script }) {
   const keybinds = useStore((s) => s.keybinds)
   const mapHideBars = useStore((s) => s.mapHideBars)
   const toggleMapHideBars = useStore((s) => s.toggleMapHideBars)
+  const padOpen = useStore((s) => s.scratchpad.open)
+  const toggleScratchpad = useStore((s) => s.toggleScratchpad)
   const jumpToSection = useStore((s) => s.jumpToSection)
   const toggleMapView = useStore((s) => s.toggleMapView)
   const ensureMapNodes = useStore((s) => s.ensureMapNodes)
@@ -1023,6 +1025,13 @@ export default function MapView({ scriptId, script }) {
           title={(mapHideBars ? 'Show' : 'Hide') + ' the top bars, leaving just this toolbar (' + keybinds.mapHideBars + ')'}
         >
           <Icon name="hideBars" />
+        </button>
+        <button
+          className={'icon-btn tb-icon' + (padOpen ? ' active' : '')}
+          onClick={toggleScratchpad}
+          title={'Notepad — a floating pad for throwaway notes (' + keybinds.toggleScratchpad + ')'}
+        >
+          <Icon name="pad" />
         </button>
         <div className="topbar-spacer" />
         <span

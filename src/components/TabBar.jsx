@@ -12,6 +12,8 @@ export default function TabBar({ script }) {
   const focusMode = useStore((s) => s.focusMode)
   const toggleFocusMode = useStore((s) => s.toggleFocusMode)
   const sidebarHidden = useStore((s) => s.sidebarHidden)
+  const padOpen = useStore((s) => s.scratchpad.open)
+  const toggleScratchpad = useStore((s) => s.toggleScratchpad)
   const toggleSidebarHidden = useStore((s) => s.toggleSidebarHidden)
   const openTeleprompter = useStore((s) => s.openTeleprompter)
   const mapViewOpen = useStore((s) => s.mapViewOpen)
@@ -74,6 +76,13 @@ export default function TabBar({ script }) {
         })}
       </div>
       <div className="tb-group">
+        <button
+          className={'icon-btn tb-icon' + (padOpen ? ' active' : '')}
+          onClick={toggleScratchpad}
+          title={'Notepad — a floating pad for throwaway notes' + kb('toggleScratchpad')}
+        >
+          <Icon name="pad" />
+        </button>
         <button
           className={'icon-btn tb-icon' + (sidebarHidden ? ' active' : '')}
           onClick={toggleSidebarHidden}

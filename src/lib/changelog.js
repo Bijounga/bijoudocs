@@ -220,6 +220,11 @@ export const CHANGELOG = {
     'Right-click 2+ selected mind-map nodes to connect them (in the order you selected them, or by position) or disconnect them',
     'New Unlink shortcut (Ctrl+Alt+E) removes the connections between the selected nodes',
     'Fixed mind-map shortcuts bound to a single letter firing while you typed that letter in a node, summary or search box'
+  ],
+  '0.5.65': [
+    'New notepad: a floating pad of ruled paper for throwaway notes — open it from the tab bar or map toolbar, or with Ctrl+Alt+N. Drag it anywhere, resize it, and put it away with the × (your notes stay)',
+    'Pages: add tabs to the notepad, double-click one to rename it, close the ones you don’t need. Every script has its own notepad and its own pages',
+    'Bold and italic in the notepad (Ctrl+B / Ctrl+I, or the buttons), a zoom for its text, and a button to turn the ruled lines off'
   ]
 }
 

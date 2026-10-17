@@ -10,6 +10,7 @@ import { buildNavList } from '../lib/navigation.js'
 import { totalWordCountAll } from '../lib/timecode.js'
 import { CHANGELOG, changelogSince } from '../lib/changelog.js'
 import { fetchSynonyms } from '../lib/synonyms.js'
+import { MAIN_TAB_ID, getPad, nextTabName } from '../lib/scratchNotes.js'
 import { checkSpelling } from '../lib/spellcheck.js'
 import { mergeExternalScript } from '../lib/externalMerge.js'
 
@@ -21,6 +22,16 @@ const byLandingOrder = (a, b) => (a.archived ? 1 : 0) - (b.archived ? 1 : 0) || 
 const saveTimers = {}
 let savedFlashTimer = null
 let updateStatusTimer = null
+let scratchSaveTimer = null
+// The script's notepad tabs inside a draft, created (with the first tab)
+// the first time something is written; a read-only view is getPad().
+function scratchPadFor(s, scriptId) {
+  if (!s.scratchPads[scriptId]) {
+    const base = getPad({}, scriptId)
+    s.scratchPads[scriptId] = { tabs: base.tabs.map((t) => ({ ...t })), active: base.active }
+  }
+  return s.scratchPads[scriptId]
+}
 // In-memory only, like the prototype's own `clipboardLines` — never persisted.
 let clipboardLines = []
 
@@ -161,6 +172,11 @@ export const useStore = create(
     // The right-hand inspector's width (dragged on its left edge), and
     // whether the left library panel is hidden.
     inspectorWidth: 290,
+    // The floating notepad: where it sits (x/y null = bottom-right), its size,
+    // text zoom, whether the ruled lines show and whether it's open; and its
+    // tabs per script (see lib/scratchNotes.js).
+    scratchpad: { open: false, x: null, y: null, w: 360, h: 380, zoom: 1, lines: true },
+    scratchPads: {},
     sidebarHidden: false,
     rightMarginWidth: 210,
     noteColor: '#f2a65a',
@@ -223,6 +239,18 @@ export const useStore = create(
         if (settings && typeof settings.zoom === 'number') s.zoom = settings.zoom
         if (settings && settings.leftMarginWidth) s.leftMarginWidth = settings.leftMarginWidth
         if (settings && typeof settings.inspectorWidth === 'number') s.inspectorWidth = settings.inspectorWidth
+        if (settings && settings.scratchpad && typeof settings.scratchpad === 'object') s.scratchpad = { ...s.scratchpad, ...settings.scratchpad }
+        if (settings && settings.scratchPads && typeof settings.scratchPads === 'object') s.scratchPads = settings.scratchPads
+        // The notepad used to keep a single note per script (scratchNotes);
+        // each becomes that script's first tab. The old key is rewritten empty
+        // on the next save, in the same write that stores the tabs.
+        if (settings && settings.scratchNotes && typeof settings.scratchNotes === 'object') {
+          for (const [id, body] of Object.entries(settings.scratchNotes)) {
+            if (typeof body === 'string' && body && !s.scratchPads[id]) {
+              s.scratchPads[id] = { tabs: [{ id: MAIN_TAB_ID, name: 'Notes', body }], active: MAIN_TAB_ID }
+            }
+          }
+        }
         if (settings && typeof settings.sidebarHidden === 'boolean') s.sidebarHidden = settings.sidebarHidden
         if (settings && settings.rightMarginWidth) s.rightMarginWidth = settings.rightMarginWidth
         if (settings && settings.ideaNodePresets) s.ideaNodePresets = settings.ideaNodePresets
@@ -412,6 +440,9 @@ export const useStore = create(
         zoom: s.zoom,
         leftMarginWidth: s.leftMarginWidth,
         inspectorWidth: s.inspectorWidth,
+        scratchpad: s.scratchpad,
+        scratchPads: s.scratchPads,
+        scratchNotes: {},
         sidebarHidden: s.sidebarHidden,
         rightMarginWidth: s.rightMarginWidth,
         leftMarginOpen: s.leftMarginOpen,
@@ -489,6 +520,97 @@ export const useStore = create(
         s.inspectorWidth = Math.max(240, Math.min(720, Math.round(width)))
       })
       if (save) get().saveAppSettings()
+    },
+    toggleScratchpad() {
+      set((s) => {
+        s.scratchpad.open = !s.scratchpad.open
+      })
+      get().saveAppSettings()
+    },
+    closeScratchpad() {
+      set((s) => {
+        s.scratchpad.open = false
+      })
+      get().saveAppSettings()
+    },
+    // { x, y } and/or { w, h }.
+    setScratchpadRect(rect) {
+      set((s) => {
+        Object.assign(s.scratchpad, rect)
+      })
+      get().saveAppSettings()
+    },
+    // step: +0.1 / -0.1 from the current size, or null to reset.
+    zoomScratchpad(step) {
+      set((s) => {
+        s.scratchpad.zoom = step == null ? 1 : Math.round(Math.max(0.7, Math.min(3, s.scratchpad.zoom + step)) * 10) / 10
+      })
+      get().saveAppSettings()
+    },
+    toggleScratchpadLines() {
+      set((s) => {
+        s.scratchpad.lines = !s.scratchpad.lines
+      })
+      get().saveAppSettings()
+    },
+    // Typing writes the open tab's body and saves a moment after you stop
+    // (and flushScratchpad on blur).
+    setScratchText(scriptId, body) {
+      set((s) => {
+        const pad = scratchPadFor(s, scriptId)
+        const tab = pad.tabs.find((t) => t.id === pad.active) || pad.tabs[0]
+        tab.body = body
+      })
+      clearTimeout(scratchSaveTimer)
+      scratchSaveTimer = setTimeout(() => get().saveAppSettings(), 600)
+    },
+    setScratchTab(scriptId, tabId) {
+      set((s) => {
+        const pad = scratchPadFor(s, scriptId)
+        if (pad.tabs.some((t) => t.id === tabId)) pad.active = tabId
+      })
+      get().saveAppSettings()
+    },
+    addScratchTab(scriptId) {
+      set((s) => {
+        const pad = scratchPadFor(s, scriptId)
+        const id = uid()
+        pad.tabs.push({ id, name: nextTabName(pad.tabs), body: '' })
+        pad.active = id
+      })
+      get().saveAppSettings()
+    },
+    renameScratchTab(scriptId, tabId, name) {
+      const clean = String(name || '').trim().slice(0, 24)
+      if (!clean) return
+      set((s) => {
+        const tab = scratchPadFor(s, scriptId).tabs.find((t) => t.id === tabId)
+        if (tab) tab.name = clean
+      })
+      get().saveAppSettings()
+    },
+    // Closing the only tab empties it instead (a notepad always has a page).
+    closeScratchTab(scriptId, tabId) {
+      set((s) => {
+        const pad = scratchPadFor(s, scriptId)
+        const i = pad.tabs.findIndex((t) => t.id === tabId)
+        if (i < 0) return
+        if (pad.tabs.length === 1) {
+          pad.tabs[0].body = ''
+          pad.tabs[0].name = 'Notes'
+          return
+        }
+        pad.tabs.splice(i, 1)
+        if (pad.active === tabId) pad.active = pad.tabs[Math.min(i, pad.tabs.length - 1)].id
+      })
+      get().saveAppSettings()
+    },
+    flushScratchpad() {
+      if (scratchSaveTimer) {
+        clearTimeout(scratchSaveTimer)
+        scratchSaveTimer = null
+        get().saveAppSettings()
+      }
     },
     toggleSidebarHidden() {
       set((s) => {

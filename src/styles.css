@@ -5391,6 +5391,220 @@ body.is-resizing-panel {
   padding: 8px;
 }
 
+/* ---------- Notepad (floating, for throwaway notes) ----------
+   A little pad of paper: a binding strip with punched holes on top, page
+   tabs, ruled lines and a red margin that scroll with the text (the lines
+   can be switched off), and a footer with the formatting and text size. Its
+   colours come from the theme's own page colours. */
+.scratchpad {
+  --pad-paper: var(--editor-page, var(--panel-2));
+  --pad-rule: color-mix(in srgb, var(--ink) 15%, transparent);
+  --pad-margin: color-mix(in srgb, var(--danger, #e2665b) 55%, transparent);
+  position: fixed;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  min-width: 260px;
+  min-height: 200px;
+  max-width: 96vw;
+  max-height: 92vh;
+  background: var(--pad-paper);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.42), 0 2px 0 color-mix(in srgb, var(--ink) 12%, transparent);
+  resize: both;
+  overflow: hidden;
+}
+.scratchpad-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 15px 6px 5px 10px;
+  /* the punched holes of the binding, then the strip's own colour */
+  background:
+    radial-gradient(circle at 8px 7px, var(--bg) 0 2.4px, var(--line) 2.4px 3.4px, transparent 3.9px) 0 0 / 16px 14px repeat-x,
+    var(--panel-3);
+  color: var(--ink);
+  font-size: 11.5px;
+  cursor: grab;
+  user-select: none;
+}
+.scratchpad-head:active {
+  cursor: grabbing;
+}
+.scratchpad-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.scratchpad-head .tb-icon,
+.scratchpad-foot .tb-icon,
+.scratchpad-newtab {
+  width: 22px;
+  height: 22px;
+}
+.scratchpad-tabs {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  padding: 0 6px 0 8px;
+  background: var(--panel-3);
+  border-bottom: 1px solid var(--line);
+}
+.scratchpad-tabscroll {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+.scratchpad-tabscroll::-webkit-scrollbar {
+  display: none;
+}
+.scratchpad-newtab {
+  flex: 0 0 auto;
+  margin-bottom: 3px;
+}
+.scratchpad-tab {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 150px;
+  padding: 4px 4px 4px 9px;
+  border: 1px solid var(--line);
+  border-bottom: none;
+  border-radius: 7px 7px 0 0;
+  background: color-mix(in srgb, var(--ink) 4%, var(--panel-3));
+  color: var(--ink);
+  font-size: 11.5px;
+  cursor: pointer;
+  margin-bottom: 0;
+}
+.scratchpad-tab:hover {
+  background: color-mix(in srgb, var(--ink) 13%, var(--panel-3));
+}
+.scratchpad-tab.active {
+  background: var(--pad-paper);
+  color: var(--ink);
+  font-weight: 600;
+  /* sits over the strip's border so the tab and the page are one piece */
+  margin-bottom: -1px;
+  padding-bottom: 5px;
+  position: relative;
+}
+.scratchpad-tab-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.scratchpad-tab-x {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink-faint);
+  opacity: 0;
+}
+.scratchpad-tab:hover .scratchpad-tab-x,
+.scratchpad-tab.active .scratchpad-tab-x {
+  opacity: 1;
+}
+.scratchpad-tab-x:hover {
+  background: color-mix(in srgb, var(--ink) 14%, transparent);
+  color: var(--ink);
+}
+.scratchpad-tab-input {
+  width: 90px;
+  font: inherit;
+  color: var(--ink);
+  background: var(--panel-2);
+  border: 1px solid var(--cyan);
+  border-radius: 4px;
+  padding: 0 4px;
+  outline: none;
+}
+.scratchpad-text {
+  --pad-lh: calc(13px * var(--pad-zoom, 1) * 1.8);
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  overflow-y: auto;
+  border: none;
+  outline: none;
+  background-color: var(--pad-paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: calc(13px * var(--pad-zoom, 1));
+  line-height: var(--pad-lh);
+  padding: 4px 16px 40px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  cursor: text;
+}
+/* Ruled: a line under every row of text (the 4px is the top padding, so the
+   first row sits on a line) and a red margin; both scroll with the text. */
+.scratchpad.ruled .scratchpad-text {
+  padding-left: 46px;
+  background-image:
+    linear-gradient(to right, transparent 34px, var(--pad-margin) 34px, var(--pad-margin) 35.5px, transparent 35.5px),
+    linear-gradient(to bottom, transparent calc(var(--pad-lh) - 1px), var(--pad-rule) calc(var(--pad-lh) - 1px));
+  background-size: 100% 100%, 100% var(--pad-lh);
+  background-repeat: no-repeat, repeat-y;
+  background-position: 0 0, 0 4px;
+  background-attachment: local, local;
+}
+.scratchpad-text:empty::before {
+  content: attr(data-placeholder);
+  color: var(--ink-faint);
+  pointer-events: none;
+}
+.scratchpad-foot {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  /* the right padding clears the resize grip in the corner */
+  padding: 4px 20px 4px 8px;
+  background: var(--panel-3);
+  border-top: 1px solid var(--line);
+}
+.scratchpad-fmt,
+.scratchpad-zoom {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.scratchpad-fmt .tb-icon {
+  font-size: 12.5px;
+  line-height: 1;
+}
+.scratchpad-zoom-value {
+  min-width: 36px;
+  background: transparent;
+  border: none;
+  color: var(--ink-faint);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  padding: 0;
+}
+
 /* ---------- Footage tab (Bijou Footage notes, read-only) ---------- */
 .ft-empty {
   font-size: 12.5px;

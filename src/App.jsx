@@ -3,6 +3,7 @@ import { useStore } from './state/store.js'
 import Topbar from './components/Topbar.jsx'
 import TitleBar from './components/TitleBar.jsx'
 import Tooltip from './components/Tooltip.jsx'
+import Scratchpad from './components/Scratchpad.jsx'
 import TabBar from './components/TabBar.jsx'
 import SectionTimeline from './components/SectionTimeline.jsx'
 import Sidebar from './components/Sidebar.jsx'
@@ -264,6 +265,7 @@ export default function App() {
       <ContextMenu />
       {script && <SaveConflictBanner scriptId={script.id} />}
       <UpdateBanner />
+      <Scratchpad script={script} />
       <Tooltip />
     </div>
   )
