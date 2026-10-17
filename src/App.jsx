@@ -32,6 +32,7 @@ export default function App() {
   const currentScriptId = useStore((s) => s.currentScriptId)
   const focusMode = useStore((s) => s.focusMode)
   const mapBarsHidden = useStore((s) => s.mapHideBars && s.mapViewOpen)
+  const sidebarHidden = useStore((s) => s.sidebarHidden)
   const hideTags = useStore((s) => s.hideTags)
   const hideNotes = useStore((s) => s.hideNotes)
   const openTagMenuFor = useStore((s) => s.openTagMenuFor)
@@ -243,7 +244,7 @@ export default function App() {
       <Topbar script={script} />
       {script && <TabBar script={script} />}
       {script && <SectionTimeline script={script} />}
-      <div className={'shell' + (focusMode ? ' focus' : '')}>
+      <div className={'shell' + (focusMode ? ' focus' : '') + (sidebarHidden ? ' sidebar-hidden' : '')}>
         <Sidebar />
         {script ? (
           <EditorMain scriptId={script.id} script={script} />

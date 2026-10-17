@@ -7,6 +7,7 @@ import * as fileStore from './fileStore.js'
 import { migrateScript, newBlankScript } from './scriptSchema.js'
 import * as scriptWatcher from './scriptWatcher.js'
 import * as macUpdate from './macUpdate.js'
+import * as footage from './footage.js'
 
 const isDev = !app.isPackaged
 const isMac = process.platform === 'darwin'
@@ -168,6 +169,11 @@ function registerIpc(win) {
   })
   ipcMain.handle('window:close', (e) => BrowserWindow.fromWebContents(e.sender)?.close())
   ipcMain.handle('window:isMaximized', (e) => BrowserWindow.fromWebContents(e.sender)?.isMaximized() ?? false)
+
+  // Bijou Footage's notes/markers (read-only) for the inspector's Footage tab.
+  ipcMain.handle('footage:load', () => footage.loadFootage())
+  ipcMain.handle('footage:open', (_e, target) => footage.openInFootage(target))
+  footage.watchFootage(win)
 
   ipcMain.handle('settings:load', () => fileStore.loadSettings())
   ipcMain.handle('settings:save', (_e, settings) => fileStore.saveSettings(settings))

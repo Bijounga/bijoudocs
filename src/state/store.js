@@ -158,6 +158,10 @@ export const useStore = create(
     bookmarksMarginOpen: true,
     pinnedMarginOpen: true,
     leftMarginWidth: 210,
+    // The right-hand inspector's width (dragged on its left edge), and
+    // whether the left library panel is hidden.
+    inspectorWidth: 290,
+    sidebarHidden: false,
     rightMarginWidth: 210,
     noteColor: '#f2a65a',
     theme: 'dark',
@@ -218,6 +222,8 @@ export const useStore = create(
         if (settings && Array.isArray(settings.customThemes)) s.customThemes = settings.customThemes
         if (settings && typeof settings.zoom === 'number') s.zoom = settings.zoom
         if (settings && settings.leftMarginWidth) s.leftMarginWidth = settings.leftMarginWidth
+        if (settings && typeof settings.inspectorWidth === 'number') s.inspectorWidth = settings.inspectorWidth
+        if (settings && typeof settings.sidebarHidden === 'boolean') s.sidebarHidden = settings.sidebarHidden
         if (settings && settings.rightMarginWidth) s.rightMarginWidth = settings.rightMarginWidth
         if (settings && settings.ideaNodePresets) s.ideaNodePresets = settings.ideaNodePresets
         // Spread saved overrides onto the current defaults rather than
@@ -405,6 +411,8 @@ export const useStore = create(
         customThemes: s.customThemes,
         zoom: s.zoom,
         leftMarginWidth: s.leftMarginWidth,
+        inspectorWidth: s.inspectorWidth,
+        sidebarHidden: s.sidebarHidden,
         rightMarginWidth: s.rightMarginWidth,
         leftMarginOpen: s.leftMarginOpen,
         rightMarginOpen: s.rightMarginOpen,
@@ -472,6 +480,19 @@ export const useStore = create(
     setLeftMarginWidth(width) {
       set((s) => {
         s.leftMarginWidth = Math.max(160, Math.min(420, Math.round(width)))
+      })
+      get().saveAppSettings()
+    },
+    // save: false while dragging — saved once on release.
+    setInspectorWidth(width, save = true) {
+      set((s) => {
+        s.inspectorWidth = Math.max(240, Math.min(720, Math.round(width)))
+      })
+      if (save) get().saveAppSettings()
+    },
+    toggleSidebarHidden() {
+      set((s) => {
+        s.sidebarHidden = !s.sidebarHidden
       })
       get().saveAppSettings()
     },

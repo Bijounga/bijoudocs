@@ -206,6 +206,14 @@ export const CHANGELOG = {
   '0.5.62': [
     'Fixed the mind map’s Add section and Add chapter buttons making a node you couldn’t see — it landed in the far top-left corner and threw off zooming and Fit every node. New nodes now appear in the middle of your view',
     'New button in the mind map toolbar (Ctrl+Shift+A) hides the topbar, tab bar and timeline, leaving just the map and its toolbar — press it again to bring them back'
+  ],
+  '0.5.63': [
+    'New Footage tab in the right-hand panel (film-strip icon): your Bijou Footage notes and markers, read straight from Bijou Footage — filter by text and by colour, search, and resize the text',
+    'Pick one of your Bijou Footage edit sections to see its notes timed in the cut, just like Footage’s Edit list',
+    'Click any note to jump Bijou Footage right to it — the recording in Review, or the section in Edit (opens Bijou Footage if it isn’t running; needs Bijou Footage 0.9.3)',
+    'Drag the right-hand panel’s left edge to make it wider or narrower (double-click to reset)',
+    'Hide just the script library on the left with the new tab-bar button or Ctrl+Shift+Q',
+    'Terraria theme: the bars and panels now step from light to dark instead of all being one blue'
   ]
 }
 

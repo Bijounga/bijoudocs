@@ -11,6 +11,8 @@ export default function TabBar({ script }) {
   const closeTab = useStore((s) => s.closeTab)
   const focusMode = useStore((s) => s.focusMode)
   const toggleFocusMode = useStore((s) => s.toggleFocusMode)
+  const sidebarHidden = useStore((s) => s.sidebarHidden)
+  const toggleSidebarHidden = useStore((s) => s.toggleSidebarHidden)
   const openTeleprompter = useStore((s) => s.openTeleprompter)
   const mapViewOpen = useStore((s) => s.mapViewOpen)
   const toggleMapView = useStore((s) => s.toggleMapView)
@@ -72,6 +74,13 @@ export default function TabBar({ script }) {
         })}
       </div>
       <div className="tb-group">
+        <button
+          className={'icon-btn tb-icon' + (sidebarHidden ? ' active' : '')}
+          onClick={toggleSidebarHidden}
+          title={(sidebarHidden ? 'Show' : 'Hide') + ' the script library on the left' + kb('toggleSidebar')}
+        >
+          <Icon name="sidebar" />
+        </button>
         <button
           className={'icon-btn tb-icon' + (focusMode ? ' active' : '')}
           onClick={toggleFocusMode}

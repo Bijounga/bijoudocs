@@ -1672,6 +1672,33 @@ body {
   border-color: #12154a !important;
   box-shadow: inset 0 0 0 1px #5d63c9 !important;
 }
+/* A tonal ladder, like Terraria's own UI: the title bar brightest, each
+   band below it a step darker, the side panels a deep blue — so the
+   slot-blue buttons and fields stand out instead of everything being one
+   flat blue. */
+[data-theme='terraria'] .tabbar {
+  background: #2d3279 !important;
+}
+[data-theme='terraria'] .section-timeline {
+  background: #222667 !important;
+}
+[data-theme='terraria'] .map-toolbar {
+  background: #282d72 !important;
+  border-bottom: 2px solid #12154a !important;
+}
+[data-theme='terraria'] .sidebar {
+  background: #272b6d !important;
+}
+[data-theme='terraria'] .inspector {
+  background: #23276a !important;
+}
+[data-theme='terraria'] .inspector .insp-tabs {
+  background: #2f347e;
+  border-bottom: 2px solid #12154a;
+}
+[data-theme='terraria'] .margin-stack {
+  background: #2a2e72 !important;
+}
 [data-theme='terraria'] .diff-modal,
 [data-theme='terraria'] .export-menu,
 [data-theme='terraria'] .section-jump-menu,
@@ -1687,7 +1714,7 @@ body {
   box-shadow: inset 0 0 0 1px #5d63c9, 0 8px 20px rgba(0, 0, 0, 0.5) !important;
 }
 [data-theme='terraria'] .topbar {
-  background: linear-gradient(180deg, #4f56bd, #353a85) !important;
+  background: linear-gradient(180deg, #474eb2, #393f93) !important;
   border-bottom: 2px solid #12154a !important;
 }
 [data-theme='terraria'] .topbar .saved-flash,
@@ -1776,7 +1803,7 @@ body {
   border-radius: 6px;
 }
 :root[data-theme='terraria'] {
-  --titlebar-bg: linear-gradient(180deg, #5057c2, #353a85);
+  --titlebar-bg: linear-gradient(180deg, #5c64d6, #4a51b8);
   --titlebar-border: #12154a;
   --titlebar-text: #ffffff;
   --titlebar-text-shadow: var(--tp-outline);
@@ -3691,8 +3718,9 @@ textarea {
   transition: transform 0.2s ease;
 }
 .inspector {
-  width: 290px;
-  flex: 0 0 290px;
+  position: relative;
+  width: var(--inspector-w, 290px);
+  flex: 0 0 var(--inspector-w, 290px);
   border-left: 1px solid var(--line);
   background: var(--panel);
   display: flex;
@@ -3709,8 +3737,27 @@ textarea {
   position: relative;
 }
 .shell.focus .sidebar,
-.shell.focus .inspector {
+.shell.focus .inspector,
+.shell.sidebar-hidden .sidebar {
   display: none;
+}
+/* The inspector's left-edge drag handle. */
+.panel-resize-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -3px;
+  width: 6px;
+  cursor: ew-resize;
+  z-index: 5;
+}
+.panel-resize-handle:hover,
+body.is-resizing-panel .panel-resize-handle {
+  background: color-mix(in srgb, var(--cyan) 35%, transparent);
+}
+body.is-resizing-panel {
+  cursor: ew-resize;
+  user-select: none;
 }
 
 .sb-head {
@@ -5342,6 +5389,197 @@ textarea {
   font-size: 12px;
   color: var(--ink-faint);
   padding: 8px;
+}
+
+/* ---------- Footage tab (Bijou Footage notes, read-only) ---------- */
+.ft-empty {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--ink-faint);
+  padding: 6px;
+}
+.ft-project,
+.ft-search {
+  width: 100%;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  color: var(--ink);
+  font-size: 12.5px;
+  padding: 7px 8px;
+  margin-bottom: 8px;
+}
+.ft-seg {
+  display: flex;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.ft-seg button {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--ink-faint);
+  font-size: 11.5px;
+  padding: 6px 0;
+}
+.ft-seg button + button {
+  border-left: 1px solid var(--line);
+}
+.ft-seg button.active {
+  background: var(--panel-3);
+  color: var(--cyan);
+}
+.ft-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 8px;
+}
+.ft-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--ink-dim);
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 3px 8px 3px 5px;
+}
+.ft-chip i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25);
+}
+.ft-chip.active {
+  border-color: var(--cyan);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--cyan);
+}
+.ft-chip.ft-clear {
+  padding-left: 8px;
+  font-family: var(--sans);
+  color: var(--ink-faint);
+}
+.ft-status {
+  font-size: 11.5px;
+  color: var(--ink-dim);
+  margin-bottom: 6px;
+}
+.ft-status.error {
+  color: var(--danger);
+}
+.ft-count-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.ft-count {
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+.ft-size {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.ft-size .tb-icon {
+  width: 22px;
+  height: 22px;
+}
+.ft-size-value {
+  min-width: 38px;
+  background: transparent;
+  border: none;
+  color: var(--ink-faint);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  padding: 0;
+}
+/* The list's text size (− / + or Ctrl+scroll). */
+.ft-list .ft-note {
+  font-size: calc(12.5px * var(--ft-scale, 1));
+}
+.ft-list .ft-time {
+  font-size: calc(11px * var(--ft-scale, 1));
+  min-width: calc(46px * var(--ft-scale, 1));
+}
+.ft-list .ft-dot {
+  width: calc(9px * var(--ft-scale, 1));
+  height: calc(9px * var(--ft-scale, 1));
+  margin-top: calc(4px * var(--ft-scale, 1));
+}
+.ft-list .ft-rec {
+  font-size: calc(10.5px * var(--ft-scale, 1));
+}
+.ft-rec {
+  justify-content: space-between;
+  margin-top: 14px;
+}
+.ft-rec-count {
+  font-family: var(--mono);
+  font-weight: 400;
+}
+.ft-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 5px 6px;
+  color: var(--ink);
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+.ft-note:hover {
+  background: var(--panel-2);
+  border-color: var(--line);
+}
+.ft-dot {
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  margin-top: 4px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25);
+}
+.ft-time {
+  flex: 0 0 auto;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+  margin-top: 1px;
+  min-width: 46px;
+}
+.ft-text {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.ft-text b {
+  font-weight: 600;
+  margin-right: 5px;
+}
+.ft-text.none {
+  color: var(--ink-faint);
+  font-style: italic;
+}
+.ft-star {
+  flex: 0 0 auto;
+  color: var(--amber);
 }
 
 .cp-newbtn {

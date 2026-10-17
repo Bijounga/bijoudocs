@@ -206,6 +206,11 @@ export function useGlobalKeydown() {
         st.toggleFocusMode()
         return
       }
+      if (combo === st.keybinds.toggleSidebar) {
+        e.preventDefault()
+        st.toggleSidebarHidden()
+        return
+      }
       if (combo === st.keybinds.hideTags) {
         e.preventDefault()
         st.toggleHideTags()

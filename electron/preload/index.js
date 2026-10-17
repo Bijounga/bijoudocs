@@ -36,6 +36,13 @@ const api = {
   windowToggleMaximize: () => ipcRenderer.invoke('window:toggleMaximize'),
   windowClose: () => ipcRenderer.invoke('window:close'),
   windowIsMaximized: () => ipcRenderer.invoke('window:isMaximized'),
+  loadFootage: () => ipcRenderer.invoke('footage:load'),
+  openInFootage: (target) => ipcRenderer.invoke('footage:open', target),
+  onFootageChanged: (cb) => {
+    const listener = () => cb()
+    ipcRenderer.on('footage:changed', listener)
+    return () => ipcRenderer.removeListener('footage:changed', listener)
+  },
   onWindowMaximizedChanged: (cb) => {
     const listener = (_e, maximized) => cb(maximized)
     ipcRenderer.on('window:maximizedChanged', listener)
