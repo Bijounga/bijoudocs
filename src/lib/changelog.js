@@ -202,6 +202,10 @@ export const CHANGELOG = {
   '0.5.61': [
     'The mind map’s "Fit every node" button now really fits every node — it can zoom out as far as it needs to (down to 2%), so a long script no longer lands you in empty space',
     'Fixed map nodes that lost their position piling up in the top-left corner far from everything else — they now move to just below the rest of your map'
+  ],
+  '0.5.62': [
+    'Fixed the mind map’s Add section and Add chapter buttons making a node you couldn’t see — it landed in the far top-left corner and threw off zooming and Fit every node. New nodes now appear in the middle of your view',
+    'New button in the mind map toolbar (Ctrl+Shift+A) hides the topbar, tab bar and timeline, leaving just the map and its toolbar — press it again to bring them back'
   ]
 }
 

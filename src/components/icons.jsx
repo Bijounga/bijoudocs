@@ -23,6 +23,7 @@ const PATHS = {
   micOff: '<rect x="6" y="1.5" width="4" height="7" rx="2"/><path d="M4 7.5a4 4 0 008 0"/><line x1="8" y1="11.5" x2="8" y2="14"/><line x1="5.5" y1="14" x2="10.5" y2="14"/><line x1="2.5" y1="2" x2="13.5" y2="14"/>',
   bookmark: '<path d="M4 2.5h8v11l-4-3-4 3z"/>',
   calendar: '<rect x="2.5" y="3" width="11" height="10.5" rx="1.2"/><line x1="2.5" y1="6.5" x2="13.5" y2="6.5"/><line x1="5" y1="1.5" x2="5" y2="4"/><line x1="11" y1="1.5" x2="11" y2="4"/>',
+  hideBars: '<rect x="2.5" y="2.5" width="11" height="11" rx="1.2"/><line x1="2.5" y1="5.5" x2="13.5" y2="5.5"/><polyline points="5.5,11 8,8.5 10.5,11"/>',
   map: '<rect x="2.5" y="2.5" width="4.5" height="4.5" rx="1"/><rect x="9" y="2.5" width="4.5" height="4.5" rx="1"/><rect x="5.75" y="9" width="4.5" height="4.5" rx="1"/><path d="M4.75 7v1a1 1 0 001 1H6"/><path d="M11.25 7v1a1 1 0 01-1 1h-.25"/>',
   layers: '<path d="M8 2.5l5.5 3L8 8.5l-5.5-3z"/><path d="M2.5 8.5L8 11.5l5.5-3"/><path d="M2.5 11.5L8 14.5l5.5-3"/>',
   check: '<polyline points="3,8.5 6.5,12 13,4.5"/>',

@@ -3625,6 +3625,13 @@ textarea {
   padding: 8px;
 }
 
+/* Mind map "hide top bars": only the map's own toolbar stays. */
+.app-root.map-bars-hidden > .topbar,
+.app-root.map-bars-hidden > .tabbar,
+.app-root.map-bars-hidden > .section-timeline {
+  display: none;
+}
+
 .section-timeline {
   flex: 0 0 auto;
   display: flex;

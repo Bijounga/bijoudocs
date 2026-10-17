@@ -137,6 +137,8 @@ export const useStore = create(
     mapSelectRequest: null,
     mapViewOpen: false,
     mapSplitOpen: false,
+    // Mind map only: hides the topbar, tab bar and timeline above it.
+    mapHideBars: false,
     outlineViewOpen: false,
     outlineSplitOpen: false,
     whatsNewOpen: false,
@@ -211,6 +213,7 @@ export const useStore = create(
         if (settings && settings.noteColor) s.noteColor = settings.noteColor
         if (settings && settings.theme) s.theme = settings.theme
         if (settings && typeof settings.editorPageContrast === 'boolean') s.editorPageContrast = settings.editorPageContrast
+        if (settings && typeof settings.mapHideBars === 'boolean') s.mapHideBars = settings.mapHideBars
         if (settings && settings.themeVariants && typeof settings.themeVariants === 'object') s.themeVariants = settings.themeVariants
         if (settings && Array.isArray(settings.customThemes)) s.customThemes = settings.customThemes
         if (settings && typeof settings.zoom === 'number') s.zoom = settings.zoom
@@ -397,6 +400,7 @@ export const useStore = create(
         noteColor: s.noteColor,
         theme: s.theme,
         editorPageContrast: s.editorPageContrast,
+        mapHideBars: s.mapHideBars,
         themeVariants: s.themeVariants,
         customThemes: s.customThemes,
         zoom: s.zoom,
@@ -2377,6 +2381,12 @@ export const useStore = create(
         s.mapViewOpen = !s.mapViewOpen
         if (s.mapViewOpen) s.outlineViewOpen = false
       })
+    },
+    toggleMapHideBars() {
+      set((s) => {
+        s.mapHideBars = !s.mapHideBars
+      })
+      get().saveAppSettings()
     },
     toggleMapSplit() {
       set((s) => {

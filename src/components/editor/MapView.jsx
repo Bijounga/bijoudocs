@@ -210,6 +210,8 @@ function threadEndDirection(sectionId, nodes, edges) {
 
 export default function MapView({ scriptId, script }) {
   const keybinds = useStore((s) => s.keybinds)
+  const mapHideBars = useStore((s) => s.mapHideBars)
+  const toggleMapHideBars = useStore((s) => s.toggleMapHideBars)
   const jumpToSection = useStore((s) => s.jumpToSection)
   const toggleMapView = useStore((s) => s.toggleMapView)
   const ensureMapNodes = useStore((s) => s.ensureMapNodes)
@@ -387,6 +389,11 @@ export default function MapView({ scriptId, script }) {
         } else {
           toggleMapHideSummaries(scriptId)
         }
+        return
+      }
+      if (combo === st.keybinds.mapHideBars) {
+        e.preventDefault()
+        toggleMapHideBars()
         return
       }
       if (combo === st.keybinds.mapAddIdeaNode) {
@@ -794,14 +801,22 @@ export default function MapView({ scriptId, script }) {
     return screenToWorld(rect.left + rect.width / 2, rect.top + rect.height / 2)
   }
 
+  // Only a real {x, y} point counts as `at`. A button wired straight to a
+  // handler (onClick={handleAddSection}) hands it the click event, whose
+  // missing x/y made a NaN position: the node saved as null, drew at the
+  // origin, looked like nothing was created, and threw off Fit.
+  function placementPoint(at) {
+    return at && Number.isFinite(at.x) && Number.isFinite(at.y) ? at : viewportCenterWorld()
+  }
+
   function handleAddSection(at) {
-    const world = at || viewportCenterWorld()
+    const world = placementPoint(at)
     if (!world) return
     addSectionFromMap(scriptId, world.x - NODE_WIDTH / 2, world.y - NODE_H / 2)
   }
 
   function handleAddIdeaNode(preset, at) {
-    const world = at || viewportCenterWorld()
+    const world = placementPoint(at)
     if (!world) return
     const opts = preset ? { title: preset.label, color: preset.color, shape: preset.shape } : {}
     const newId = addIdeaNode(scriptId, world.x - NODE_WIDTH / 2, world.y - NODE_H / 2, opts)
@@ -810,7 +825,7 @@ export default function MapView({ scriptId, script }) {
   }
 
   function handleAddChapterNode(at) {
-    const world = at || viewportCenterWorld()
+    const world = placementPoint(at)
     if (!world) return
     const newId = addChapterNode(scriptId, world.x - NODE_WIDTH / 2, world.y - NODE_H / 2)
     if (newId) setSelectedNodeIds([newId])
@@ -851,7 +866,7 @@ export default function MapView({ scriptId, script }) {
   return (
     <div className="main map-main">
       <div className="map-toolbar">
-        <button className="icon-btn tb-icon" onClick={handleAddSection} title={'Add section (' + keybinds.mapAddSection + ')'}>
+        <button className="icon-btn tb-icon" onClick={() => handleAddSection()} title={'Add section (' + keybinds.mapAddSection + ')'}>
           <Icon name="addSection" />
         </button>
         <div className="map-idea-menu-wrap" style={{ position: 'relative' }}>
@@ -903,7 +918,7 @@ export default function MapView({ scriptId, script }) {
             />
           )}
         </div>
-        <button className="icon-btn tb-icon" onClick={handleAddChapterNode} title="Add chapter — a group header for the Outline">
+        <button className="icon-btn tb-icon" onClick={() => handleAddChapterNode()} title="Add chapter — a group header for the Outline">
           <Icon name="layers" />
         </button>
         <div className="divider-v" />
@@ -936,6 +951,13 @@ export default function MapView({ scriptId, script }) {
         </div>
         <button className="icon-btn tb-icon" onClick={recenterView} title="Fit every node on screen">
           <Icon name="fit" />
+        </button>
+        <button
+          className={'icon-btn tb-icon' + (mapHideBars ? ' active' : '')}
+          onClick={toggleMapHideBars}
+          title={(mapHideBars ? 'Show' : 'Hide') + ' the top bars, leaving just this toolbar (' + keybinds.mapHideBars + ')'}
+        >
+          <Icon name="hideBars" />
         </button>
         <div className="topbar-spacer" />
         <span

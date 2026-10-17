@@ -20,6 +20,7 @@ export const DEFAULT_KEYBINDS = {
   newTake: 'ctrl+shift+r',
   bookmark: 'ctrl+shift+b',
   mapAddSection: 'ctrl+shift+m',
+  mapHideBars: 'ctrl+shift+a',
   mapToggleSummaries: 'ctrl+shift+y',
   mapAddIdeaNode: 'ctrl+shift+i',
   duplicate: 'ctrl+d',
@@ -54,6 +55,7 @@ export const SHORTCUT_META = [
   { id: 'tabForward', label: 'Forward a tab', desc: 'Goes forward again after going back.' },
   { id: 'focusMode', label: 'Toggle focus mode', desc: 'Hides the library and inspector panels.' },
   { id: 'mapAddSection', label: 'Add section in mind map', desc: 'Adds a new section as a node, while the mind map is open.' },
+  { id: 'mapHideBars', label: 'Hide top bars in mind map', desc: 'Hides the topbar, tab bar and section timeline while the mind map is open, leaving just the map toolbar. Press again to bring them back.' },
   {
     id: 'mapToggleSummaries',
     label: 'Toggle mind map summaries',

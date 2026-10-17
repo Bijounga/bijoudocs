@@ -31,6 +31,7 @@ export default function App() {
   const scripts = useStore((s) => s.scripts)
   const currentScriptId = useStore((s) => s.currentScriptId)
   const focusMode = useStore((s) => s.focusMode)
+  const mapBarsHidden = useStore((s) => s.mapHideBars && s.mapViewOpen)
   const hideTags = useStore((s) => s.hideTags)
   const hideNotes = useStore((s) => s.hideNotes)
   const openTagMenuFor = useStore((s) => s.openTagMenuFor)
@@ -237,7 +238,7 @@ export default function App() {
   const script = scripts.find((s) => s.id === currentScriptId) || null
 
   return (
-    <div className={'app-root ' + (hideTags ? 'hide-tags ' : '') + (hideNotes ? 'hide-notes' : '')}>
+    <div className={'app-root ' + (hideTags ? 'hide-tags ' : '') + (hideNotes ? 'hide-notes ' : '') + (mapBarsHidden ? 'map-bars-hidden' : '')}>
       <TitleBar />
       <Topbar script={script} />
       {script && <TabBar script={script} />}
