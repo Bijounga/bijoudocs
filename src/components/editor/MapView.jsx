@@ -23,7 +23,10 @@ function isSectionNode(node) {
   return !!node && !node.type
 }
 
-const ZOOM_MIN = 0.25
+// Low enough that "Fit every node" can show even a sprawling map (a long
+// script spans tens of thousands of px) — at 25% it bottomed out and
+// landed in empty space between far-apart nodes.
+const ZOOM_MIN = 0.02
 const ZOOM_MAX = 2
 
 // A node's *real* rendered height varies a lot with its content (a
@@ -58,6 +61,12 @@ function blurActiveEditableField() {
 // rendered yet (no node.width/height measured) computes exactly as
 // before — this only changes behavior once a node has actually mounted
 // and been measured at least once.
+// The remembered pan, or the default when it's missing or broken (a NaN
+// saved by an older build reads back as null).
+function savedPan(p) {
+  return p && Number.isFinite(p.x) && Number.isFinite(p.y) ? p : { x: 60, y: 40 }
+}
+
 function nodeSize(node) {
   return { w: node.width || NODE_WIDTH, h: node.height || NODE_H }
 }
@@ -239,7 +248,7 @@ export default function MapView({ scriptId, script }) {
   const dragRef = useRef(null) // { type: 'node'|'pan'|'connect'|'select'|'bend'|'resize', ... }
   const [zoom, setZoom] = useState(script.mapLayout.viewZoom || 1)
   const zoomRef = useRef(zoom) // mirrors `zoom` synchronously — two zoomBy() calls in the same tick (e.g. a fast double-click on the +button, before React re-renders between them) would otherwise both read the same stale closured `zoom` and not compound
-  const [pan, setPan] = useState(script.mapLayout.viewPan || { x: 60, y: 40 })
+  const [pan, setPan] = useState(() => savedPan(script.mapLayout.viewPan))
   const panRef = useRef(pan) // mirrors `pan` on every render — screenToWorld is called from the mousemove/mouseup effect below, whose closure is only refreshed when scriptId changes, so a plain closured `pan` goes stale (and connector-drag previews / rubber-band selection start pointing at the wrong spot) the moment the user pans without also changing zoom or script
   panRef.current = pan
   const [connectPreview, setConnectPreview] = useState(null) // { fromId, x, y } in world coords
@@ -272,7 +281,7 @@ export default function MapView({ scriptId, script }) {
   // would go stale the moment the user pans without switching scripts.
   useEffect(() => {
     const initialZoom = script.mapLayout.viewZoom || 1
-    setPan(script.mapLayout.viewPan || { x: 60, y: 40 })
+    setPan(savedPan(script.mapLayout.viewPan))
     setZoom(initialZoom)
     zoomRef.current = initialZoom // setZoom alone won't reach it — see zoomRef's own declaration comment
     return () => {
@@ -501,7 +510,9 @@ export default function MapView({ scriptId, script }) {
   function recenterView() {
     if (!canvasRef.current) return
     const rect = canvasRef.current.getBoundingClientRect()
-    const nodeList = Object.values(script.mapLayout.nodes)
+    // Frames the middle of the nodes' bounding box; a node without a
+    // position yet (repaired by ensureMapNodes) would drag it to the origin.
+    const nodeList = Object.values(script.mapLayout.nodes).filter((n) => Number.isFinite(n.x) && Number.isFinite(n.y))
     if (!nodeList.length) {
       zoomRef.current = 1
       setZoom(1)

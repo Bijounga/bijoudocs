@@ -24,6 +24,20 @@ let updateStatusTimer = null
 // In-memory only, like the prototype's own `clipboardLines` — never persisted.
 let clipboardLines = []
 
+const hasPosition = (n) => Number.isFinite(n.x) && Number.isFinite(n.y)
+// Where a map node goes when it has no usable position: just below the
+// lowest placed node, lined up with the map's left edge. A NaN position
+// saves as null and renders at the origin — Allumeria had two such
+// sections ~23,000px from everything else, which made "Fit every node"
+// frame mostly empty space.
+function spotBelowMap(nodes, skip = 0) {
+  const placed = Object.values(nodes).filter(hasPosition)
+  if (!placed.length) return { x: 60, y: 60 + skip * 190 }
+  const x = Math.min(...placed.map((n) => n.x))
+  const bottom = Math.max(...placed.map((n) => n.y + (n.height || 140)))
+  return { x, y: bottom + 50 + skip * 190 }
+}
+
 function snapshotScript(script) {
   return {
     title: script.title,
@@ -2406,6 +2420,7 @@ export const useStore = create(
     // — a mind map "typically" reads top-to-bottom, and a vertical default
     // is easy to branch sideways from later, unlike a grid.
     ensureMapNodes(scriptId) {
+      let repaired = false
       set((s) => {
         const script = s.scripts.find((sc) => sc.id === scriptId)
         if (!script) return
@@ -2415,13 +2430,20 @@ export const useStore = create(
           script.mapLayout.nodes[sec.id] = { x: 60, y: 60 + i * 190, collapsed: false }
           i++
         })
+        // Nodes that lost their position (saved as null) move below the map.
+        const lost = Object.values(script.mapLayout.nodes).filter((n) => !hasPosition(n))
+        lost.forEach((n, k) => {
+          Object.assign(n, spotBelowMap(script.mapLayout.nodes, k))
+          repaired = true
+        })
       })
+      if (repaired) get().scheduleSave(scriptId, { flash: false })
     },
     setMapNodePosition(scriptId, sectionId, x, y) {
       set((s) => {
         const script = s.scripts.find((sc) => sc.id === scriptId)
         const node = script && script.mapLayout.nodes[sectionId]
-        if (node) {
+        if (node && Number.isFinite(x) && Number.isFinite(y)) {
           node.x = x
           node.y = y
         }
@@ -2432,7 +2454,9 @@ export const useStore = create(
       const newId = get().addSection(scriptId)
       set((s) => {
         const script = s.scripts.find((sc) => sc.id === scriptId)
-        if (script && newId) script.mapLayout.nodes[newId] = { x, y, collapsed: false }
+        if (!script || !newId) return
+        const at = Number.isFinite(x) && Number.isFinite(y) ? { x, y } : spotBelowMap(script.mapLayout.nodes)
+        script.mapLayout.nodes[newId] = { ...at, collapsed: false }
       })
       get().scheduleSave(scriptId, { flash: false })
       return newId
@@ -2580,9 +2604,10 @@ export const useStore = create(
         const script = s.scripts.find((sc) => sc.id === scriptId)
         if (!script) return
         newId = uid()
+        const at = Number.isFinite(x) && Number.isFinite(y) ? { x, y } : spotBelowMap(script.mapLayout.nodes)
         script.mapLayout.nodes[newId] = {
-          x,
-          y,
+          x: at.x,
+          y: at.y,
           collapsed: false,
           type: 'idea',
           title: opts.title || '',
@@ -2747,7 +2772,8 @@ export const useStore = create(
         const script = s.scripts.find((sc) => sc.id === scriptId)
         if (!script) return
         newId = uid()
-        script.mapLayout.nodes[newId] = { x, y, collapsed: false, type: 'chapter', label: '', number: 1 }
+        const at = Number.isFinite(x) && Number.isFinite(y) ? { x, y } : spotBelowMap(script.mapLayout.nodes)
+        script.mapLayout.nodes[newId] = { ...at, collapsed: false, type: 'chapter', label: '', number: 1 }
         script.updatedAt = Date.now()
       })
       get().scheduleSave(scriptId, { flash: false })

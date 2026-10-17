@@ -198,6 +198,10 @@ export const CHANGELOG = {
   '0.5.60': [
     'New Tiki theme: a koa-wood title bar and topbar, a bamboo tab bar, woven lauhala side panels, cream pages trimmed in koa, and carved tiki-sign headings',
     '17 Tiki backgrounds to pick from — totem walls, beach and tiki-bar photos, hibiscus and monstera, two aloha-shirt prints, and cabin interiors and plank walls'
+  ],
+  '0.5.61': [
+    'The mind map’s "Fit every node" button now really fits every node — it can zoom out as far as it needs to (down to 2%), so a long script no longer lands you in empty space',
+    'Fixed map nodes that lost their position piling up in the top-left corner far from everything else — they now move to just below the rest of your map'
   ]
 }
 
