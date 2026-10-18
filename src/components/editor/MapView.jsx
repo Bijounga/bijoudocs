@@ -9,6 +9,7 @@ import IdeaNode from './IdeaNode.jsx'
 import ChapterNode from './ChapterNode.jsx'
 import ShapePicker, { SHAPES } from './ShapePicker.jsx'
 import { computeMainThread } from '../../lib/mapGraph.js'
+import { presetChain, wouldLoop } from '../../lib/ideaPresets.js'
 import { routeElbow, pathFromPoints } from '../../lib/mapEdgeRouting.js'
 
 function isIdeaNode(node) {
@@ -235,6 +236,7 @@ export default function MapView({ scriptId, script }) {
   const openContextMenu = useStore((s) => s.openContextMenu)
   const addIdeaNode = useStore((s) => s.addIdeaNode)
   const addConnectedIdeaNodeFromMap = useStore((s) => s.addConnectedIdeaNodeFromMap)
+  const addIdeaNodeChain = useStore((s) => s.addIdeaNodeChain)
   const addChapterNode = useStore((s) => s.addChapterNode)
   const selectConnectedNodes = useStore((s) => s.selectConnectedNodes)
   const mapSelectRequest = useStore((s) => s.mapSelectRequest)
@@ -880,9 +882,13 @@ export default function MapView({ scriptId, script }) {
   function handleAddIdeaNode(preset, at) {
     const world = placementPoint(at)
     if (!world) return
-    const opts = preset ? { title: preset.label, color: preset.color, shape: preset.shape } : {}
-    const newId = addIdeaNode(scriptId, world.x - NODE_WIDTH / 2, world.y - NODE_H / 2, opts)
-    if (newId) setSelectedNodeIds([newId])
+    const x = world.x - NODE_WIDTH / 2
+    const y = world.y - NODE_H / 2
+    // A preset spawns its whole chain (If it has a "then add": the next
+    // preset below it, linked); the lot ends up selected together.
+    const ids = preset ? addIdeaNodeChain(scriptId, x, y, preset.id) : [addIdeaNode(scriptId, x, y, {})]
+    const made = ids.filter(Boolean)
+    if (made.length) setSelectedNodeIds(made)
     setIdeaMenuOpen(false)
   }
 
@@ -961,6 +967,14 @@ export default function MapView({ scriptId, script }) {
                     <Icon name={((preset && SHAPES.find((s) => s.id === (preset.shape || 'rectangle'))) || SHAPES[0]).icon} size={13} />
                   </span>
                   {preset ? preset.label : 'Blank'}
+                  {preset && preset.then && presetChain(ideaNodePresets, preset.id).length > 1 && (
+                    <span className="map-idea-then" title="Spawns these after it, linked">
+                      {presetChain(ideaNodePresets, preset.id)
+                        .slice(1)
+                        .map((p) => '→ ' + p.label)
+                        .join(' ')}
+                    </span>
+                  )}
                   {i < 9 && <span className="map-idea-num">{i + 1}</span>}
                 </div>
               ))}
@@ -1244,25 +1258,45 @@ function PresetManager({ presets, onAdd, onDelete, onUpdate, onClose }) {
     <div className="map-idea-menu map-preset-manager" ref={ref}>
       <div className="map-preset-manager-title">Idea node presets</div>
       {presets.map((p) => (
-        <div key={p.id} className="map-idea-menu-item map-preset-row">
-          <input
-            type="color"
-            className="map-preset-color-input"
-            value={p.color}
-            title="Change preset color"
-            onChange={(e) => onUpdate(p.id, { color: e.target.value })}
-          />
-          <ShapePicker value={p.shape || 'rectangle'} onChange={(s) => onUpdate(p.id, { shape: s })} />
-          <input
-            className="map-preset-label-input"
-            style={{ flex: 1 }}
-            value={p.label}
-            title="Rename preset"
-            onChange={(e) => onUpdate(p.id, { label: e.target.value })}
-          />
-          <button className="map-preset-delete" onClick={() => onDelete(p.id)} title="Delete preset">
-            <Icon name="x" size={11} />
-          </button>
+        <div key={p.id} className="map-preset-item">
+          <div className="map-idea-menu-item map-preset-row">
+            <input
+              type="color"
+              className="map-preset-color-input"
+              value={p.color}
+              title="Change preset color"
+              onChange={(e) => onUpdate(p.id, { color: e.target.value })}
+            />
+            <ShapePicker value={p.shape || 'rectangle'} onChange={(s) => onUpdate(p.id, { shape: s })} />
+            <input
+              className="map-preset-label-input"
+              style={{ flex: 1 }}
+              value={p.label}
+              title="Rename preset"
+              onChange={(e) => onUpdate(p.id, { label: e.target.value })}
+            />
+            <button className="map-preset-delete" onClick={() => onDelete(p.id)} title="Delete preset">
+              <Icon name="x" size={11} />
+            </button>
+          </div>
+          {/* Chaining: using this preset also spawns the one picked here, below it and linked. */}
+          <label className="map-preset-then" title="Spawn this preset too, right below it and linked to it">
+            <span>then add</span>
+            <select
+              className="map-preset-then-select"
+              value={presets.some((q) => q.id === p.then) ? p.then : ''}
+              onChange={(e) => onUpdate(p.id, { then: e.target.value || null })}
+            >
+              <option value="">nothing</option>
+              {presets
+                .filter((q) => q.id !== p.id && !wouldLoop(presets, p.id, q.id))
+                .map((q) => (
+                  <option key={q.id} value={q.id}>
+                    {q.label}
+                  </option>
+                ))}
+            </select>
+          </label>
         </div>
       ))}
       <div className="map-preset-add">

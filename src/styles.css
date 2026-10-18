@@ -331,6 +331,7 @@
 :is([data-theme='dos'], [data-theme='minecraft']) .map-preset-color-input,
 :is([data-theme='dos'], [data-theme='minecraft']) .map-preset-delete,
 :is([data-theme='dos'], [data-theme='minecraft']) .map-preset-label-input,
+:is([data-theme='dos'], [data-theme='minecraft']) .map-preset-then-select,
 :is([data-theme='dos'], [data-theme='minecraft']) .margin-panel-collapse,
 :is([data-theme='dos'], [data-theme='minecraft']) .new-script-btn,
 :is([data-theme='dos'], [data-theme='minecraft']) .note-box textarea,
@@ -7247,6 +7248,36 @@ body.is-resizing-panel {
 }
 .map-preset-row {
   cursor: default;
+}
+/* A preset's "then add" line, under its row. */
+.map-preset-then {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px 6px 34px;
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+.map-preset-then-select {
+  flex: 1;
+  min-width: 0;
+  background: var(--panel-2);
+  border: 1px solid var(--line-soft);
+  border-radius: 5px;
+  color: var(--ink);
+  font-size: 11.5px;
+  padding: 2px 4px;
+}
+.map-preset-then-select:focus {
+  outline: none;
+  border-color: var(--cyan);
+}
+/* In the idea menu: what a chained preset also spawns. */
+.map-idea-then {
+  margin-left: 4px;
+  font-size: 10.5px;
+  color: var(--ink-faint);
+  white-space: nowrap;
 }
 .map-preset-color-input {
   flex: 0 0 auto;

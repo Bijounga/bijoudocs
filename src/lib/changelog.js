@@ -225,6 +225,10 @@ export const CHANGELOG = {
     'New notepad: a floating pad of ruled paper for throwaway notes — open it from the tab bar or map toolbar, or with Ctrl+Alt+N. Drag it anywhere, resize it, and put it away with the × (your notes stay)',
     'Pages: add tabs to the notepad, double-click one to rename it, close the ones you don’t need. Every script has its own notepad and its own pages',
     'Bold and italic in the notepad (Ctrl+B / Ctrl+I, or the buttons), a zoom for its text, and a button to turn the ruled lines off'
+  ],
+  '0.5.66': [
+    'Chain idea-node presets: in Manage presets, each preset has a “then add” choice — spawn a But and a Therefore comes along right below it, already linked. Chains can run several presets long, and one undo removes the whole set',
+    'Works from every way of adding a preset: the toolbar menu, the keyboard menu at your cursor, and right-click on the map. Chained presets show what they bring along, like “But → Therefore”'
   ]
 }
 

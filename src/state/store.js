@@ -11,6 +11,7 @@ import { totalWordCountAll } from '../lib/timecode.js'
 import { CHANGELOG, changelogSince } from '../lib/changelog.js'
 import { fetchSynonyms } from '../lib/synonyms.js'
 import { MAIN_TAB_ID, getPad, nextTabName } from '../lib/scratchNotes.js'
+import { presetChain } from '../lib/ideaPresets.js'
 import { checkSpelling } from '../lib/spellcheck.js'
 import { mergeExternalScript } from '../lib/externalMerge.js'
 
@@ -633,6 +634,10 @@ export const useStore = create(
     deleteIdeaNodePreset(id) {
       set((s) => {
         s.ideaNodePresets = s.ideaNodePresets.filter((p) => p.id !== id)
+        // Whatever chained into it just stops chaining.
+        s.ideaNodePresets.forEach((p) => {
+          if (p.then === id) p.then = null
+        })
       })
       get().saveAppSettings()
     },
@@ -2776,6 +2781,40 @@ export const useStore = create(
     },
     // Mirrors addConnectedSectionFromMap, but for growing a thread with a
     // blank idea node instead of a new section.
+    // Spawns a preset's idea node and, if the preset chains into others, each
+    // of those below it (the same step a "grow down" node takes), linked
+    // top to bottom. One undo step for the lot. Returns the new node ids,
+    // the preset's own first.
+    addIdeaNodeChain(scriptId, x, y, presetId) {
+      const chain = presetChain(get().ideaNodePresets, presetId)
+      if (!chain.length) return []
+      get().pushUndo(scriptId)
+      const ids = []
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        if (!script) return
+        const at = Number.isFinite(x) && Number.isFinite(y) ? { x, y } : spotBelowMap(script.mapLayout.nodes)
+        chain.forEach((p, i) => {
+          const id = uid()
+          script.mapLayout.nodes[id] = {
+            x: at.x,
+            y: at.y + i * 190,
+            collapsed: false,
+            type: 'idea',
+            title: p.label,
+            text: '',
+            color: p.color || null,
+            bgColor: null,
+            shape: p.shape || 'rectangle'
+          }
+          if (i > 0) script.mapLayout.edges.push({ id: uid(), from: ids[i - 1], to: id })
+          ids.push(id)
+        })
+        script.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+      return ids
+    },
     addConnectedIdeaNodeFromMap(scriptId, fromId, dir) {
       const script = get().scripts.find((sc) => sc.id === scriptId)
       const fromNode = script && script.mapLayout.nodes[fromId]

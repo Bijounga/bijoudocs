@@ -57,6 +57,7 @@ export default function ContextMenu() {
   const addIdeaNode = useStore((s) => s.addIdeaNode)
   const addChapterNode = useStore((s) => s.addChapterNode)
   const ideaNodePresets = useStore((s) => s.ideaNodePresets)
+  const addIdeaNodeChain = useStore((s) => s.addIdeaNodeChain)
   const toggleStruckForMapNodes = useStore((s) => s.toggleStruckForMapNodes)
   const openSynonymMenu = useStore((s) => s.openSynonymMenu)
 
@@ -262,7 +263,7 @@ export default function ContextMenu() {
             label: p.label,
             swatch: p.color,
             shape: p.shape || 'rectangle',
-            onClick: act(() => addIdeaNode(menu.scriptId, x, y, { title: p.label, color: p.color, shape: p.shape }))
+            onClick: act(() => addIdeaNodeChain(menu.scriptId, x, y, p.id))
           }))
         ]
       },
