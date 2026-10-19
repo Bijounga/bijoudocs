@@ -31,6 +31,9 @@ function isSectionNode(node) {
 const ZOOM_MIN = 0.02
 const ZOOM_MAX = 2
 
+// A remembered view ({ x, y, zoom }), or null when there isn't one or it's broken.
+const validView = (v) => (v && Number.isFinite(v.x) && Number.isFinite(v.y) && Number.isFinite(v.zoom) && v.zoom > 0 ? v : null)
+
 // A node's *real* rendered height varies a lot with its content (a
 // short idea node vs. one with several lines of text can easily differ
 // by 200px+) and isn't tracked anywhere in mapLayout — only the nominal
@@ -63,12 +66,6 @@ function blurActiveEditableField() {
 // rendered yet (no node.width/height measured) computes exactly as
 // before — this only changes behavior once a node has actually mounted
 // and been measured at least once.
-// The remembered pan, or the default when it's missing or broken (a NaN
-// saved by an older build reads back as null).
-function savedPan(p) {
-  return p && Number.isFinite(p.x) && Number.isFinite(p.y) ? p : { x: 60, y: 40 }
-}
-
 function nodeSize(node) {
   return { w: node.width || NODE_WIDTH, h: node.height || NODE_H }
 }
@@ -232,7 +229,7 @@ export default function MapView({ scriptId, script }) {
   const pushUndo = useStore((s) => s.pushUndo)
   const removeMapEdgesByIds = useStore((s) => s.removeMapEdgesByIds)
   const toggleStruckForMapNodes = useStore((s) => s.toggleStruckForMapNodes)
-  const setMapViewport = useStore((s) => s.setMapViewport)
+  const setMapView = useStore((s) => s.setMapView)
   const openContextMenu = useStore((s) => s.openContextMenu)
   const addIdeaNode = useStore((s) => s.addIdeaNode)
   const addConnectedIdeaNodeFromMap = useStore((s) => s.addConnectedIdeaNodeFromMap)
@@ -254,9 +251,12 @@ export default function MapView({ scriptId, script }) {
 
   const canvasRef = useRef(null)
   const dragRef = useRef(null) // { type: 'node'|'pan'|'connect'|'select'|'bend'|'resize', ... }
-  const [zoom, setZoom] = useState(script.mapLayout.viewZoom || 1)
+  const [zoom, setZoom] = useState(() => (validView(useStore.getState().mapViews[scriptId]) || { zoom: 1 }).zoom)
   const zoomRef = useRef(zoom) // mirrors `zoom` synchronously — two zoomBy() calls in the same tick (e.g. a fast double-click on the +button, before React re-renders between them) would otherwise both read the same stale closured `zoom` and not compound
-  const [pan, setPan] = useState(() => savedPan(script.mapLayout.viewPan))
+  const [pan, setPan] = useState(() => {
+    const v = validView(useStore.getState().mapViews[scriptId])
+    return v ? { x: v.x, y: v.y } : { x: 60, y: 40 }
+  })
   const panRef = useRef(pan) // mirrors `pan` on every render — screenToWorld is called from the mousemove/mouseup effect below, whose closure is only refreshed when scriptId changes, so a plain closured `pan` goes stale (and connector-drag previews / rubber-band selection start pointing at the wrong spot) the moment the user pans without also changing zoom or script
   panRef.current = pan
   const [connectPreview, setConnectPreview] = useState(null) // { fromId, x, y } in world coords
@@ -286,23 +286,76 @@ export default function MapView({ scriptId, script }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scriptId, script.sections.length])
 
-  // Remembers the pan/zoom position per script — saved once on the way
-  // out (leaving map view, or switching to a different script while still
-  // in it), not on every pan/zoom change, which would mean a store write
-  // per mousemove while dragging. Reads the two refs above (not the
-  // `pan`/`zoom` state directly) since this cleanup closure is only
-  // refreshed when scriptId itself changes, so a closured `pan`/`zoom`
-  // would go stale the moment the user pans without switching scripts.
+  // Puts the map back where you left it for this script (kept in app
+  // settings — see mapViews in store.js). When nothing is remembered yet, or
+  // the remembered spot no longer has a single node in view (they've been
+  // moved or deleted since), it fits everything instead, like the Fit
+  // button — otherwise you open onto empty canvas and have to go looking.
+  // The cleanup saves the spot on the way out (leaving the map, or switching
+  // script while in it); it reads the refs, not the `pan`/`zoom` state,
+  // since this closure only refreshes when scriptId changes.
+  // viewReady stays false until the view is real — restored, or fitted — so
+  // the placeholder default is never saved as if it were somewhere you'd been.
+  const viewReady = useRef(false)
   useEffect(() => {
-    const initialZoom = script.mapLayout.viewZoom || 1
-    setPan(savedPan(script.mapLayout.viewPan))
-    setZoom(initialZoom)
-    zoomRef.current = initialZoom // setZoom alone won't reach it — see zoomRef's own declaration comment
+    viewReady.current = false
+    const saved = validView(useStore.getState().mapViews[scriptId])
+    const view = saved || { x: 60, y: 40, zoom: 1 }
+    setPan({ x: view.x, y: view.y })
+    setZoom(view.zoom)
+    zoomRef.current = view.zoom // setZoom alone won't reach it — see zoomRef's own declaration comment
+    if (saved) viewReady.current = true
+    let raf = 0
+    let tries = 0
+    const settle = () => {
+      const rect = canvasRef.current && canvasRef.current.getBoundingClientRect()
+      const placed = Object.values(script.mapLayout.nodes).filter((n) => Number.isFinite(n.x) && Number.isFinite(n.y))
+      if (!placed.length) {
+        viewReady.current = true
+        return
+      }
+      // Not laid out yet: try again next frame.
+      if (!rect || rect.width <= 0) {
+        if (tries++ < 60) raf = requestAnimationFrame(settle)
+        return
+      }
+      const sees =
+        saved &&
+        placed.some((n) => {
+          const x = view.x + n.x * view.zoom
+          const y = view.y + n.y * view.zoom
+          return x < rect.width && x + (n.width || NODE_WIDTH) * view.zoom > 0 && y < rect.height && y + (n.height || NODE_H) * view.zoom > 0
+        })
+      if (!sees) recenterView()
+      viewReady.current = true
+    }
+    settle()
     return () => {
-      setMapViewport(scriptId, panRef.current, zoomRef.current)
+      cancelAnimationFrame(raf)
+      if (viewReady.current) setMapView(scriptId, { x: panRef.current.x, y: panRef.current.y, zoom: zoomRef.current })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scriptId])
+
+  // Saves the spot a moment after you stop panning or zooming — not on every
+  // tick of a drag — so quitting the app with the map open (which never runs
+  // the cleanup above) still finds it again. The refs hold the latest values
+  // by the time the timer fires.
+  const scriptIdRef = useRef(scriptId)
+  scriptIdRef.current = scriptId
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (viewReady.current) setMapView(scriptIdRef.current, { x: panRef.current.x, y: panRef.current.y, zoom: zoomRef.current })
+    }, 700)
+    return () => clearTimeout(t)
+  }, [pan, zoom, setMapView])
+  useEffect(() => {
+    const onUnload = () => {
+      if (viewReady.current) setMapView(scriptIdRef.current, { x: panRef.current.x, y: panRef.current.y, zoom: zoomRef.current })
+    }
+    window.addEventListener('beforeunload', onUnload)
+    return () => window.removeEventListener('beforeunload', onUnload)
+  }, [setMapView])
 
   // Applies a selection computed by ContextMenu.jsx's "select connected
   // nodes" items (which can't reach this component's own local state

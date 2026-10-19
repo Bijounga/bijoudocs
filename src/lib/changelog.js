@@ -229,6 +229,10 @@ export const CHANGELOG = {
   '0.5.66': [
     'Chain idea-node presets: in Manage presets, each preset has a “then add” choice — spawn a But and a Therefore comes along right below it, already linked. Chains can run several presets long, and one undo removes the whole set',
     'Works from every way of adding a preset: the toolbar menu, the keyboard menu at your cursor, and right-click on the map. Chained presets show what they bring along, like “But → Therefore”'
+  ],
+  '0.5.67': [
+    'The mind map now remembers where you were — it reopens at the same position and zoom for each script, even after you quit and relaunch. (It used to lose its place every time the app closed.)',
+    'A map with nothing remembered yet, or whose remembered spot no longer shows any nodes, opens fitted to show everything instead of empty canvas'
   ]
 }
 

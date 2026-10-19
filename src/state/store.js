@@ -178,6 +178,11 @@ export const useStore = create(
     // tabs per script (see lib/scratchNotes.js).
     scratchpad: { open: false, x: null, y: null, w: 360, h: 380, zoom: 1, lines: true },
     scratchPads: {},
+    // Where each script's mind map was last left: { [scriptId]: { x, y, zoom } }
+    // (the pan offset in screen px, and the zoom). App settings, not the
+    // script file: moving around the map isn't an edit, so it shouldn't
+    // touch the script's "last edited" time or sync between machines.
+    mapViews: {},
     sidebarHidden: false,
     rightMarginWidth: 210,
     noteColor: '#f2a65a',
@@ -242,6 +247,7 @@ export const useStore = create(
         if (settings && typeof settings.inspectorWidth === 'number') s.inspectorWidth = settings.inspectorWidth
         if (settings && settings.scratchpad && typeof settings.scratchpad === 'object') s.scratchpad = { ...s.scratchpad, ...settings.scratchpad }
         if (settings && settings.scratchPads && typeof settings.scratchPads === 'object') s.scratchPads = settings.scratchPads
+        if (settings && settings.mapViews && typeof settings.mapViews === 'object') s.mapViews = settings.mapViews
         // The notepad used to keep a single note per script (scratchNotes);
         // each becomes that script's first tab. The old key is rewritten empty
         // on the next save, in the same write that stores the tabs.
@@ -443,6 +449,7 @@ export const useStore = create(
         inspectorWidth: s.inspectorWidth,
         scratchpad: s.scratchpad,
         scratchPads: s.scratchPads,
+        mapViews: s.mapViews,
         scratchNotes: {},
         sidebarHidden: s.sidebarHidden,
         rightMarginWidth: s.rightMarginWidth,
@@ -2665,17 +2672,20 @@ export const useStore = create(
       })
       get().scheduleSave(scriptId, { flash: false })
     },
-    // Saved once when the map view unmounts (leaving the map, or switching
-    // to a different script while still in it) — not on every pan/zoom
-    // change, which would mean a store write per mousemove while dragging.
-    setMapViewport(scriptId, pan, zoom) {
+    // The map reports where it is a moment after you stop panning/zooming
+    // (and when it closes), never during a drag. Only writes when it moved.
+    setMapView(scriptId, view) {
+      if (!scriptId || !view || !Number.isFinite(view.x) || !Number.isFinite(view.y) || !Number.isFinite(view.zoom)) return
+      // Zoom keeps 4 decimals: positions on a big map are thousands of px
+      // from the origin, so a coarser zoom would drift the view visibly.
+      const r = (n, d) => Math.round(n * d) / d
+      const next = { x: r(view.x, 100), y: r(view.y, 100), zoom: r(view.zoom, 10000) }
+      const cur = get().mapViews[scriptId]
+      if (cur && cur.x === next.x && cur.y === next.y && cur.zoom === next.zoom) return
       set((s) => {
-        const script = s.scripts.find((sc) => sc.id === scriptId)
-        if (!script) return
-        script.mapLayout.viewPan = pan
-        script.mapLayout.viewZoom = zoom
+        s.mapViews[scriptId] = next
       })
-      get().scheduleSave(scriptId, { flash: false })
+      get().saveAppSettings()
     },
     toggleMapNodeCollapsed(scriptId, sectionId) {
       set((s) => {
