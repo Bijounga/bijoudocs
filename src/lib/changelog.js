@@ -242,6 +242,10 @@ export const CHANGELOG = {
   '0.5.69': [
     'To-dos added from the Premiere panel now go into the section’s Checkpoints list instead of being added to your script text. A tag put on one shows as a chip, and it still counts toward that tag',
     'Turning a checkpoint into a script line, or moving a line into the checklist, now keeps its tag'
+  ],
+  '0.5.70': [
+    'New right-click option on a script line: “Move to this section’s checkpoints”. It does what dragging the line onto the section’s checklist icon does, without the dragging, and opens the checkpoints so you can see it',
+    'Moving a line into the checklist now keeps its note and done tick too (it used to drop them)'
   ]
 }
 

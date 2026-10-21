@@ -28,6 +28,7 @@ export default function ContextMenu() {
   const toggleLineBookmark = useStore((s) => s.toggleLineBookmark)
   const toggleResumeLine = useStore((s) => s.toggleResumeLine)
   const copyLineToClipboard = useStore((s) => s.copyLineToClipboard)
+  const moveLineToChecklist = useStore((s) => s.moveLineToChecklist)
   const flashSaved = useStore((s) => s.flashSaved)
   const deleteSection = useStore((s) => s.deleteSection)
   const openSectionTab = useStore((s) => s.openSectionTab)
@@ -174,6 +175,16 @@ export default function ContextMenu() {
         onClick: act(() => toggleResumeLine(menu.scriptId, menu.sectionId, menu.lineId))
       },
       { label: 'Duplicate', onClick: act(() => duplicateLine(menu.scriptId, menu.sectionId, menu.lineId)) },
+      {
+        // Same as dragging the line onto the section's checklist icon, without the dragging.
+        label: "Move to this section's checkpoints",
+        onClick: act(() => {
+          moveLineToChecklist(menu.scriptId, menu.sectionId, menu.lineId, menu.sectionId)
+          const sec = script.sections.find((se) => se.id === menu.sectionId)
+          if (sec && !sec.checklistOpen) toggleSectionChecklistOpen(menu.scriptId, menu.sectionId)
+          flashSaved('Moved to checkpoints')
+        })
+      },
       {
         label: 'Copy',
         onClick: act(() => {

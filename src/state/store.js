@@ -2023,7 +2023,15 @@ export const useStore = create(
         const idx = fromSec.lines.findIndex((l) => l.id === lineId)
         if (idx < 0) return
         const [moved] = fromSec.lines.splice(idx, 1)
-        toSec.checklist.push({ id: uid(), text: stripHtmlToText(moved.text), done: false, ...(moved.categoryId ? { categoryId: moved.categoryId } : {}) })
+        // The tag, note, done state and any Premiere marker link come along.
+        toSec.checklist.push({
+          id: uid(),
+          text: stripHtmlToText(moved.text),
+          done: !!moved.done,
+          ...(moved.categoryId ? { categoryId: moved.categoryId } : {}),
+          ...(moved.note ? { note: moved.note } : {}),
+          ...(moved.marker ? { marker: moved.marker } : {})
+        })
         script.updatedAt = Date.now()
       })
       get().scheduleSave(scriptId, { flash: false })
