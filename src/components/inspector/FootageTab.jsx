@@ -91,6 +91,7 @@ function sectionRows(section, byKey, project) {
     t: m.t,
     n: { type: 'MARKER', color: m.color, text: m.text, star: false, sketch: false },
     seq: true,
+    from: project.from || null,
     open: { projectId: project.id, sectionId: section.id, t: m.t }
   }))
   let start = 0
@@ -100,7 +101,7 @@ function sectionRows(section, byKey, project) {
       for (const n of rec.notes) {
         if (n.t < c.in || n.t >= c.out) continue
         const t = start + n.t - c.in
-        rows.push({ id: n.id + '@' + c.id, t, n, from: recordingShort(rec.name), open: { projectId: project.id, sectionId: section.id, t } })
+        rows.push({ id: n.id + '@' + c.id, t, n, from: project.from || rec.from || null, source: recordingShort(rec.name), open: { projectId: project.id, sectionId: section.id, t } })
       }
     }
     start += c.out - c.in
@@ -161,7 +162,7 @@ export default function FootageTab({ scriptId, script }) {
       .map((r) => ({
         key: r.key,
         label: recordingLabel(r.name),
-        rows: r.notes.map((n) => ({ id: n.id, t: n.t, n, open: { key: r.key, t: n.t, noteId: n.id } })).sort((a, b) => a.t - b.t)
+        rows: r.notes.map((n) => ({ id: n.id, t: n.t, n, from: r.from || null, open: { key: r.key, t: n.t, noteId: n.id } })).sort((a, b) => a.t - b.t)
       }))
   }, [data, project, section])
 
@@ -232,9 +233,9 @@ export default function FootageTab({ scriptId, script }) {
   }
 
   async function open(row) {
-    // Synced from another computer: the footage itself isn't here to open.
-    if (data && data.source === 'synced') {
-      setStatus({ text: 'Bijou Footage and the footage are on ' + (data.syncedFrom || 'the other computer') + ' — open this note there.', error: true })
+    // A note synced from another computer: the footage itself isn't here to open.
+    if (row.from) {
+      setStatus({ text: 'That footage is on ' + row.from + ' — open this note in Bijou Footage there.', error: true })
       return
     }
     setStatus({ text: 'Opening in Bijou Footage…' })
@@ -248,9 +249,16 @@ export default function FootageTab({ scriptId, script }) {
 
   return (
     <div className="ft">
-      {data.source === 'synced' && (
-        <div className="ft-sync" title="Bijou Footage on that computer writes these into your BijouDocs folder, which syncs">
-          Synced from <b>{data.syncedFrom || 'your other computer'}</b> · updated {ago(data.syncedAt)}. Read-only here.
+      {data.synced && data.synced.length > 0 && (
+        <div className="ft-sync" title="Bijou Footage's computer saves these into your BijouDocs folder, which syncs">
+          Includes notes synced from{' '}
+          {data.synced.map((s, i) => (
+            <span key={s.host}>
+              {i > 0 && ', '}
+              <b>{s.host}</b> ({ago(s.at)})
+            </span>
+          ))}
+          . Those are read-only here.
         </div>
       )}
       <select className="ft-project" value={projectId || 'all'} onChange={(e) => pickProject(e.target.value)} title="Which Bijou Footage project">
@@ -258,6 +266,7 @@ export default function FootageTab({ scriptId, script }) {
         {projects.map((p) => (
           <option key={p.id} value={p.id}>
             {p.name}
+            {p.from ? ' · ' + p.from : ''}
           </option>
         ))}
       </select>
@@ -346,7 +355,7 @@ export default function FootageTab({ scriptId, script }) {
                 key={r.id}
                 className="ft-note"
                 onClick={() => open(r)}
-                title={(data.source === 'synced' ? 'Synced note at ' : 'Open in Bijou Footage at ') + clock(r.t) + (section ? ' in ' + section.name : '') + (r.from ? ' — from the ' + r.from + ' recording' : '')}
+                title={(r.from ? 'Synced from ' + r.from + ' — ' : 'Open in Bijou Footage at ') + clock(r.t) + (section ? ' in ' + section.name : '') + (r.source ? ' — from the ' + r.source + ' recording' : '')}
               >
                 <i className="ft-dot" style={{ background: sw.hex }} />
                 <span className="ft-time">{clock(r.t)}</span>

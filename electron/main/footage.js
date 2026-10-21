@@ -165,35 +165,68 @@ export function publishFootage(docsDir) {
   return true
 }
 
-// The newest snapshot any computer has published, or null.
-function readSynced(docsDir) {
-  if (!docsDir) return null
+// Every OTHER computer's newest snapshot, one per computer. This computer's
+// own copy is skipped — its live data is read directly.
+function readOthers(docsDir) {
+  if (!docsDir) return []
   const dir = path.join(docsDir, SYNC_DIR)
   let names = []
   try {
     names = fs.readdirSync(dir).filter((f) => f.endsWith('.json'))
   } catch {
-    return null
+    return []
   }
-  let best = null
+  const mine = hostId()
+  const byHost = new Map()
   for (const f of names) {
     const s = readJson(path.join(dir, f))
-    if (s && s.v === 1 && s.data && s.data.available && (!best || s.at > best.at)) best = s
+    if (!s || s.v !== 1 || !s.data || !s.data.available || !s.host) continue
+    if (String(s.host).replace(/[^\w.-]+/g, '_') === mine) continue
+    const cur = byHost.get(s.host)
+    if (!cur || s.at > cur.at) byHost.set(s.host, s)
   }
-  return best && { ...best.data, source: 'synced', syncedFrom: best.host, syncedAt: best.at }
+  return [...byHost.values()]
 }
 
-// What the Footage tab shows: this computer's own Footage data when it has
-// any, else the synced snapshot from the one that does.
+// What the Footage tab shows: this computer's own Footage data together with
+// what every other computer has synced. A computer can have Footage of its
+// own (the Mac has projects of its own) and still be shown the PC's notes;
+// each synced recording and project carries `from` (the computer's name) so
+// the tab knows it can't open those here.
 export function loadFootage(docsDir) {
   const local = readLocal()
-  if (local) return local.available ? { ...local, source: 'local' } : local
-  return readSynced(docsDir) || { available: false }
+  const others = readOthers(docsDir)
+  const hasLocal = !!(local && local.available)
+  if (!hasLocal && !others.length) return local || { available: false }
+  const out = { available: true, projects: [], recordings: [], beatColors: {}, synced: [] }
+  const keys = new Set()
+  const ids = new Set()
+  const add = (data, from) => {
+    for (const r of data.recordings || []) {
+      if (keys.has(r.key)) continue
+      keys.add(r.key)
+      out.recordings.push(from ? { ...r, from } : r)
+    }
+    for (const p of data.projects || []) {
+      if (ids.has(p.id)) continue
+      ids.add(p.id)
+      out.projects.push(from ? { ...p, from } : p)
+    }
+    if (!Object.keys(out.beatColors).length && data.beatColors) out.beatColors = data.beatColors
+  }
+  if (hasLocal) add(local, null)
+  for (const s of others) {
+    add(s.data, s.host)
+    out.synced.push({ host: s.host, at: s.at })
+  }
+  out.recordings.sort((a, b) => a.name.localeCompare(b.name))
+  out.source = hasLocal ? (others.length ? 'mixed' : 'local') : 'synced'
+  return out
 }
 
 // Pushes 'footage:changed' to the window whenever the notes change: where
-// Footage runs, on its saves (and publishes the snapshot); where it doesn't,
-// when a new snapshot arrives from the other computer.
+// Footage runs, on its saves (and publishes the snapshot); on every computer,
+// when another computer's snapshot arrives.
 let watching = false
 export function watchFootage(win, docsDir) {
   if (watching) return
@@ -201,10 +234,7 @@ export function watchFootage(win, docsDir) {
   const send = () => {
     if (!win.isDestroyed()) win.webContents.send('footage:changed')
   }
-  const dir = dataDir()
-  if (!dir) {
-    // No Footage here: check for a newer snapshot every few seconds.
-    if (!docsDir) return
+  if (docsDir) {
     const stamp = () => {
       try {
         const d = path.join(docsDir, SYNC_DIR)
@@ -221,8 +251,9 @@ export function watchFootage(win, docsDir) {
         send()
       }
     }, 6000)
-    return
   }
+  const dir = dataDir()
+  if (!dir) return
   const reviews = path.join(dir, 'reviews.json')
   try {
     publishFootage(docsDir)

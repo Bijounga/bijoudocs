@@ -250,6 +250,9 @@ export const CHANGELOG = {
   '0.5.71': [
     'Your Bijou Footage notes and markers now follow you to your other computer: the computer that runs Bijou Footage saves a copy of them (and your edit sections) into your BijouDocs folder, and BijouDocs on a computer without Footage — like your Mac — shows that copy in its Footage tab, updating as the other computer saves. It is read-only there; opening a note in Footage needs the computer that has the footage',
     'Premiere panel: choose which sections belong to which sequence, and BijouDocs keeps that choice when it merges the panel’s changes'
+  ],
+  '0.5.72': [
+    'Fixed the Footage tab not showing your other computer’s notes on a computer that has its own Bijou Footage (like your Mac): it now shows both together — this computer’s projects and everything synced from the other one — instead of only its own. Synced notes are marked read-only and show which computer they came from'
   ]
 }
 
