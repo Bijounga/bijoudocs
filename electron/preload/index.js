@@ -19,6 +19,9 @@ const api = {
   chooseStorageDir: () => ipcRenderer.invoke('settings:chooseStorageDir'),
   resetStorageDir: () => ipcRenderer.invoke('settings:resetStorageDir'),
   onUpdateStatus: (cb) => ipcRenderer.on('update:status', (_e, payload) => cb(payload)),
+  // A bijoudocs:// link asked to show a script/section/line (see main/deepLink.js).
+  onOpenLink: (cb) => ipcRenderer.on('deeplink:open', (_e, link) => cb(link)),
+  linkReady: () => ipcRenderer.invoke('deeplink:ready'),
   // Fired when a script's .json file changes on disk from something other
   // than this app instance's own save — currently only the Premiere
   // extension (premiere-extension/), which edits tags/notes/done directly.

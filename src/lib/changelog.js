@@ -233,6 +233,11 @@ export const CHANGELOG = {
   '0.5.67': [
     'The mind map now remembers where you were — it reopens at the same position and zoom for each script, even after you quit and relaunch. (It used to lose its place every time the app closed.)',
     'A map with nothing remembered yet, or whose remembered spot no longer shows any nodes, opens fitted to show everything instead of empty canvas'
+  ],
+  '0.5.68': [
+    'Works with the new BijouDocs Tags panel for Premiere Pro: tags, notes, done-ticks, checklist to-dos, marker links and presets changed from Premiere now appear here live, without reopening the script',
+    'Links from Premiere: “show in BijouDocs” buttons open this app straight at a line or section (and start it if it isn’t running). Open BijouDocs once after updating so Windows registers the link',
+    'Launching BijouDocs while it’s already open now brings the open window forward instead of starting a second copy'
   ]
 }
 

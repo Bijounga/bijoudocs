@@ -8,9 +8,44 @@ import { migrateScript, newBlankScript } from './scriptSchema.js'
 import * as scriptWatcher from './scriptWatcher.js'
 import * as macUpdate from './macUpdate.js'
 import * as footage from './footage.js'
+import { findDeepLinkArg, parseDeepLink } from './deepLink.js'
 
 const isDev = !app.isPackaged
 const isMac = process.platform === 'darwin'
+
+// ---- bijoudocs:// links ("show this in BijouDocs", from the Premiere panel) ----
+// A second launch (the OS opening a bijoudocs:// link) must reach THIS running
+// instance instead of starting another, so installed builds take the
+// single-instance lock. Dev runs skip it - a dev server and an installed
+// copy share a data folder and would otherwise lock each other out - unless
+// BIJOU_SINGLE_INSTANCE is set (used to test this path from a dev build).
+const useInstanceLock = !isDev || !!process.env.BIJOU_SINGLE_INSTANCE
+const gotInstanceLock = useInstanceLock ? app.requestSingleInstanceLock() : true
+if (!gotInstanceLock) app.quit()
+
+let mainWindow = null
+let linkRendererReady = false
+let pendingLink = null
+
+function deliverLink(link) {
+  if (!link) return
+  if (mainWindow && !mainWindow.isDestroyed() && linkRendererReady) {
+    if (mainWindow.isMinimized()) mainWindow.restore()
+    mainWindow.show()
+    mainWindow.focus()
+    mainWindow.webContents.send('deeplink:open', link)
+  } else {
+    // Cold start (or window still loading): the renderer asks for it when ready.
+    pendingLink = link
+  }
+}
+
+app.on('second-instance', (_e, argv) => deliverLink(parseDeepLink(findDeepLinkArg(argv))))
+// macOS hands links over as an event, not an argument.
+app.on('open-url', (e, url) => {
+  e.preventDefault()
+  deliverLink(parseDeepLink(url))
+})
 
 // Follows redirects manually — GitHub release asset URLs 302 to a CDN —
 // and streams the response straight to disk.
@@ -294,6 +329,8 @@ function setupAutoUpdater(win) {
 }
 
 app.whenReady().then(() => {
+  if (!gotInstanceLock) return
+  if (!isDev) app.setAsDefaultProtocolClient('bijoudocs')
   // Electron's spellchecker can leave `dictionarySuggestions` empty (and
   // sometimes `misspelledWord` unset) in the context-menu event without an
   // explicit language — the inline red-squiggly marking runs regardless
@@ -310,7 +347,19 @@ app.whenReady().then(() => {
   // move into Applications if launched from the .dmg.
   if (isMac && !isDev) macUpdate.tidyOnLaunch().catch((err) => console.error('BijouDocs: mac tidy failed', err))
   const win = createWindow()
+  mainWindow = win
   registerIpc(win)
+  // The renderer says when it can take a link (its library has loaded); a link
+  // that arrived earlier - including the one this process was launched with - waits.
+  pendingLink = pendingLink || parseDeepLink(findDeepLinkArg(process.argv))
+  ipcMain.handle('deeplink:ready', () => {
+    linkRendererReady = true
+    if (pendingLink) {
+      const link = pendingLink
+      pendingLink = null
+      deliverLink(link)
+    }
+  })
   scriptWatcher.startWatching(win)
   const checkNow = setupAutoUpdater(win)
 

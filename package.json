@@ -1,6 +1,6 @@
 {
   "name": "bijoudocs",
-  "version": "0.5.67",
+  "version": "0.5.68",
   "description": "BijouDocs — a desktop script workspace for YouTube scripts",
   "main": "out/main/index.js",
   "author": "Bijou",
@@ -30,6 +30,7 @@
   "build": {
     "appId": "com.bijoudocs.app",
     "productName": "BijouDocs",
+    "protocols": [{ "name": "BijouDocs", "schemes": ["bijoudocs"] }],
     "directories": {
       "output": "dist"
     },

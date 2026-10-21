@@ -85,7 +85,10 @@ function migrateScript(raw, { forceNewId = false } = {}) {
           indent: typeof l.indent === 'number' ? l.indent : 0,
           struck: !!l.struck,
           bookmarked: !!l.bookmarked,
-          takes: Array.isArray(l.takes) ? l.takes : []
+          takes: Array.isArray(l.takes) ? l.takes : [],
+          // Set by the Premiere panel when a tagged line is pinned to a
+          // sequence marker; must survive load/save or the link is lost.
+          ...(l.marker && typeof l.marker === 'object' ? { marker: l.marker } : {})
         }))
       : []
   }))

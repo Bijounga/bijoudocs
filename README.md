@@ -37,6 +37,13 @@ Nothing is sent anywhere except the app's own update check (see below) — scrip
 
 This copy is wired to check `github.com/Bijounga/bijoudocs` (Releases) for newer versions on launch and periodically while running, download silently in the background, and show a small "restart to update" banner once ready. To point a fork at your own releases instead, change `build.publish` in `package.json` and update `.github/workflows/release.yml`'s target repo — then push a `vX.Y.Z` tag to build and publish a new release automatically (both Windows and a universal Mac build).
 
+## Premiere Pro extension
+
+`premiere-extension/` is a separate, standalone Premiere Pro panel for
+working with a script's tags/notes/done-state directly inside Premiere,
+without opening BijouDocs. See [premiere-extension/README.md](premiere-extension/README.md)
+for setup and usage.
+
 ## Project structure
 
 ```

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>BijouDocs Tags</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="app">
+    <header id="header">
+      <div id="script-bar">
+        <select id="script-select" aria-label="Script"></select>
+        <button id="refresh-btn" class="icon-btn" data-icon="refresh" title="Reload the script from disk" aria-label="Reload the script from disk"></button>
+        <button id="settings-btn" class="icon-btn" data-icon="folder" title="Change the scripts folder" aria-label="Change the scripts folder" aria-expanded="false"></button>
+      </div>
+      <div id="settings-bar">
+        <label for="folder-input">BijouDocs scripts folder</label>
+        <div class="row">
+          <input id="folder-input" type="text" placeholder="e.g. J:\My Drive\BijouDocs" />
+          <button id="folder-load-btn" class="primary">Load</button>
+        </div>
+      </div>
+    </header>
+
+    <div id="tabs" role="tablist">
+      <button class="tab-btn active" role="tab" aria-selected="true" data-view="checklist">Checklist <span class="badge" id="cl-badge" title="Unfinished to-dos in this script"></span></button>
+      <button class="tab-btn" role="tab" aria-selected="false" data-view="sections">Sections</button>
+      <button class="tab-btn" role="tab" aria-selected="false" data-view="tags">Tags</button>
+      <button class="tab-btn" role="tab" data-view="search">Search</button>
+    </div>
+
+    <div id="status-bar" role="status" aria-live="polite"></div>
+
+    <div id="view-sections" class="view">
+      <p class="hint">Pick a tag to see that section's lines.</p>
+      <div id="sections-list"></div>
+    </div>
+
+    <div id="view-tags" class="view">
+      <p class="hint">Every tag in the script. Pick one to list all its lines.</p>
+      <div id="tags-list"></div>
+    </div>
+
+    <div id="view-checklist" class="view active">
+      <form id="cl-add" autocomplete="off">
+        <input id="cl-text" type="text" placeholder="Add a to-do, e.g. need ocean footage" aria-label="New to-do" />
+        <div id="cl-pickers">
+          <label class="pick"><span class="cap">Goes in</span><select id="cl-target"></select></label>
+          <label class="pick"><span class="cap">Tag</span><span id="cl-tag-wrap" class="cl-wrap"></span></label>
+          <label class="pick"><span class="cap"><i id="cl-color-dot" class="cl-dot"></i>Marker colour</span><select id="cl-color"></select></label>
+        </div>
+        <div id="cl-add-actions">
+          <div id="cl-presets" aria-label="Presets"></div>
+          <button type="button" id="cl-add-btn" title="Add the to-do without a marker">Add</button>
+          <button type="button" id="cl-add-marker-btn" class="primary" title="Add the to-do and drop a marker at the playhead"><span data-icon="pin"></span>Add + marker</button>
+        </div>
+        <div id="cl-preset-editor">
+          <input id="cl-preset-name" type="text" placeholder="Preset name, e.g. SFX" aria-label="Preset name" maxlength="24" />
+          <label class="cl-preset-tag"><span>Same as tag</span><select id="cl-preset-tag" title="Base the preset on a tag you already have, so it isn't a duplicate"></select></label>
+          <div id="cl-preset-colors" role="radiogroup" aria-label="Marker colour"></div>
+          <button type="button" id="cl-preset-save" class="primary">Save</button>
+          <button type="button" id="cl-preset-cancel">Cancel</button>
+        </div>
+      </form>
+
+      <div id="cl-filters">
+        <div class="seg" id="cl-seg" role="group" aria-label="Show">
+          <button type="button" data-status="all" aria-pressed="true">All</button>
+          <button type="button" data-status="open" aria-pressed="false">Open</button>
+          <button type="button" data-status="done" aria-pressed="false">Done</button>
+        </div>
+        <button type="button" id="cl-filters-btn" class="link" aria-expanded="false" title="Filter by section or tag">Filters <span class="n" id="cl-filter-count"></span></button>
+        <span class="spacer"></span>
+        <button type="button" id="cl-undo" class="icon-btn" data-icon="undo" aria-label="Undo" title="Nothing to undo" disabled></button>
+        <button type="button" id="cl-redo" class="icon-btn" data-icon="redo" aria-label="Redo" title="Nothing to redo" disabled></button>
+        <button type="button" id="cl-collapse-all" class="link" title="Fold or unfold every section below">Collapse all</button>
+        <button type="button" id="cl-delete-done" class="link danger" title="Delete the finished to-dos shown (tagged lines are never deleted)">Clear done</button>
+      </div>
+      <div id="cl-filter-panel">
+        <label for="cl-f-section">Section</label>
+        <select id="cl-f-section"></select>
+        <label for="cl-f-tag">Tag</label>
+        <select id="cl-f-tag"></select>
+        <button type="button" id="cl-f-reset" class="link reset">Reset filters</button>
+      </div>
+
+      <div id="checklist-list"></div>
+    </div>
+
+    <div id="view-search" class="view">
+      <input id="search-input" type="text" placeholder="Search your lines..." aria-label="Search lines" />
+      <div id="search-results"></div>
+    </div>
+
+    <div id="empty-state">
+      <strong>Connect your scripts</strong>
+      Enter the folder BijouDocs saves scripts to (the one you picked inside
+      BijouDocs), then press Load. You only need to do this once.
+    </div>
+  </div>
+
+  <script src="js/CSInterface.js"></script>
+  <script src="js/dataLayer.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

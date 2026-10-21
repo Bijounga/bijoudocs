@@ -281,6 +281,10 @@ export const useStore = create(
       // whenever a script's file changes on disk from outside this app
       // instance, currently only the Premiere extension.
       window.bijou.onExternalScriptChange((script) => get().applyExternalScriptChange(script))
+      // Links from outside (the Premiere panel's "show in BijouDocs"). Registered
+      // after the library has loaded; linkReady() releases one that was waiting.
+      window.bijou.onOpenLink((link) => get().openLink(link))
+      window.bijou.linkReady()
       // A missing lastSeenVersion means one of two very different things:
       // either this is a genuinely brand-new install (no scripts yet —
       // showing a changelog before the user has done anything would just
@@ -712,7 +716,11 @@ export const useStore = create(
         }
         s.diskUpdatedAt[incoming.id] = incoming.updatedAt
       })
-      if (get().currentScriptId === incoming.id) get().flashSaved('Updated from Premiere')
+      if (get().currentScriptId === incoming.id) {
+        const nodes = Object.values((incoming.mapLayout && incoming.mapLayout.nodes) || {})
+        const fromFootage = nodes.some((n) => n && n.importedFrom === 'bijou-footage' && Date.now() - (n.importedAt || 0) < 10000)
+        get().flashSaved(fromFootage ? 'Updated from Bijou Footage' : 'Updated from Premiere')
+      }
     },
     dismissSaveConflict(id) {
       set((s) => {
@@ -1773,6 +1781,24 @@ export const useStore = create(
         s.sectionJumpOpen = false
         s.sectionJumpQuery = ''
       })
+    },
+    // A bijoudocs:// link: show this script, and the section / line in it.
+    async openLink({ scriptId, sectionId, lineId }) {
+      const script = get().scripts.find((sc) => sc.id === scriptId)
+      if (!script) {
+        get().flashSaved("That script isn't in this library")
+        return
+      }
+      set((s) => {
+        // Map / outline views replace the editor, which is where the line is.
+        s.mapViewOpen = false
+        s.mapSplitOpen = false
+        s.outlineViewOpen = false
+        s.outlineSplitOpen = false
+      })
+      if (get().currentScriptId !== scriptId) await get().openScript(scriptId)
+      if (sectionId && lineId) get().jumpToLine(scriptId, sectionId, lineId)
+      else if (sectionId) get().jumpToSection(scriptId, sectionId, false)
     },
     jumpToLine(scriptId, sectionId, lineId) {
       set((s) => {
