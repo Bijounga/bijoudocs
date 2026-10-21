@@ -319,3 +319,19 @@ button.cl-open:hover { color: var(--accent); background: var(--raised); }
 
 .cl-note { color: var(--ink-dim); font-style: italic; font-size: 11px; margin-top: 2px; white-space: pre-wrap; word-break: break-word; cursor: text; border-radius: 3px; }
 .cl-note:hover { background: var(--raised); }
+
+#cl-seqbar { display: none; align-items: center; gap: 6px; margin-bottom: 6px; color: var(--ink-dim); }
+#cl-seqbar .seq-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#cl-seqbar strong { color: var(--ink); }
+#cl-seq-btn[aria-expanded="true"] .icon { transform: rotate(180deg); }
+#cl-seq-picker { display: none; margin-bottom: var(--gap); padding: 8px; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; }
+#cl-seq-picker.open { display: block; }
+#cl-seq-picker .seq-help { color: var(--ink-dim); margin-bottom: 6px; }
+#cl-seq-list label { display: flex; align-items: center; gap: 8px; padding: 3px 0; cursor: pointer; }
+#cl-seq-list input { margin: 0; accent-color: var(--accent); }
+#cl-seq-picker #cl-seq-all { margin-top: 6px; }
+.tag-head-row { display: flex; align-items: center; }
+.tag-head-row button.tag-head { flex: 1; min-width: 0; }
+button.cl-card-add { width: 24px; height: 24px; padding: 0; margin-right: 6px; flex: 0 0 auto; background: transparent; border-color: transparent; color: var(--ink-faint); }
+button.cl-card-add:hover { color: var(--accent); background: var(--raised); }
+.cl-scope-note { color: var(--ink-faint); font-size: 10.5px; padding: 0 10px 6px; }

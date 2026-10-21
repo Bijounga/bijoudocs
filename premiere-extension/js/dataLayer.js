@@ -513,6 +513,49 @@
     return null;
   }
 
+  // ---- sequences (per script) ---------------------------------------------
+  // Which of the script's sections belong to which Premiere sequence:
+  // script.sequenceSections = { <sequenceID>: { name, sections: [sectionId, ...] } }.
+  // No entry for a sequence means "not chosen yet" = every section shows.
+  function getSequenceSections(script, seqId) {
+    var m = (script.sequenceSections || {})[seqId];
+    return m && Array.isArray(m.sections) ? m.sections : null;
+  }
+
+  // ids = null clears the choice (back to every section).
+  function setSequenceSections(script, seqId, name, ids) {
+    if (!script.sequenceSections) script.sequenceSections = {};
+    if (ids === null) delete script.sequenceSections[seqId];
+    else script.sequenceSections[seqId] = { name: name || '', sections: ids.slice() };
+    if (!Object.keys(script.sequenceSections).length) delete script.sequenceSections;
+  }
+
+  // A restore point in BijouDocs' own history format (<id>.snapshot-<ms>.json
+  // next to the script, which BijouDocs lists in its History panel and never
+  // mistakes for a script). Skipped if there's already one from the last
+  // `minAgeMs`. Returns true when a copy was written.
+  function backupScriptFile(filePath, minAgeMs) {
+    if (!hasNode()) return false;
+    try {
+      var fs = require('fs');
+      var path = require('path');
+      var dir = path.dirname(filePath);
+      var id = path.basename(filePath).replace(/\.json$/, '');
+      var prefix = id + '.snapshot-';
+      var newest = 0;
+      fs.readdirSync(dir).forEach(function (n) {
+        if (n.indexOf(prefix) !== 0 || !/\.json$/.test(n)) return;
+        var t = Number(n.slice(prefix.length, -5));
+        if (t > newest) newest = t;
+      });
+      if (Date.now() - newest < (minAgeMs || 600000)) return false;
+      fs.copyFileSync(filePath, path.join(dir, prefix + Date.now() + '.json'));
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   // Removes to-dos by id: checklist items AND tagged lines (a line is removed
   // from the script, text and all). The ids are also recorded in
   // script.checklistTombstones so an open BijouDocs removes them too instead
@@ -562,6 +605,9 @@
     updatePreset: updatePreset,
     deletePreset: deletePreset,
     moveTodo: moveTodo,
+    getSequenceSections: getSequenceSections,
+    setSequenceSections: setSequenceSections,
+    backupScriptFile: backupScriptFile,
     convertLineToChecklist: convertLineToChecklist,
     MARKER_COLORS: MARKER_COLORS,
     nearestMarkerColor: nearestMarkerColor,

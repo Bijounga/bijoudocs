@@ -42,6 +42,15 @@
     </div>
 
     <div id="view-checklist" class="view active">
+      <div id="cl-seqbar">
+        <span class="seq-text">Sequence <strong id="cl-seq-name"></strong></span>
+        <button type="button" id="cl-seq-btn" class="link" aria-expanded="false" title="Choose which sections belong to this sequence"><span id="cl-seq-summary"></span><svg class="icon" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></button>
+      </div>
+      <div id="cl-seq-picker">
+        <div class="seq-help">Tick the sections that belong to this sequence. Only those show below, in script order.</div>
+        <div id="cl-seq-list"></div>
+        <button type="button" id="cl-seq-all" class="link">Show all sections</button>
+      </div>
       <form id="cl-add" autocomplete="off">
         <input id="cl-text" type="text" placeholder="Add a to-do, e.g. need ocean footage" aria-label="New to-do" />
         <div id="cl-pickers">

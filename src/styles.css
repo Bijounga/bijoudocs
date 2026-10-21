@@ -5680,6 +5680,21 @@ body.is-resizing-panel {
   font-family: var(--sans);
   color: var(--ink-faint);
 }
+/* Shown where the notes are a synced copy from the other computer. */
+.ft-sync {
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--ink-dim);
+  background: var(--panel-2);
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  padding: 6px 8px;
+  margin-bottom: 8px;
+}
+.ft-sync b {
+  color: var(--ink);
+  font-weight: 600;
+}
 .ft-status {
   font-size: 11.5px;
   color: var(--ink-dim);

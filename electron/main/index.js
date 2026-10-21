@@ -206,9 +206,9 @@ function registerIpc(win) {
   ipcMain.handle('window:isMaximized', (e) => BrowserWindow.fromWebContents(e.sender)?.isMaximized() ?? false)
 
   // Bijou Footage's notes/markers (read-only) for the inspector's Footage tab.
-  ipcMain.handle('footage:load', () => footage.loadFootage())
+  ipcMain.handle('footage:load', () => footage.loadFootage(fileStore.getDocsDir()))
   ipcMain.handle('footage:open', (_e, target) => footage.openInFootage(target))
-  footage.watchFootage(win)
+  footage.watchFootage(win, fileStore.getDocsDir())
 
   ipcMain.handle('settings:load', () => fileStore.loadSettings())
   ipcMain.handle('settings:save', (_e, settings) => fileStore.saveSettings(settings))

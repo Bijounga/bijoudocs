@@ -34,6 +34,18 @@ see [SCHEMA.md](SCHEMA.md) for the on-disk format this was built against.
   **section** and **tag**, and **Delete completed** removes the finished
   checklist items currently shown (it never deletes tagged lines - they're
   script text - so use the Status filter to hide those).
+- **Sequence-based sections**: the bar at the top of the Checklist tab follows the
+  sequence that's open in Premiere. Click it and tick which sections belong to that
+  sequence; the list then shows the Project to-dos, those sections, and anything
+  that already has a marker in this sequence (so existing markers never vanish).
+  Once sections are chosen the list is **one flat list in script order** (no
+  section cards; Project to-dos last) - just work down it pressing each row's
+  marker button. Hover a row to see which section it's from.
+  "Goes in" only offers the chosen sections, and each section card has a **+** to
+  add straight into it. The choice is saved per sequence in the script file
+  (`sequenceSections`) and comes back whenever that sequence is open. Until you
+  choose, or after "Show all sections", everything is listed as before. The first
+  time a script loads, a restore point is saved next to it (`<id>.snapshot-*.json`).
 - **Nothing the panel adds goes into your script text.** To-dos added here - with
   or without a tag, from a preset or the Tag picker - are saved as items in
   BijouDocs' per-section **Checkpoints** panel (the checklist toggle on each

@@ -56,6 +56,15 @@ function recordingShort(name) {
   return d ? d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ', ' + d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }) : name
 }
 
+// "just now", "12 min ago", "3 h ago", "2 days ago"
+function ago(at) {
+  const min = Math.max(0, Math.round((Date.now() - at) / 60000))
+  if (min < 1) return 'just now'
+  if (min < 60) return min + ' min ago'
+  if (min < 60 * 48) return Math.round(min / 60) + ' h ago'
+  return Math.round(min / 1440) + ' days ago'
+}
+
 const norm = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '')
 
 // Per-viewer conveniences (which project, view, filters) — fine to lose.
@@ -223,6 +232,11 @@ export default function FootageTab({ scriptId, script }) {
   }
 
   async function open(row) {
+    // Synced from another computer: the footage itself isn't here to open.
+    if (data && data.source === 'synced') {
+      setStatus({ text: 'Bijou Footage and the footage are on ' + (data.syncedFrom || 'the other computer') + ' — open this note there.', error: true })
+      return
+    }
     setStatus({ text: 'Opening in Bijou Footage…' })
     const res = await window.bijou.openInFootage(row.open).catch((e) => ({ error: String(e) }))
     setStatus(res && res.error ? { text: res.error, error: true } : null)
@@ -234,6 +248,11 @@ export default function FootageTab({ scriptId, script }) {
 
   return (
     <div className="ft">
+      {data.source === 'synced' && (
+        <div className="ft-sync" title="Bijou Footage on that computer writes these into your BijouDocs folder, which syncs">
+          Synced from <b>{data.syncedFrom || 'your other computer'}</b> · updated {ago(data.syncedAt)}. Read-only here.
+        </div>
+      )}
       <select className="ft-project" value={projectId || 'all'} onChange={(e) => pickProject(e.target.value)} title="Which Bijou Footage project">
         <option value="all">All footage</option>
         {projects.map((p) => (
@@ -327,7 +346,7 @@ export default function FootageTab({ scriptId, script }) {
                 key={r.id}
                 className="ft-note"
                 onClick={() => open(r)}
-                title={'Open in Bijou Footage at ' + clock(r.t) + (section ? ' in ' + section.name : '') + (r.from ? ' — from the ' + r.from + ' recording' : '')}
+                title={(data.source === 'synced' ? 'Synced note at ' : 'Open in Bijou Footage at ') + clock(r.t) + (section ? ' in ' + section.name : '') + (r.from ? ' — from the ' + r.from + ' recording' : '')}
               >
                 <i className="ft-dot" style={{ background: sw.hex }} />
                 <span className="ft-time">{clock(r.t)}</span>

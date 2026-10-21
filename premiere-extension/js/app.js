@@ -22,6 +22,9 @@
     markerColor: 'auto',   // 'auto' (follow the tag colour) or a Premiere colour index
     clFilter: { status: 'all', section: '', tag: '' },
     clOptionsOpen: false,
+    activeSeq: { id: '', name: '' },  // the sequence open in Premiere right now
+    seqPickerOpen: false,
+    backedUp: {},          // scriptId -> true once a restore point was taken this session
     presetEdit: false,     // chips show a delete x and open for editing
     presetDraft: null,     // {id|null, label, color} while the preset editor is open
     clCollapsed: {},       // checklist group key -> true when folded (remembered per script)
@@ -98,6 +101,12 @@
     el.clColor = document.getElementById('cl-color');
     el.clTagWrap = document.getElementById('cl-tag-wrap');
     el.clColorDot = document.getElementById('cl-color-dot');
+    el.clSeqBar = document.getElementById('cl-seqbar');
+    el.clSeqName = document.getElementById('cl-seq-name');
+    el.clSeqBtn = document.getElementById('cl-seq-btn');
+    el.clSeqSummary = document.getElementById('cl-seq-summary');
+    el.clSeqPicker = document.getElementById('cl-seq-picker');
+    el.clSeqList = document.getElementById('cl-seq-list');
     el.clPresets = document.getElementById('cl-presets');
     el.clPresetEditor = document.getElementById('cl-preset-editor');
     el.clPresetName = document.getElementById('cl-preset-name');
@@ -156,7 +165,15 @@
     el.clText.addEventListener('keydown', function (e) {
       if (e.key === 'Enter') { e.preventDefault(); addChecklistEntry(true); }
     });
-    el.clTarget.addEventListener('change', function () { state.addTarget = el.clTarget.value; renderChecklist(); });
+    el.clTarget.addEventListener('change', function () { setAddTarget(el.clTarget.value); renderChecklist(); });
+    el.clSeqBtn.addEventListener('click', function () { state.seqPickerOpen = !state.seqPickerOpen; renderChecklist(); });
+    document.getElementById('cl-seq-all').addEventListener('click', function () {
+      var sc = currentScript();
+      if (!sc || !state.activeSeq.id) return;
+      DL.setSequenceSections(sc, state.activeSeq.id, state.activeSeq.name, null);
+      persistCurrent();
+      renderChecklist();
+    });
     el.clColor.addEventListener('change', function () { state.markerColor = el.clColor.value; renderChecklist(); });
     Array.prototype.forEach.call(el.clSeg.querySelectorAll('button'), function (b) {
       b.addEventListener('click', function () { state.clFilter.status = b.getAttribute('data-status'); renderChecklist(); });
@@ -361,8 +378,16 @@
     state.markerState = {};
     clearHistory();
     try { state.clCollapsed = JSON.parse(safeLocalGet('bijouExt.collapsed.' + id) || '{}') || {}; } catch (e) { state.clCollapsed = {}; }
+    state.addTarget = safeLocalGet('bijouExt.addTarget.' + id) || '';
+    // A restore point (visible in BijouDocs' History panel) before the panel changes anything this session.
+    if (!state.backedUp[id]) {
+      state.backedUp[id] = true;
+      var meta = state.scripts.find(function (m) { return m.id === id; });
+      if (meta && meta.path && meta.path !== '(debug)') DL.backupScriptFile(meta.path, 10 * 60 * 1000);
+    }
     renderAll();
     syncMarkers();
+    refreshActiveSequence();
   }
 
   function currentScript() {
@@ -850,9 +875,78 @@
     return state.markerColor === 'auto' ? DL.defaultMarkerColor(entry) : Number(state.markerColor);
   }
 
+  // The sections chosen for the sequence open in Premiere, or null (no choice
+  // made yet / no sequence open = show everything).
+  function sequenceScope(script) {
+    if (!state.activeSeq.id) return null;
+    var ids = DL.getSequenceSections(script, state.activeSeq.id);
+    return ids ? { id: state.activeSeq.id, sections: ids } : null;
+  }
+
+  // In scope: Project items, items in a chosen section, and - so nothing you've
+  // already pinned ever disappears - anything with a marker in this sequence.
+  function inScope(e, scope) {
+    if (!scope || e.sectionId === null) return true;
+    if (scope.sections.indexOf(e.sectionId) !== -1) return true;
+    return !!(e.marker && e.marker.seqId === scope.id);
+  }
+
+  function setAddTarget(v) {
+    state.addTarget = v;
+    safeLocalSet('bijouExt.addTarget.' + state.currentScriptId, v);
+  }
+
+  function refreshActiveSequence() {
+    return callHost('bdActiveSequence', []).then(function (r) {
+      if (!r || !r.ok) return;
+      var next = { id: r.seqId || '', name: r.seqName || '' };
+      if (next.id === state.activeSeq.id && next.name === state.activeSeq.name) return;
+      state.activeSeq = next;
+      if (state.activeView === 'checklist') renderChecklist();
+    });
+  }
+
+  function renderSequenceBar(script) {
+    var seq = state.activeSeq;
+    el.clSeqBar.style.display = seq.id ? 'flex' : 'none';
+    var open = !!seq.id && state.seqPickerOpen;
+    el.clSeqPicker.classList.toggle('open', open);
+    el.clSeqBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (!seq.id) return;
+    var ids = DL.getSequenceSections(script, seq.id);
+    el.clSeqName.textContent = seq.name || '(untitled)';
+    el.clSeqSummary.textContent = ids
+      ? ids.filter(function (id) { return script.sections.some(function (s) { return s.id === id; }); }).length + ' of ' + script.sections.length + ' sections'
+      : 'All sections - choose';
+    if (!open) return;
+    el.clSeqList.innerHTML = '';
+    script.sections.forEach(function (sec) {
+      var label = document.createElement('label');
+      var cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = ids ? ids.indexOf(sec.id) !== -1 : true;
+      cb.addEventListener('change', function () {
+        var checked = Array.prototype.map.call(el.clSeqList.querySelectorAll('input'), function (box, i) {
+          return box.checked ? script.sections[i].id : null;
+        }).filter(Boolean);
+        // Every box ticked = no filter at all (the same as never having chosen).
+        DL.setSequenceSections(script, seq.id, seq.name, checked.length === script.sections.length ? null : checked);
+        persistCurrent();
+        renderChecklist();
+      });
+      var span = document.createElement('span');
+      span.textContent = sec.heading || '(untitled section)';
+      label.appendChild(cb);
+      label.appendChild(span);
+      el.clSeqList.appendChild(label);
+    });
+  }
+
   function filteredEntries(script) {
     var f = state.clFilter;
+    var scope = sequenceScope(script);
     return DL.todoEntries(script).filter(function (e) {
+      if (!inScope(e, scope)) return false;
       if (f.status === 'open' && e.done) return false;
       if (f.status === 'done' && !e.done) return false;
       if (f.section === 'project' && e.sectionId !== null) return false;
@@ -870,9 +964,14 @@
     if (!script) return;
 
     // Add form: which checklist (project, or any section).
+    var scope = sequenceScope(script);
     var targets = [['', 'Project']];
-    script.sections.forEach(function (sec) { targets.push([sec.id, sec.heading || '(untitled section)']); });
+    script.sections.forEach(function (sec) {
+      if (scope && scope.sections.indexOf(sec.id) === -1 && sec.id !== state.addTarget) return;
+      targets.push([sec.id, sec.heading || '(untitled section)']);
+    });
     state.addTarget = fillSelect(el.clTarget, targets, state.addTarget);
+    renderSequenceBar(script);
 
     // Tag: none = a plain checklist to-do; a tag adds a tagged line to the
     // chosen section instead (so it also shows under that tag in BijouDocs).
@@ -947,6 +1046,32 @@
       return;
     }
 
+    // A sequence with chosen sections: one flat list in script order, no section
+    // cards, so you can just work down it placing markers.
+    if (scope) {
+      visibleGroupKeys = [];
+      el.clCollapseAll.style.display = 'none';
+      var flat = document.createElement('div');
+      flat.className = 'section-card flat-seq';
+      var fbody = document.createElement('div');
+      fbody.className = 'tag-lines';
+      var secOrder = {};
+      script.sections.forEach(function (s, i) { secOrder[s.id] = i; });
+      entries.map(function (e, i) { return { e: e, i: i }; }).sort(function (a, b) {
+        var ka = a.e.sectionId === null ? 1e9 : secOrder[a.e.sectionId];
+        var kb = b.e.sectionId === null ? 1e9 : secOrder[b.e.sectionId];
+        return (ka - kb) || (a.i - b.i);
+      }).forEach(function (x) {
+        var row = buildChecklistRow(x.e);
+        row.title = x.e.sectionHeading || '';
+        fbody.appendChild(row);
+      });
+      flat.appendChild(fbody);
+      el.checklistList.appendChild(flat);
+      return;
+    }
+    el.clCollapseAll.style.display = '';
+
     // One card per section (project first), in script order.
     var groups = [];
     var byKey = {};
@@ -977,7 +1102,22 @@
       head.appendChild(count);
       head.insertAdjacentHTML('beforeend', icon('chevron'));
       head.addEventListener('click', function () { setGroupFolded(g.key, !folded); });
-      card.appendChild(head);
+      var headRow = document.createElement('div');
+      headRow.className = 'tag-head-row';
+      headRow.appendChild(head);
+      var addHere = document.createElement('button');
+      addHere.type = 'button';
+      addHere.className = 'cl-card-add';
+      addHere.innerHTML = icon('plus');
+      addHere.title = 'Add a to-do to ' + g.label;
+      addHere.setAttribute('aria-label', addHere.title);
+      addHere.addEventListener('click', function () {
+        setAddTarget(g.key === 'project' ? '' : g.key);
+        renderChecklist();
+        el.clText.focus();
+      });
+      headRow.appendChild(addHere);
+      card.appendChild(headRow);
       if (!folded) {
         var body = document.createElement('div');
         body.className = 'tag-lines';
@@ -1855,8 +1995,13 @@
   // A cheap 1.2s tick; the real check runs every tick while a marker is fresh,
   // and only every 4s otherwise.
   var lastPollAt = 0;
+  var lastSeqPollAt = 0;
   function schedulePoll() {
     setInterval(function () {
+      if (state.activeView === 'checklist' && !document.hidden && Date.now() - lastSeqPollAt > 2400) {
+        lastSeqPollAt = Date.now();
+        refreshActiveSequence();
+      }
       if (!hasFreshMarker() && Date.now() - lastPollAt < 4000) return;
       lastPollAt = Date.now();
       pollMarkers();

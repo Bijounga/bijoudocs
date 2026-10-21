@@ -77,6 +77,9 @@ export function mergeExternalScript(existing, incoming) {
   // The panel's per-project marker presets. Copied whole so BijouDocs' next save
   // can't drop them (it would otherwise write its older copy back over the file).
   if (Array.isArray(incoming.markerPresets)) existing.markerPresets = incoming.markerPresets.map((p) => ({ ...p }))
+  // Which sections belong to which Premiere sequence (the panel's per-project choice).
+  if (incoming.sequenceSections) existing.sequenceSections = JSON.parse(JSON.stringify(incoming.sequenceSections))
+  else delete existing.sequenceSections
 
   mergeImportedMapNodes(existing, incoming)
 

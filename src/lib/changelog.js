@@ -246,6 +246,10 @@ export const CHANGELOG = {
   '0.5.70': [
     'New right-click option on a script line: “Move to this section’s checkpoints”. It does what dragging the line onto the section’s checklist icon does, without the dragging, and opens the checkpoints so you can see it',
     'Moving a line into the checklist now keeps its note and done tick too (it used to drop them)'
+  ],
+  '0.5.71': [
+    'Your Bijou Footage notes and markers now follow you to your other computer: the computer that runs Bijou Footage saves a copy of them (and your edit sections) into your BijouDocs folder, and BijouDocs on a computer without Footage — like your Mac — shows that copy in its Footage tab, updating as the other computer saves. It is read-only there; opening a note in Footage needs the computer that has the footage',
+    'Premiere panel: choose which sections belong to which sequence, and BijouDocs keeps that choice when it merges the panel’s changes'
   ]
 }
 

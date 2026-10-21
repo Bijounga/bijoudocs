@@ -5,6 +5,14 @@
 // file only ever reads those; "open at this note" goes to the running app
 // over its local bridge (footage-review/electron/main/deckBridge.js), the
 // same line the Stream Deck plugin uses.
+//
+// Footage's data only exists on the computer Footage runs on (the PC), so
+// that computer's BijouDocs also publishes a small snapshot of the notes,
+// markers and edit sections into <docs folder>/footage-notes/<computer>.json
+// — the docs folder is the one that syncs (Google Drive) — and a computer
+// with no Footage data of its own (the Mac) reads the newest snapshot instead,
+// read-only. A subfolder, because a loose .json in the docs folder would be
+// loaded as a script by BijouDocs, its watcher and the Premiere panel.
 import fs from 'fs'
 import os from 'os'
 import net from 'net'
@@ -91,9 +99,15 @@ function listProjects(dir, fallback) {
   return out.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0))
 }
 
-export function loadFootage() {
+// A recording's name from its key, whichever computer's path style it is
+// (a Windows path read on a Mac has backslashes the Mac's path.basename
+// would leave in).
+const fileName = (key) => String(key).split(/[\\/]/).pop()
+
+// Footage's own data on this computer, or null when there isn't any.
+function readLocal() {
   const dir = dataDir()
-  if (!dir) return { available: false }
+  if (!dir) return null
   const data = readJson(path.join(dir, 'reviews.json'))
   if (!data) return { available: false, error: 'unreadable' }
   const reviews = data.reviews || {}
@@ -104,7 +118,7 @@ export function loadFootage() {
     if (!notes.length) continue
     recordings.push({
       key,
-      name: path.basename(key).replace(/\.[^.]+$/, ''),
+      name: fileName(key).replace(/\.[^.]+$/, ''),
       notes: notes
         .filter((n) => n && typeof n.t === 'number' && n.type !== 'BREAK')
         .map((n) => ({ id: n.id, t: n.t, type: n.type, color: n.color || null, text: n.text || '', star: !!n.star, sketch: !!n.sketch, pov: n.pov || null }))
@@ -123,22 +137,109 @@ export function loadFootage() {
   return { available: true, projects, recordings, beatColors: (prefs && prefs.colors) || {} }
 }
 
-// Pushes 'footage:changed' to the window whenever Footage saves.
-let watching = null
-export function watchFootage(win) {
+// ---- the snapshot that crosses to the other computer ----
+const SYNC_DIR = 'footage-notes'
+const hostId = () => (os.hostname() || 'computer').replace(/[^\w.-]+/g, '_')
+let lastPublished = '' // the data last written, to skip a rewrite (and a Drive upload) when nothing changed
+
+// Writes this computer's snapshot into the docs folder; only when there is
+// Footage data here, and only when it differs from what's already there.
+export function publishFootage(docsDir) {
+  if (!docsDir) return false
+  const data = readLocal()
+  if (!data || !data.available) return false
+  const body = JSON.stringify(data)
+  if (body === lastPublished) return false
+  const file = path.join(docsDir, SYNC_DIR, hostId() + '.json')
+  try {
+    const cur = JSON.parse(fs.readFileSync(file, 'utf8'))
+    if (cur && JSON.stringify(cur.data) === body) {
+      lastPublished = body
+      return false
+    }
+  } catch {}
+  fs.mkdirSync(path.dirname(file), { recursive: true })
+  fs.writeFileSync(file + '.tmp', JSON.stringify({ v: 1, host: os.hostname(), at: Date.now(), data }), 'utf8')
+  fs.renameSync(file + '.tmp', file)
+  lastPublished = body
+  return true
+}
+
+// The newest snapshot any computer has published, or null.
+function readSynced(docsDir) {
+  if (!docsDir) return null
+  const dir = path.join(docsDir, SYNC_DIR)
+  let names = []
+  try {
+    names = fs.readdirSync(dir).filter((f) => f.endsWith('.json'))
+  } catch {
+    return null
+  }
+  let best = null
+  for (const f of names) {
+    const s = readJson(path.join(dir, f))
+    if (s && s.v === 1 && s.data && s.data.available && (!best || s.at > best.at)) best = s
+  }
+  return best && { ...best.data, source: 'synced', syncedFrom: best.host, syncedAt: best.at }
+}
+
+// What the Footage tab shows: this computer's own Footage data when it has
+// any, else the synced snapshot from the one that does.
+export function loadFootage(docsDir) {
+  const local = readLocal()
+  if (local) return local.available ? { ...local, source: 'local' } : local
+  return readSynced(docsDir) || { available: false }
+}
+
+// Pushes 'footage:changed' to the window whenever the notes change: where
+// Footage runs, on its saves (and publishes the snapshot); where it doesn't,
+// when a new snapshot arrives from the other computer.
+let watching = false
+export function watchFootage(win, docsDir) {
+  if (watching) return
+  watching = true
+  const send = () => {
+    if (!win.isDestroyed()) win.webContents.send('footage:changed')
+  }
   const dir = dataDir()
-  if (!dir || watching) return
-  watching = path.join(dir, 'reviews.json')
+  if (!dir) {
+    // No Footage here: check for a newer snapshot every few seconds.
+    if (!docsDir) return
+    const stamp = () => {
+      try {
+        const d = path.join(docsDir, SYNC_DIR)
+        return fs.readdirSync(d).map((f) => f + fs.statSync(path.join(d, f)).mtimeMs).join('|')
+      } catch {
+        return ''
+      }
+    }
+    let last = stamp()
+    setInterval(() => {
+      const now = stamp()
+      if (now !== last) {
+        last = now
+        send()
+      }
+    }, 6000)
+    return
+  }
+  const reviews = path.join(dir, 'reviews.json')
+  try {
+    publishFootage(docsDir)
+  } catch {}
   let timer = null
   const changed = () => {
     clearTimeout(timer)
     timer = setTimeout(() => {
-      if (!win.isDestroyed()) win.webContents.send('footage:changed')
+      try {
+        publishFootage(docsDir)
+      } catch {}
+      send()
     }, 400)
   }
-  fs.watchFile(watching, { interval: 1500 }, changed)
+  fs.watchFile(reviews, { interval: 1500 }, changed)
   // Edit sections are saved in the projects folder, one file each.
-  const data = readJson(watching)
+  const data = readJson(reviews)
   const projectsDir = data && data.settings && data.settings.projectsDir
   if (projectsDir && fs.existsSync(projectsDir)) {
     try {
