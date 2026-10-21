@@ -238,6 +238,10 @@ export const CHANGELOG = {
     'Works with the new BijouDocs Tags panel for Premiere Pro: tags, notes, done-ticks, checklist to-dos, marker links and presets changed from Premiere now appear here live, without reopening the script',
     'Links from Premiere: “show in BijouDocs” buttons open this app straight at a line or section (and start it if it isn’t running). Open BijouDocs once after updating so Windows registers the link',
     'Launching BijouDocs while it’s already open now brings the open window forward instead of starting a second copy'
+  ],
+  '0.5.69': [
+    'To-dos added from the Premiere panel now go into the section’s Checkpoints list instead of being added to your script text. A tag put on one shows as a chip, and it still counts toward that tag',
+    'Turning a checkpoint into a script line, or moving a line into the checklist, now keeps its tag'
   ]
 }
 

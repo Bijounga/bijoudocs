@@ -1898,7 +1898,7 @@ export const useStore = create(
         if (!sec) return
         const item = sec.checklist.find((i) => i.id === itemId)
         if (!item) return
-        sec.lines.push(mkLine(item.text, null))
+        sec.lines.push(mkLine(item.text, item.categoryId || null))
         sec.checklist = sec.checklist.filter((i) => i.id !== itemId)
         script.updatedAt = Date.now()
       })
@@ -2023,7 +2023,7 @@ export const useStore = create(
         const idx = fromSec.lines.findIndex((l) => l.id === lineId)
         if (idx < 0) return
         const [moved] = fromSec.lines.splice(idx, 1)
-        toSec.checklist.push({ id: uid(), text: stripHtmlToText(moved.text), done: false })
+        toSec.checklist.push({ id: uid(), text: stripHtmlToText(moved.text), done: false, ...(moved.categoryId ? { categoryId: moved.categoryId } : {}) })
         script.updatedAt = Date.now()
       })
       get().scheduleSave(scriptId, { flash: false })

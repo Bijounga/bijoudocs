@@ -511,7 +511,7 @@
   function linesInSectionForTag(script, sectionId, categoryId) {
     var sec = script.sections.find(function (s) { return s.id === sectionId; });
     if (!sec) return [];
-    return sec.lines.filter(function (l) { return l.categoryId === categoryId; });
+    return sec.lines.concat(sec.checklist || []).filter(function (l) { return l.categoryId === categoryId; });
   }
 
   function renderTagLines(script, sectionId, categoryId) {
@@ -905,7 +905,7 @@
     var secOpts = [['', 'All sections'], ['project', 'Project']];
     script.sections.forEach(function (sec) { secOpts.push([sec.id, sec.heading || '(untitled section)']); });
     f.section = fillSelect(el.fSection, secOpts, f.section);
-    var tagOpts = [['', 'All tags'], ['none', 'No tag (checklist)']];
+    var tagOpts = [['', 'All tags'], ['none', 'No tag']];
     script.categories.forEach(function (c) { tagOpts.push([c.id, c.label]); });
     DL.listPresets(script).forEach(function (pr) { tagOpts.push(['preset:' + pr.id, 'Preset: ' + pr.label]); });
     f.tag = fillSelect(el.fTag, tagOpts, f.tag);
@@ -1248,15 +1248,30 @@
     sel.appendChild(opt('', 'Move to...'));
     sel.options[0].disabled = true;
     if (e.kind === 'check' && e.sectionId !== null) sel.appendChild(opt('__project__', 'Project checklist'));
+    if (e.kind === 'line') sel.appendChild(opt('__checklist__', 'Out of the script, into the checklist'));
     script.sections.forEach(function (sec) {
       if (sec.id === e.sectionId) return;
       sel.appendChild(opt(sec.id, sec.heading || '(untitled section)'));
     });
     sel.value = '';
     if (sel.options.length < 2) return document.createDocumentFragment();
-    sel.addEventListener('change', function () { moveEntry(e, sel.value === '__project__' ? null : sel.value); });
+    sel.addEventListener('change', function () {
+      if (sel.value === '__checklist__') convertEntry(e);
+      else moveEntry(e, sel.value === '__project__' ? null : sel.value);
+    });
     wrap.appendChild(sel);
     return wrap;
+  }
+
+  // A tagged line that was added from here by mistake (it landed in the script
+  // text): file it in the section's checklist instead.
+  function convertEntry(e) {
+    var script = currentScript();
+    return recordAction('Move "' + shortText(e.text) + '" out of the script', function () {
+      if (!DL.convertLineToChecklist(script, e.id)) return;
+      persistCurrent();
+      renderAll();
+    }).then(function () { showStatus('Moved into the section\'s checklist - the script text is untouched.', 'saved'); });
   }
 
   function moveEntry(e, targetSectionId) {
@@ -1542,18 +1557,16 @@
     var script = currentScript();
     var text = el.clText.value.trim();
     if (!script || !text) return Promise.resolve();
-    // A tagged line lives in a section, so the project list can't take one.
     var tagged = !!(el.clTagSelect && el.clTagSelect.value);
-    if (tagged && !state.addTarget) { showStatus('Pick a section to add a tagged item to.', 'error'); return Promise.resolve(); }
     var categoryId = null;
     if (tagged) {
       categoryId = resolveTagSelectValue(script, el.clTagSelect);
       if (!categoryId) return Promise.resolve();
     }
     return recordAction('Add "' + shortText(text) + '"', function () {
-      var item = tagged
-        ? DL.addLineToSection(script, state.addTarget, { text: text, categoryId: categoryId })
-        : DL.addChecklistItem(script, state.addTarget || null, text);
+      // Always a checklist item (BijouDocs' per-section "Checkpoints" panel), with
+      // the tag on it - never a new line in the script itself.
+      var item = DL.addChecklistItem(script, state.addTarget || null, text, categoryId);
       el.clText.value = '';
       persistCurrent();
       if (!withMarker) { renderAll(); return; }
@@ -1626,7 +1639,7 @@
         chip.addEventListener('click', function () { openPresetEditor({ id: p.id, label: p.label, color: p.color, tagId: p.tagId || '' }); });
       } else {
         chip.title = (p.tagId && tagLabelFor(script, p.tagId)
-          ? 'Add a line tagged ' + tagLabelFor(script, p.tagId) + ' to the "Goes in" section'
+          ? 'Add a to-do tagged ' + tagLabelFor(script, p.tagId) + ' to the "Goes in" list'
           : 'Add a to-do to the "Goes in" list') + ', with a ' + DL.MARKER_COLORS[p.color].name.toLowerCase() + ' marker';
         chip.addEventListener('click', function () { addFromPreset(p); });
       }
@@ -1753,19 +1766,9 @@
     if (!script) return Promise.resolve();
     var text = el.clText.value.trim() || p.label;
     var tagged = !!(p.tagId && script.categories.some(function (c) { return c.id === p.tagId; }));
-    // A tagged line lives in a section, so a tag preset needs one in "Goes in".
-    if (tagged && !state.addTarget) {
-      showStatus('"' + p.label + '" adds a tagged line - pick a section in "Goes in" first.', 'error');
-      return Promise.resolve();
-    }
     return recordAction('Add "' + shortText(text) + '" (' + p.label + ')', function () {
-      var item;
-      if (tagged) {
-        item = DL.addLineToSection(script, state.addTarget, { text: text, categoryId: p.tagId });
-      } else {
-        item = DL.addChecklistItem(script, state.addTarget || null, text);
-        item.preset = { id: p.id, label: p.label, color: p.color };
-      }
+      var item = DL.addChecklistItem(script, state.addTarget || null, text, tagged ? p.tagId : null);
+      if (!tagged) item.preset = { id: p.id, label: p.label, color: p.color };
       el.clText.value = '';
       persistCurrent();
       return placeMarkerCore(item.id, p.color).then(function (ok) {

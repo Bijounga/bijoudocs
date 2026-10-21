@@ -34,6 +34,13 @@ see [SCHEMA.md](SCHEMA.md) for the on-disk format this was built against.
   **section** and **tag**, and **Delete completed** removes the finished
   checklist items currently shown (it never deletes tagged lines - they're
   script text - so use the Status filter to hide those).
+- **Nothing the panel adds goes into your script text.** To-dos added here - with
+  or without a tag, from a preset or the Tag picker - are saved as items in
+  BijouDocs' per-section **Checkpoints** panel (the checklist toggle on each
+  section), and a tagged one carries its tag as a chip. They still count toward
+  that tag in the Tags tab and Sections tab. If you added tagged lines to the
+  script with an older version, the arrow button on a row has "Out of the
+  script, into the checklist" to take it out of the text (undoable).
 - **Presets** (SFX, POV, VFX...): the coloured chips next to Add. **+ Preset**
   makes one (a name and a marker colour); the pencil lets you rename, recolour
   or delete them. Each project keeps its own. Click a chip and it adds a to-do
@@ -62,8 +69,8 @@ see [SCHEMA.md](SCHEMA.md) for the on-disk format this was built against.
 - **Presets based on a tag**: in the preset editor, "Same as tag" lets you pick a
   tag you already have (it names the preset after it), or just name a preset the
   same as a tag and it links to it automatically, so there are no duplicates.
-  Using it adds a *tagged line* (that tag) to the "Goes in" section - so it needs
-  a section, not Project - with the preset's own marker colour (never the tag's).
+  Using it adds a to-do carrying that tag (to the "Goes in" list) with the preset's
+  own marker colour (never the tag's).
 - **Undo / redo** (the two arrows in the Checklist tab, or Ctrl+Z / Ctrl+Shift+Z):
   covers adding to-dos, placing and removing markers, checking off, and
   deleting. Undo also fixes Premiere: it deletes a marker the earlier state

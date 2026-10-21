@@ -2,6 +2,7 @@ import React, { useRef } from 'react'
 import { useStore } from '../../state/store.js'
 import Icon from '../icons.jsx'
 import { useDropIndicator } from '../../hooks/useDropIndicator.js'
+import { getInk } from '../../lib/html.js'
 
 function ChecklistItemRow({ scriptId, sec, item }) {
   const toggleCheckItem = useStore((s) => s.toggleCheckItem)
@@ -13,6 +14,12 @@ function ChecklistItemRow({ scriptId, sec, item }) {
   const reorderCheckItem = useStore((s) => s.reorderCheckItem)
   const moveLineToChecklist = useStore((s) => s.moveLineToChecklist)
   const dropIndicator = useDropIndicator()
+  // A tag put on this checkpoint (e.g. from the Premiere panel), shown as a chip.
+  const cat = useStore((s) => {
+    if (!item.categoryId) return null
+    const sc = s.scripts.find((x) => x.id === scriptId)
+    return (sc && sc.categories.find((c) => c.id === item.categoryId)) || null
+  })
 
   return (
     <div
@@ -57,6 +64,11 @@ function ChecklistItemRow({ scriptId, sec, item }) {
         <Icon name="grip" size={10} />
       </span>
       <input type="checkbox" checked={item.done} onChange={() => toggleCheckItem(scriptId, sec.id, item.id)} />
+      {cat && (
+        <span className="tag-pill check-tag" style={{ background: cat.color, color: getInk(cat.color) }} title={cat.label}>
+          {cat.label}
+        </span>
+      )}
       <input
         type="text"
         value={item.text}

@@ -142,7 +142,7 @@
     return script.sections.map(function (sec) {
       var seen = {};
       var tags = [];
-      sec.lines.forEach(function (line) {
+      sec.lines.concat(sec.checklist || []).forEach(function (line) {
         if (!line.categoryId || seen[line.categoryId]) return;
         var cat = categoryById(script, line.categoryId);
         if (!cat) return;
@@ -157,18 +157,21 @@
   // [{ sectionId, sectionHeading, lineId, text, note, done, bookmarked }]
   function linesForTag(script, categoryId) {
     var out = [];
-    script.sections.forEach(function (sec) {
-      sec.lines.forEach(function (line) {
-        if (line.categoryId !== categoryId) return;
-        out.push({
-          sectionId: sec.id,
-          sectionHeading: sec.heading,
-          lineId: line.id,
-          text: stripHtmlToText(line.text),
-          note: line.note || '',
-          done: !!line.done
-        });
+    function take(sec, item) {
+      if (item.categoryId !== categoryId) return;
+      out.push({
+        sectionId: sec ? sec.id : null,
+        sectionHeading: sec ? sec.heading : 'Project',
+        lineId: item.id,
+        text: stripHtmlToText(item.text),
+        note: item.note || '',
+        done: !!item.done
       });
+    }
+    (script.projectChecklist || []).forEach(function (item) { take(null, item); });
+    script.sections.forEach(function (sec) {
+      sec.lines.forEach(function (line) { take(sec, line); });
+      (sec.checklist || []).forEach(function (item) { take(sec, item); });
     });
     return out;
   }
@@ -180,12 +183,15 @@
   function tagCounts(script) {
     return script.categories.map(function (cat) {
       var total = 0, remaining = 0;
+      function count(item) {
+        if (item.categoryId !== cat.id) return;
+        total++;
+        if (!item.done) remaining++;
+      }
+      (script.projectChecklist || []).forEach(count);
       script.sections.forEach(function (sec) {
-        sec.lines.forEach(function (line) {
-          if (line.categoryId !== cat.id) return;
-          total++;
-          if (!line.done) remaining++;
-        });
+        sec.lines.forEach(count);
+        (sec.checklist || []).forEach(count);
       });
       return { id: cat.id, label: cat.label, color: cat.color, total: total, remaining: remaining };
     });
@@ -224,7 +230,9 @@
         if (sec.lines[j].id === lineId) return sec.lines[j];
       }
     }
-    return null;
+    // A tagged checklist item behaves like a tagged line everywhere a line is edited.
+    var f = findChecklistItem(script, lineId);
+    return f ? f.item : null;
   }
 
   // ---- mutations ---------------------------------------------------------
@@ -384,12 +392,12 @@
     var out = [];
     (script.projectChecklist || []).forEach(function (item) {
       out.push({ kind: 'check', id: item.id, text: item.text, note: '', done: !!item.done, marker: item.marker || null,
-        sectionId: null, sectionHeading: 'Project', sectionColor: null, tag: null, preset: presetOf(script, item), raw: item });
+        sectionId: null, sectionHeading: 'Project', sectionColor: null, tag: tagOf(script, item.categoryId), preset: presetOf(script, item), raw: item });
     });
     script.sections.forEach(function (sec) {
       (sec.checklist || []).forEach(function (item) {
         out.push({ kind: 'check', id: item.id, text: item.text, note: '', done: !!item.done, marker: item.marker || null,
-          sectionId: sec.id, sectionHeading: sec.heading || '(untitled section)', sectionColor: sec.titleColor || null, tag: null, preset: presetOf(script, item), raw: item });
+          sectionId: sec.id, sectionHeading: sec.heading || '(untitled section)', sectionColor: sec.titleColor || null, tag: tagOf(script, item.categoryId), preset: presetOf(script, item), raw: item });
       });
       sec.lines.forEach(function (line) {
         var tag = tagOf(script, line.categoryId);
@@ -416,8 +424,9 @@
   }
 
   // sectionId null = the script-wide project checklist.
-  function addChecklistItem(script, sectionId, text) {
+  function addChecklistItem(script, sectionId, text, categoryId) {
     var item = { id: genId(), text: String(text).trim(), done: false };
+    if (categoryId) item.categoryId = categoryId;
     if (sectionId === null || sectionId === undefined || sectionId === '') {
       if (!script.projectChecklist) script.projectChecklist = [];
       script.projectChecklist.push(item);
@@ -483,6 +492,27 @@
     return true;
   }
 
+  // Takes a tagged line out of the script text and files it as a tagged item in
+  // that section's checklist instead (keeping its tag, note, done state and
+  // marker). The line's id is tombstoned so an open BijouDocs drops the line too.
+  function convertLineToChecklist(script, lineId) {
+    for (var i = 0; i < script.sections.length; i++) {
+      var sec = script.sections[i];
+      var idx = sec.lines.findIndex(function (l) { return l.id === lineId; });
+      if (idx < 0) continue;
+      var line = sec.lines.splice(idx, 1)[0];
+      var item = { id: genId(), text: stripHtmlToText(line.text).trim(), done: !!line.done };
+      if (line.categoryId) item.categoryId = line.categoryId;
+      if (line.note) item.note = line.note;
+      if (line.marker) item.marker = line.marker;
+      if (!sec.checklist) sec.checklist = [];
+      sec.checklist.push(item);
+      script.checklistTombstones = (script.checklistTombstones || []).concat([lineId]).slice(-200);
+      return item;
+    }
+    return null;
+  }
+
   // Removes to-dos by id: checklist items AND tagged lines (a line is removed
   // from the script, text and all). The ids are also recorded in
   // script.checklistTombstones so an open BijouDocs removes them too instead
@@ -532,6 +562,7 @@
     updatePreset: updatePreset,
     deletePreset: deletePreset,
     moveTodo: moveTodo,
+    convertLineToChecklist: convertLineToChecklist,
     MARKER_COLORS: MARKER_COLORS,
     nearestMarkerColor: nearestMarkerColor,
     defaultMarkerColor: defaultMarkerColor,

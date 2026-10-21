@@ -96,6 +96,7 @@ function mergeChecklist(cur, inc) {
       return
     }
     c.done = it.done
+    if ('categoryId' in it) c.categoryId = it.categoryId
     // Text is normally left alone (it may be mid-edit here). A panel edit carries a
     // timestamp, and is adopted only when it's newer than what we already have.
     if (it.textEditedAt && it.textEditedAt > (c.textEditedAt || 0)) {

@@ -7750,3 +7750,10 @@ body.is-resizing-panel {
 .update-banner.conflict .update-banner-btn {
   background: var(--amber, #f2a65a);
 }
+
+/* A tag on a section checkpoint (set from the Premiere panel). */
+.checklist-item .check-tag {
+  margin-top: 0;
+  cursor: default;
+  align-self: center;
+}
