@@ -1019,6 +1019,15 @@
       text.addEventListener('click', function () { startTextEdit(text, e); });
     }
     main.appendChild(text);
+    // The BijouDocs note attached to a tagged line, shown under it (click to edit).
+    if (e.kind === 'line' && e.note) {
+      var note = document.createElement('div');
+      note.className = 'cl-note';
+      note.textContent = e.note;
+      note.title = 'Click to edit the note';
+      note.addEventListener('click', function () { startNoteEdit(note, e); });
+      main.appendChild(note);
+    }
     if (e.tag) {
       var chip = document.createElement('span');
       chip.className = 'cl-tag';
@@ -1126,6 +1135,39 @@
     textEl.replaceWith(input);
     input.focus();
     input.select();
+  }
+
+  function startNoteEdit(noteEl, e) {
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'cl-edit';
+    input.value = e.note;
+    input.setAttribute('aria-label', 'Edit note');
+    var done = false;
+    function finish(save) {
+      if (done) return;
+      done = true;
+      if (save && input.value !== e.note) editNote(e, input.value.trim());
+      else renderChecklist();
+    }
+    input.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Enter') { ev.preventDefault(); finish(true); }
+      else if (ev.key === 'Escape') { ev.preventDefault(); finish(false); }
+    });
+    input.addEventListener('blur', function () { finish(true); });
+    noteEl.replaceWith(input);
+    input.focus();
+    input.select();
+  }
+
+  // Saves a tagged line's note (clearing it removes the note). Undoable.
+  function editNote(e, newNote) {
+    var script = currentScript();
+    return recordAction('Edit note on "' + shortText(e.text) + '"', function () {
+      DL.setLineNote(script, e.id, newNote);
+      persistCurrent();
+      renderAll();
+    });
   }
 
   function editChecklistText(e, newText) {
