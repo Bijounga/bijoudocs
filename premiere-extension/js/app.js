@@ -1057,13 +1057,16 @@
       fbody.className = 'tag-lines';
       var secOrder = {};
       script.sections.forEach(function (s, i) { secOrder[s.id] = i; });
-      entries.map(function (e, i) { return { e: e, i: i }; }).sort(function (a, b) {
+      // Script order first, then the usual rule: no marker yet at the top (in
+      // script order), the ones with markers below in timeline order.
+      var scriptOrder = entries.map(function (e, i) { return { e: e, i: i }; }).sort(function (a, b) {
         var ka = a.e.sectionId === null ? 1e9 : secOrder[a.e.sectionId];
         var kb = b.e.sectionId === null ? 1e9 : secOrder[b.e.sectionId];
         return (ka - kb) || (a.i - b.i);
-      }).forEach(function (x) {
-        var row = buildChecklistRow(x.e);
-        row.title = x.e.sectionHeading || '';
+      }).map(function (x) { return x.e; });
+      sortTodos(scriptOrder).forEach(function (e) {
+        var row = buildChecklistRow(e);
+        row.title = e.sectionHeading || '';
         fbody.appendChild(row);
       });
       flat.appendChild(fbody);
