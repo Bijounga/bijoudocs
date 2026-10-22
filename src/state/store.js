@@ -183,6 +183,9 @@ export const useStore = create(
     // script file: moving around the map isn't an edit, so it shouldn't
     // touch the script's "last edited" time or sync between machines.
     mapViews: {},
+    // Where you stopped in the Footage tab, per script:
+    // { [scriptId]: { projectId, view, rowId, t, text } } — see FootageTab.jsx.
+    footageStops: {},
     sidebarHidden: false,
     rightMarginWidth: 210,
     noteColor: '#f2a65a',
@@ -248,6 +251,7 @@ export const useStore = create(
         if (settings && settings.scratchpad && typeof settings.scratchpad === 'object') s.scratchpad = { ...s.scratchpad, ...settings.scratchpad }
         if (settings && settings.scratchPads && typeof settings.scratchPads === 'object') s.scratchPads = settings.scratchPads
         if (settings && settings.mapViews && typeof settings.mapViews === 'object') s.mapViews = settings.mapViews
+        if (settings && settings.footageStops && typeof settings.footageStops === 'object') s.footageStops = settings.footageStops
         // The notepad used to keep a single note per script (scratchNotes);
         // each becomes that script's first tab. The old key is rewritten empty
         // on the next save, in the same write that stores the tabs.
@@ -454,6 +458,7 @@ export const useStore = create(
         scratchpad: s.scratchpad,
         scratchPads: s.scratchPads,
         mapViews: s.mapViews,
+        footageStops: s.footageStops,
         scratchNotes: {},
         sidebarHidden: s.sidebarHidden,
         rightMarginWidth: s.rightMarginWidth,
@@ -2705,6 +2710,15 @@ export const useStore = create(
         if (script) script.mapLayout.hideOutlines = !script.mapLayout.hideOutlines
       })
       get().scheduleSave(scriptId, { flash: false })
+    },
+    // The note you flagged as "where I stopped" in the Footage tab (null clears it).
+    setFootageStop(scriptId, stop) {
+      if (!scriptId) return
+      set((s) => {
+        if (stop) s.footageStops[scriptId] = stop
+        else delete s.footageStops[scriptId]
+      })
+      get().saveAppSettings()
     },
     // The map reports where it is a moment after you stop panning/zooming
     // (and when it closes), never during a drag. Only writes when it moved.

@@ -5756,6 +5756,111 @@ body.is-resizing-panel {
   font-family: var(--mono);
   font-weight: 400;
 }
+/* "Where I stopped": a flag on a note row, and the button that jumps back to it. */
+.ft-row {
+  position: relative;
+  border-radius: 6px;
+}
+.ft-row.is-stop {
+  background: color-mix(in srgb, var(--cyan) 12%, transparent);
+  box-shadow: inset 3px 0 0 var(--cyan);
+}
+.ft-row.flash {
+  animation: ft-flash 1.8s ease-out;
+}
+@keyframes ft-flash {
+  0%,
+  35% {
+    background: color-mix(in srgb, var(--cyan) 38%, transparent);
+  }
+  100% {
+    background: transparent;
+  }
+}
+.ft-flag {
+  position: absolute;
+  top: 5px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--ink-faint);
+  opacity: 0;
+}
+.ft-row:hover .ft-flag,
+.ft-flag:focus-visible,
+.ft-row.is-stop .ft-flag {
+  opacity: 1;
+}
+.ft-row.is-stop .ft-flag {
+  color: var(--ink);
+}
+.ft-row.is-stop .ft-flag svg {
+  fill: currentColor;
+}
+.ft-flag:hover {
+  background: var(--panel-3);
+  color: var(--ink);
+}
+/* Pinned at the top of the tab so it's there however far down the list is. */
+.ft-stop {
+  position: sticky;
+  top: 6px;
+  z-index: 3;
+  display: flex;
+  align-items: stretch;
+  margin-bottom: 8px;
+  background: var(--panel-3);
+  border: 1px solid var(--cyan);
+  border-radius: 8px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+}
+.ft-stop-go {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+  background: transparent;
+  border: none;
+  color: var(--ink);
+  padding: 6px 8px;
+}
+.ft-stop-label {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  font-size: 11.5px;
+  line-height: 1.3;
+  color: var(--ink);
+}
+.ft-stop-label b {
+  color: var(--ink);
+  font-weight: 700;
+}
+.ft-stop-label span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ft-stop-x {
+  flex: 0 0 auto;
+  width: 26px;
+  background: transparent;
+  border: none;
+  border-left: 1px solid var(--line-soft);
+  color: var(--ink-faint);
+}
+.ft-stop-x:hover {
+  color: var(--danger);
+}
 .ft-note {
   display: flex;
   align-items: flex-start;
@@ -5769,6 +5874,10 @@ body.is-resizing-panel {
   color: var(--ink);
   font-size: 12.5px;
   line-height: 1.4;
+}
+/* room on the right for the flag button */
+.ft-row .ft-note {
+  padding-right: 26px;
 }
 .ft-note:hover {
   background: var(--panel-2);

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { useStore } from '../../state/store.js'
 import Icon from '../icons.jsx'
 
 // Bijou Footage's notes and markers for this script's footage, read-only
@@ -118,6 +119,10 @@ export default function FootageTab({ scriptId, script }) {
   const [query, setQuery] = useState('')
   const [textSize, setTextSize] = useState(() => remember('size', 1)) // list text scale
   const [status, setStatus] = useState(null)
+  // Where you stopped (one flagged note per script) and the jump back to it.
+  const stop = useStore((s) => s.footageStops[scriptId]) || null
+  const setStop = useStore((s) => s.setFootageStop)
+  const [jump, setJump] = useState(null) // { rowId, relaxed } while going to the flagged note
 
   useEffect(() => {
     let alive = true
@@ -232,6 +237,56 @@ export default function FootageTab({ scriptId, script }) {
     store('colors', next)
   }
 
+  // Flags a note as where you stopped (or clears it if it already is).
+  function toggleStop(r) {
+    if (stop && stop.rowId === r.id) {
+      setStop(scriptId, null)
+      return
+    }
+    const sw = swatchOf(r.n, data.beatColors)
+    const words = r.n.text.trim() || (r.n.sketch ? 'Sketch' : sw.label)
+    setStop(scriptId, {
+      projectId: projectId || null,
+      view: section ? section.id : 'recordings',
+      rowId: r.id,
+      t: r.t,
+      text: clock(r.t) + ' · ' + (words.length > 38 ? words.slice(0, 37) + '…' : words)
+    })
+  }
+
+  // Back to the flagged note: its project and view, then scrolled to it.
+  function goToStop() {
+    if (!stop) return
+    const wantProject = stop.projectId || 'all'
+    if ((projectId || 'all') !== wantProject) pickProject(wantProject)
+    if (viewChoice !== stop.view) pickView(stop.view)
+    setJump({ rowId: stop.rowId, relaxed: false })
+  }
+  // Runs after the project/view switch has rendered. If a filter is hiding the
+  // note, the filters are cleared once; if it still isn't there it's gone.
+  useEffect(() => {
+    if (!jump) return
+    const list = listRef.current
+    const el = list && Array.from(list.querySelectorAll('[data-row-id]')).find((e) => e.dataset.rowId === jump.rowId)
+    if (el) {
+      el.scrollIntoView({ block: 'center' })
+      el.classList.add('flash')
+      setTimeout(() => el.classList.remove('flash'), 1800)
+      setJump(null)
+      return
+    }
+    if (!jump.relaxed && (textFilter !== 'all' || active.length || q)) {
+      pickText('all')
+      setColors([])
+      store('colors', [])
+      setQuery('')
+      setJump({ ...jump, relaxed: true })
+      return
+    }
+    setStatus({ text: 'That note isn’t in this list anymore — it may have been deleted or moved.', error: true })
+    setJump(null)
+  })
+
   async function open(row) {
     // A note synced from another computer: the footage itself isn't here to open.
     if (row.from) {
@@ -321,6 +376,21 @@ export default function FootageTab({ scriptId, script }) {
 
       {status && <div className={'ft-status' + (status.error ? ' error' : '')}>{status.text}</div>}
 
+      {stop && (
+        <div className="ft-stop">
+          <button className="ft-stop-go" onClick={goToStop} title="Go to the note you flagged as where you stopped">
+            <Icon name="bookmark" size={13} />
+            <span className="ft-stop-label">
+              <b>Where I stopped</b>
+              <span>{stop.text}</span>
+            </span>
+          </button>
+          <button className="ft-stop-x" onClick={() => setStop(scriptId, null)} title="Clear the stop flag">
+            <Icon name="x" size={11} />
+          </button>
+        </div>
+      )}
+
       <div className="ft-count-row">
         <span className="ft-count">
           {total} {total === 1 ? 'note' : 'notes'}
@@ -350,9 +420,10 @@ export default function FootageTab({ scriptId, script }) {
           )}
           {g.shown.map((r) => {
             const sw = swatchOf(r.n, data.beatColors)
+            const isStop = !!stop && stop.rowId === r.id
             return (
+              <div key={r.id} className={'ft-row' + (isStop ? ' is-stop' : '')} data-row-id={r.id}>
               <button
-                key={r.id}
                 className="ft-note"
                 onClick={() => open(r)}
                 title={(r.from ? 'Synced from ' + r.from + ' — ' : 'Open in Bijou Footage at ') + clock(r.t) + (section ? ' in ' + section.name : '') + (r.source ? ' — from the ' + r.source + ' recording' : '')}
@@ -366,6 +437,14 @@ export default function FootageTab({ scriptId, script }) {
                 </span>
                 {r.n.star && <span className="ft-star">★</span>}
               </button>
+              <button
+                className="ft-flag"
+                onClick={() => toggleStop(r)}
+                title={isStop ? 'This is where you stopped — click to clear it' : 'Flag this note as where you stopped'}
+              >
+                <Icon name="bookmark" size={12} />
+              </button>
+              </div>
             )
           })}
         </div>

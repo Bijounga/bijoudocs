@@ -253,6 +253,9 @@ export const CHANGELOG = {
   ],
   '0.5.72': [
     'Fixed the Footage tab not showing your other computer’s notes on a computer that has its own Bijou Footage (like your Mac): it now shows both together — this computer’s projects and everything synced from the other one — instead of only its own. Synced notes are marked read-only and show which computer they came from'
+  ],
+  '0.5.73': [
+    'Footage tab: flag a note as “where I stopped” (the bookmark icon on its right) and a bar pinned at the top of the tab jumps you straight back to it — switching to the right project and view, and clearing any filter that was hiding it. One flag per script, kept between sessions on this computer'
   ]
 }
 
