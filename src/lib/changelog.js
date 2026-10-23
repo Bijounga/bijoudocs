@@ -256,6 +256,10 @@ export const CHANGELOG = {
   ],
   '0.5.73': [
     'Footage tab: flag a note as “where I stopped” (the bookmark icon on its right) and a bar pinned at the top of the tab jumps you straight back to it — switching to the right project and view, and clearing any filter that was hiding it. One flag per script, kept between sessions on this computer'
+  ],
+  '0.5.74': [
+    'Outline: idea titles look editable now, and a dot-and-arrow button beside each one switches it to another preset (But, Therefore, …) — title, colour and shape together',
+    'Minecraft theme: selected text has a lighter highlight, so it stays readable'
   ]
 }
 

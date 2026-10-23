@@ -2911,6 +2911,23 @@ export const useStore = create(
       })
       get().scheduleSave(scriptId, { flash: false })
     },
+    // Switches an idea node to another preset's look: its title, colour and
+    // shape (the text is left alone). One undo step.
+    applyIdeaNodePreset(scriptId, nodeId, presetId) {
+      const preset = get().ideaNodePresets.find((p) => p.id === presetId)
+      if (!preset) return
+      get().pushUndo(scriptId)
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        const node = script && script.mapLayout.nodes[nodeId]
+        if (!node) return
+        node.title = preset.label
+        node.color = preset.color || null
+        node.shape = preset.shape || 'rectangle'
+        script.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+    },
     setIdeaNodeColor(scriptId, nodeId, color) {
       // No pushUndo here on purpose — a native <input type="color"> fires
       // onChange continuously while the user drags inside the OS picker,

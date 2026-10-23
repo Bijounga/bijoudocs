@@ -1410,6 +1410,14 @@ body {
   border: 2px solid #1a1208 !important;
   box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.45) !important;
 }
+/* Selected text: a light grass green with dark text. The generic rule mixes the
+   (dark green) accent into the page, which came out a muddy grey that dark text
+   couldn't read on; forcing the text dark also keeps it readable over the dirt
+   title bar and the grey panels. */
+[data-theme='minecraft'] ::selection {
+  background: #cfe8a0;
+  color: #1e1e1e;
+}
 /* Inventory panels: black outline, white top-left / dark bottom-right bevel. */
 [data-theme='minecraft'] .sidebar,
 [data-theme='minecraft'] .inspector,
@@ -7276,6 +7284,47 @@ body.is-resizing-panel {
 }
 .outline-item-title:focus {
   outline: none;
+}
+/* Titles are text fields — hint that, instead of looking like static labels. */
+.outline-item-title {
+  border-bottom: 1px dashed transparent;
+  cursor: text;
+}
+.outline-item-title:hover {
+  border-bottom-color: var(--line);
+}
+.outline-item-title:focus {
+  border-bottom: 1px solid var(--cyan);
+}
+/* The type switcher beside an idea's title (But / Therefore / …). */
+.outline-type {
+  position: relative;
+  flex: 0 0 auto;
+}
+.outline-type-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 5px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+}
+.outline-type-btn:hover,
+.outline-type-btn.active {
+  background: var(--panel-3);
+  border-color: var(--line-soft);
+}
+.outline-type-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: 0 0 auto;
+}
+.outline-type-menu {
+  top: 100%;
+  margin-top: 4px;
 }
 .outline-item-text {
   width: 100%;

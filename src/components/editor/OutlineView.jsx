@@ -19,6 +19,8 @@ export default function OutlineView({ scriptId, script }) {
   const commitSectionBeatSummary = useStore((s) => s.commitSectionBeatSummary)
   const setIdeaNodeTitle = useStore((s) => s.setIdeaNodeTitle)
   const commitIdeaNodeTitle = useStore((s) => s.commitIdeaNodeTitle)
+  const ideaNodePresets = useStore((s) => s.ideaNodePresets)
+  const applyIdeaNodePreset = useStore((s) => s.applyIdeaNodePreset)
   const setIdeaNodeText = useStore((s) => s.setIdeaNodeText)
   const commitIdeaNodeText = useStore((s) => s.commitIdeaNodeText)
   const openSectionTab = useStore((s) => s.openSectionTab)
@@ -30,7 +32,25 @@ export default function OutlineView({ scriptId, script }) {
   const toggleStruckForMapNodes = useStore((s) => s.toggleStruckForMapNodes)
   const jumpOutlineHighlightId = useStore((s) => s.jumpOutlineHighlightId)
   const [query, setQuery] = useState('')
+  const [typeMenuId, setTypeMenuId] = useState(null) // idea node whose type menu is open
   const listRef = useRef(null)
+
+  // Close the type menu on any click outside it, or Escape.
+  useEffect(() => {
+    if (!typeMenuId) return
+    const onDown = (e) => {
+      if (!e.target.closest || !e.target.closest('.outline-type')) setTypeMenuId(null)
+    }
+    const onKey = (e) => {
+      if (e.key === 'Escape') setTypeMenuId(null)
+    }
+    document.addEventListener('mousedown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [typeMenuId])
 
   useEffect(() => {
     ensureMapNodes(scriptId)
@@ -138,6 +158,35 @@ export default function OutlineView({ scriptId, script }) {
                   <span className="outline-item-num">{i + 1}</span>
                   <div className="outline-item-body">
                     <div className="outline-item-head">
+                      <div className="outline-type">
+                        <button
+                          className={'outline-type-btn' + (typeMenuId === id ? ' active' : '')}
+                          style={{ color: node.color || 'var(--ink-faint)' }}
+                          onClick={() => setTypeMenuId(typeMenuId === id ? null : id)}
+                          title="Switch this idea's type (But, Therefore, …)"
+                        >
+                          <span className="outline-type-dot" />
+                          <Icon name="chevron" size={9} />
+                        </button>
+                        {typeMenuId === id && (
+                          <div className="map-idea-menu outline-type-menu">
+                            {ideaNodePresets.map((p) => (
+                              <div
+                                key={p.id}
+                                className={'map-idea-menu-item' + (node.title === p.label && node.color === p.color ? ' highlighted' : '')}
+                                onClick={() => {
+                                  applyIdeaNodePreset(scriptId, id, p.id)
+                                  setTypeMenuId(null)
+                                }}
+                              >
+                                <span className="outline-type-dot" style={{ color: p.color }} />
+                                {p.label}
+                              </div>
+                            ))}
+                            {ideaNodePresets.length === 0 && <div className="map-idea-menu-item">No presets yet — add some on the map.</div>}
+                          </div>
+                        )}
+                      </div>
                       <input
                         className="outline-item-title"
                         placeholder="Untitled idea"
