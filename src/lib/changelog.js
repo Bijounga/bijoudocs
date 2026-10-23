@@ -264,6 +264,9 @@ export const CHANGELOG = {
   '0.5.75': [
     'Outline: chapter headings (like “Eater”) are editable — rename one and every chapter of that name follows — and a chevron folds a chapter’s items away under its heading',
     'Fixed the “this script changed elsewhere” popup coming back on every launch: a stray backup copy of a script left in the scripts folder was being loaded as a second copy of it'
+  ],
+  '0.5.76': [
+    'Add a section anywhere: hover the gap between two sections (or above the first) and click “+ Add section here” — no more adding at the bottom and reordering'
   ]
 }
 

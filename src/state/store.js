@@ -12,6 +12,9 @@ import { CHANGELOG, changelogSince } from '../lib/changelog.js'
 import { fetchSynonyms } from '../lib/synonyms.js'
 import { MAIN_TAB_ID, getPad, nextTabName } from '../lib/scratchNotes.js'
 import { presetChain } from '../lib/ideaPresets.js'
+
+// addSection's "before the first section" marker.
+export const SECTION_AT_START = '__start__'
 import { checkSpelling } from '../lib/spellcheck.js'
 import { mergeExternalScript } from '../lib/externalMerge.js'
 
@@ -1012,6 +1015,8 @@ export const useStore = create(
     },
 
     // ---------- sections ----------
+    // afterSectionId: a section id to insert after, SECTION_AT_START to insert
+    // before the first one, or nothing to append.
     addSection(scriptId, afterSectionId) {
       get().pushUndo(scriptId)
       let newId = null
@@ -1021,7 +1026,8 @@ export const useStore = create(
         const sec = mkSection('New section', [mkLine('', null)])
         newId = sec.id
         let idx = script.sections.length
-        if (afterSectionId) {
+        if (afterSectionId === SECTION_AT_START) idx = 0
+        else if (afterSectionId) {
           const i = script.sections.findIndex((se) => se.id === afterSectionId)
           if (i >= 0) idx = i + 1
         }

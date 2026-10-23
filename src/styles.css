@@ -4729,6 +4729,51 @@ body.is-resizing-panel {
   border-color: var(--cyan);
   color: var(--cyan);
 }
+/* Between two sections: invisible until hovered, then a dashed line with a
+   label — adds a section at that spot, no reordering. */
+.insert-section-strip {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 14px;
+  margin: -4px 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  z-index: 2;
+}
+.insert-section-strip::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  border-top: 1px dashed transparent;
+}
+.insert-section-strip span {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  padding: 1px 12px;
+  border-radius: 999px;
+  background: var(--panel-3);
+  border: 1px solid var(--cyan);
+  color: var(--cyan);
+  font-size: 11px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+}
+.insert-section-strip:hover::before,
+.insert-section-strip:focus-visible::before {
+  border-top-color: var(--cyan);
+}
+.insert-section-strip:hover span,
+.insert-section-strip:focus-visible span {
+  opacity: 1;
+}
 
 .insp-tabs {
   display: flex;

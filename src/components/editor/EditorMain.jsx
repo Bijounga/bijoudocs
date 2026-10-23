@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { useStore } from '../../state/store.js'
+import { useStore, SECTION_AT_START } from '../../state/store.js'
 import SectionBlock from './SectionBlock.jsx'
 import FilterView from './FilterView.jsx'
 import MapView from './MapView.jsx'
@@ -57,6 +57,30 @@ export default function EditorMain({ scriptId, script }) {
   const showingSingle = singleIdx >= 0
   const { order: mapOrder } = computeMainThread(script.mapLayout)
 
+  // A hover strip that adds a section at that spot (after `afterId`, or at the
+  // very top), then drops the cursor in its heading.
+  function insertStrip(afterId) {
+    return (
+      <button
+        key={'insert-' + afterId}
+        className="insert-section-strip"
+        title="Add a section here"
+        onClick={() => {
+          const newId = addSection(scriptId, afterId)
+          setTimeout(() => {
+            const t = document.querySelector('[data-heading-for="' + newId + '"]')
+            if (t) {
+              t.focus()
+              t.select()
+            }
+          }, 0)
+        }}
+      >
+        <span>+ Add section here</span>
+      </button>
+    )
+  }
+
   const editor = (
     <div className={'editor-wrap' + (focusMode ? ' focus-wide' : '')} style={{ zoom }}>
       {showingSingle ? (
@@ -70,16 +94,19 @@ export default function EditorMain({ scriptId, script }) {
         />
       ) : (
         <>
+          {insertStrip(SECTION_AT_START)}
           {script.sections.map((sec, idx) => (
-            <SectionBlock
-              key={sec.id}
-              scriptId={scriptId}
-              sec={sec}
-              tc={tcs[idx]}
-              categories={script.categories}
-              onSetFilter={setFilterCategory}
-              mapOrder={mapOrder.get(sec.id)}
-            />
+            <React.Fragment key={sec.id}>
+              <SectionBlock
+                scriptId={scriptId}
+                sec={sec}
+                tc={tcs[idx]}
+                categories={script.categories}
+                onSetFilter={setFilterCategory}
+                mapOrder={mapOrder.get(sec.id)}
+              />
+              {idx < script.sections.length - 1 && insertStrip(sec.id)}
+            </React.Fragment>
           ))}
           <button className="add-section-btn" onClick={() => addSection(scriptId)}>
             + Add section
