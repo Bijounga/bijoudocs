@@ -116,10 +116,23 @@ function loadAllScripts() {
     .readdirSync(dir)
     .filter((f) => f.endsWith('.json') && !isHistoryFile(f) && f !== globalCategoriesFileName())
   const scripts = []
+  // A script lives in <id>.json. A stray copy under another name (a hand-made
+  // backup, say) would otherwise load as a second script with the same id and
+  // make every first save look like a conflict, because the app tracks one
+  // on-disk timestamp per id. So the file named after the id goes first, and
+  // any later file with an id already loaded is skipped.
+  const isOwnFile = (f) => /^[^.]+\.json$/.test(f)
+  files.sort((x, y) => Number(isOwnFile(y)) - Number(isOwnFile(x)))
+  const seen = new Set()
   for (const file of files) {
     try {
       const raw = JSON.parse(fs.readFileSync(path.join(dir, file), 'utf-8'))
       const script = migrateScript(raw)
+      if (script && seen.has(script.id)) {
+        console.warn('BijouDocs: ignoring', file, '- script', script.id, 'is already loaded from another file')
+        continue
+      }
+      if (script) seen.add(script.id)
       if (script) scripts.push(script)
     } catch (err) {
       console.error('BijouDocs: failed to read/parse', file, err)

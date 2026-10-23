@@ -3060,6 +3060,36 @@ export const useStore = create(
       })
       get().scheduleSave(scriptId, { flash: false })
     },
+    // Renames every chapter node in an Outline group at once (they share one
+    // heading because they share a label). One undo step.
+    renameChapterGroup(scriptId, nodeIds, label) {
+      get().pushUndo(scriptId)
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        if (!script) return
+        nodeIds.forEach((id) => {
+          const node = script.mapLayout.nodes[id]
+          if (node && node.type === 'chapter') node.label = label
+        })
+        script.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+    },
+    // Folds an Outline group's items away under its heading (or opens it).
+    toggleChapterGroupCollapsed(scriptId, nodeIds) {
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        if (!script) return
+        const first = script.mapLayout.nodes[nodeIds[0]]
+        const next = !(first && first.outlineCollapsed)
+        nodeIds.forEach((id) => {
+          const node = script.mapLayout.nodes[id]
+          if (node) node.outlineCollapsed = next
+        })
+        script.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+    },
     setChapterNodeNumber(scriptId, nodeId, number) {
       get().pushUndo(scriptId)
       set((s) => {

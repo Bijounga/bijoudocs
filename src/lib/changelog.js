@@ -260,6 +260,10 @@ export const CHANGELOG = {
   '0.5.74': [
     'Outline: idea titles look editable now, and a dot-and-arrow button beside each one switches it to another preset (But, Therefore, …) — title, colour and shape together',
     'Minecraft theme: selected text has a lighter highlight, so it stays readable'
+  ],
+  '0.5.75': [
+    'Outline: chapter headings (like “Eater”) are editable — rename one and every chapter of that name follows — and a chevron folds a chapter’s items away under its heading',
+    'Fixed the “this script changed elsewhere” popup coming back on every launch: a stray backup copy of a script left in the scripts folder was being loaded as a second copy of it'
   ]
 }
 

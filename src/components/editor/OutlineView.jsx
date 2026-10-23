@@ -9,10 +9,50 @@ function isIdeaNode(node) {
   return !!node && node.type === 'idea'
 }
 
+// A chapter group's heading: a text field that renames the whole group when
+// you finish (the Outline re-sorts groups by label, so renaming per keystroke
+// would move the field out from under the cursor), plus the fold button.
+function ChapterHeading({ label, collapsed, onRename, onToggle }) {
+  const [draft, setDraft] = useState(label)
+  useEffect(() => setDraft(label), [label])
+  function commit() {
+    const next = draft.trim()
+    if (next !== label) onRename(next)
+    else setDraft(label)
+  }
+  return (
+    <>
+      <button
+        className={'outline-fold' + (collapsed ? ' collapsed' : '')}
+        onClick={onToggle}
+        title={collapsed ? 'Show this chapter’s items' : 'Hide this chapter’s items'}
+      >
+        <Icon name="chevron" size={12} />
+      </button>
+      <input
+        className="outline-chapter-title"
+        value={draft}
+        placeholder="Untitled chapter"
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') e.target.blur()
+          else if (e.key === 'Escape') {
+            setDraft(label)
+            e.target.blur()
+          }
+        }}
+      />
+    </>
+  )
+}
+
 export default function OutlineView({ scriptId, script }) {
   const zoom = useStore((s) => s.zoom)
   const ensureMapNodes = useStore((s) => s.ensureMapNodes)
   const pushUndo = useStore((s) => s.pushUndo)
+  const renameChapterGroup = useStore((s) => s.renameChapterGroup)
+  const toggleChapterGroupCollapsed = useStore((s) => s.toggleChapterGroupCollapsed)
   const setSectionHeading = useStore((s) => s.setSectionHeading)
   const commitSectionHeading = useStore((s) => s.commitSectionHeading)
   const setSectionBeatSummary = useStore((s) => s.setSectionBeatSummary)
@@ -79,15 +119,45 @@ export default function OutlineView({ scriptId, script }) {
     dividersByIndex.get(d.index).push(d)
   })
   const dividerClass = { header: 'outline-chapter-header', subEnd: 'outline-sub-end', groupEnd: 'outline-group-end', divider: 'outline-divider' }
+  const q = query.trim().toLowerCase()
+  // Items inside a folded chapter group are hidden (a search shows everything).
+  // Each group runs from its heading's index up to its "End of" marker's.
+  const hiddenIndexes = new Set()
+  const foldedGroups = new Set()
+  if (!q) {
+    const openHeaders = []
+    dividers.forEach((d) => {
+      if (d.kind === 'header') openHeaders.push(d)
+      else if (d.kind === 'groupEnd') {
+        const h = openHeaders.pop()
+        const first = h && nodes[h.chapterIds[0]]
+        if (h && first && first.outlineCollapsed) {
+          foldedGroups.add(h)
+          for (let k = h.index; k < d.index; k++) hiddenIndexes.add(k)
+        }
+      }
+    })
+  }
   function renderDivider(d, key) {
     const text = d.label || 'Not yet connected to anything else'
+    if (d.kind === 'header' && d.chapterIds && d.chapterIds.length) {
+      return (
+        <div key={key} className={dividerClass.header + ' has-title'}>
+          <ChapterHeading
+            label={text === 'Untitled chapter' && !nodes[d.chapterIds[0]].label ? '' : text}
+            collapsed={foldedGroups.has(d)}
+            onRename={(label) => renameChapterGroup(scriptId, d.chapterIds, label)}
+            onToggle={() => toggleChapterGroupCollapsed(scriptId, d.chapterIds)}
+          />
+        </div>
+      )
+    }
     return (
       <div key={key} className={dividerClass[d.kind] || 'outline-divider'}>
         {d.kind === 'subEnd' ? <span>{text}</span> : text}
       </div>
     )
   }
-  const q = query.trim().toLowerCase()
   function matchesQuery(title, text) {
     if (!q) return true
     return (title || '').toLowerCase().includes(q) || (text || '').toLowerCase().includes(q)
@@ -141,6 +211,12 @@ export default function OutlineView({ scriptId, script }) {
           const node = nodes[id]
           if (!node) return null
           const dividersHere = dividersByIndex.get(i) || []
+          if (hiddenIndexes.has(i)) {
+            // The group's heading (and a previous group's end marker) still show above its first hidden item.
+            return dividersHere.length ? (
+              <React.Fragment key={id}>{dividersHere.filter((d) => d.kind !== 'subEnd').map((d, di) => renderDivider(d, di))}</React.Fragment>
+            ) : null
+          }
           if (isIdeaNode(node)) {
             if (!matchesQuery(node.title, node.text)) return null
             return (

@@ -119,20 +119,25 @@ export function flattenMapOrder(mapLayout) {
   let currentLabel = null
   let currentLabelDisplay = null
   let currentNumber = null
+  // Every chapter node in the current group — the heading edits and
+  // collapses them all together.
+  let currentIds = []
   function closeCurrentGroup() {
-    if (currentLabel !== null) dividers.push({ index: ordered.length, label: 'End of ' + currentLabelDisplay, kind: 'groupEnd' })
+    if (currentLabel !== null) dividers.push({ index: ordered.length, label: 'End of ' + currentLabelDisplay, kind: 'groupEnd', chapterIds: currentIds })
   }
   chapterIds.forEach((id) => {
     if (visited.has(id)) return
     const label = nodes[id].label || 'Untitled chapter'
     if (label.toLowerCase() !== currentLabel) {
       closeCurrentGroup()
-      dividers.push({ index: ordered.length, label, kind: 'header' })
+      currentIds = []
+      dividers.push({ index: ordered.length, label, kind: 'header', chapterIds: currentIds })
       currentLabel = label.toLowerCase()
       currentLabelDisplay = label
     } else {
       dividers.push({ index: ordered.length, label: '#' + currentNumber, kind: 'subEnd' })
     }
+    currentIds.push(id)
     walkChapterMembers(id)
     currentNumber = nodes[id].number
   })
