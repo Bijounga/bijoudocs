@@ -267,6 +267,9 @@ export const CHANGELOG = {
   ],
   '0.5.76': [
     'Add a section anywhere: hover the gap between two sections (or above the first) and click “+ Add section here” — no more adding at the bottom and reordering'
+  ],
+  '0.5.77': [
+    'Fixed pasting over selected text in a line: it now replaces the selection instead of adding a copied line underneath. Copied lines only paste as lines while they are still what you copied last'
   ]
 }
 

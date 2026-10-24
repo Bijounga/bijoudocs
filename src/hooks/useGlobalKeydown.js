@@ -59,6 +59,37 @@ function forceSyncFocusedElement(st) {
 // Installed once; always reads fresh state via useStore.getState() so it
 // never closes over stale values.
 export function useGlobalKeydown() {
+  // Pasting copied lines. Only when the clipboard still holds those lines (copy
+  // something else and a normal paste happens), never inside the notepad or a
+  // plain text field, and never over selected text in a line, which a normal
+  // paste replaces.
+  useEffect(() => {
+    function onPaste(e) {
+      const st = useStore.getState()
+      if (st.teleprompterOpen || !st.hasClipboard()) return
+      if (e.target && e.target.closest && e.target.closest('.scratchpad')) return
+      const script = st.scripts.find((s) => s.id === st.currentScriptId)
+      if (!script) return
+      const active = document.activeElement
+      const activeLineKey = active && active.dataset ? active.dataset.lineKey : null
+      if (!activeLineKey && active && (active.tagName === 'TEXTAREA' || active.tagName === 'INPUT' || active.isContentEditable)) return
+      const text = e.clipboardData ? e.clipboardData.getData('text/plain') : ''
+      if (!st.clipboardMatches(text)) return
+      if (activeLineKey) {
+        const sel = window.getSelection()
+        if (sel && !sel.isCollapsed && active.contains(sel.anchorNode)) return
+      }
+      e.preventDefault()
+      let opts = {}
+      if (activeLineKey) opts = { atLineKey: activeLineKey }
+      else if (st.selectedLines.length) opts = { afterSelected: true }
+      const newKeys = st.pasteClipboard(script.id, opts)
+      if (newKeys && newKeys.length) st.flashSaved('Pasted ' + newKeys.length + ' line' + (newKeys.length === 1 ? '' : 's'))
+    }
+    document.addEventListener('paste', onPaste)
+    return () => document.removeEventListener('paste', onPaste)
+  }, [])
+
   useEffect(() => {
     function onKeyDown(e) {
       const st = useStore.getState()
@@ -167,15 +198,8 @@ export function useGlobalKeydown() {
         return
       }
 
-      if (combo === 'ctrl+v' && st.hasClipboard()) {
-        e.preventDefault()
-        let opts = {}
-        if (activeLineKey) opts = { atLineKey: activeLineKey }
-        else if (st.selectedLines.length) opts = { afterSelected: true }
-        const newKeys = st.pasteClipboard(script.id, opts)
-        if (newKeys && newKeys.length) st.flashSaved('Pasted ' + newKeys.length + ' line' + (newKeys.length === 1 ? '' : 's'))
-        return
-      }
+      // Ctrl+V of copied lines is handled by the paste listener below, which
+      // can see what's actually on the clipboard.
 
       if (combo === st.keybinds.duplicate) {
         e.preventDefault()

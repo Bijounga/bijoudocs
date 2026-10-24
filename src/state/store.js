@@ -38,6 +38,23 @@ function scratchPadFor(s, scriptId) {
 }
 // In-memory only, like the prototype's own `clipboardLines` — never persisted.
 let clipboardLines = []
+// The plain text of those lines as also put on the OS clipboard when they were
+// copied (null if the OS clipboard couldn't be written). Ctrl+V pastes the
+// lines only while the OS clipboard still holds this — copy something else
+// afterwards and a normal paste wins.
+let clipboardText = null
+const normalizeClip = (t) => String(t || '').replace(/\r\n/g, '\n').trim()
+function setClipboardLines(lines) {
+  clipboardLines = lines
+  clipboardText = lines.map((l) => stripHtmlToText(l.text)).join('\n')
+  try {
+    navigator.clipboard.writeText(clipboardText).catch(() => {
+      clipboardText = null
+    })
+  } catch (e) {
+    clipboardText = null
+  }
+}
 
 const hasPosition = (n) => Number.isFinite(n.x) && Number.isFinite(n.y)
 // Where a map node goes when it has no usable position: just below the
@@ -2364,26 +2381,32 @@ export const useStore = create(
     hasClipboard() {
       return clipboardLines.length > 0
     },
+    // Is `text` (what a paste is about to insert) still the copied lines?
+    clipboardMatches(text) {
+      return clipboardText === null || normalizeClip(text) === normalizeClip(clipboardText)
+    },
     copyLineToClipboard(scriptId, sectionId, lineId) {
       const script = get().scripts.find((sc) => sc.id === scriptId)
       const sec = script && script.sections.find((se) => se.id === sectionId)
       const line = sec && sec.lines.find((l) => l.id === lineId)
       if (!line) return 0
-      clipboardLines = [JSON.parse(JSON.stringify(line))]
+      setClipboardLines([JSON.parse(JSON.stringify(line))])
       return 1
     },
     copySelectionToClipboard(scriptId) {
       const { selectedLines } = get()
       const script = get().scripts.find((sc) => sc.id === scriptId)
       if (!script || !selectedLines.length) return 0
-      clipboardLines = selectedLines
-        .map((k) => {
-          const [secId, lineId] = k.split(':')
-          const sec = script.sections.find((se) => se.id === secId)
-          const line = sec && sec.lines.find((l) => l.id === lineId)
-          return line ? JSON.parse(JSON.stringify(line)) : null
-        })
-        .filter(Boolean)
+      setClipboardLines(
+        selectedLines
+          .map((k) => {
+            const [secId, lineId] = k.split(':')
+            const sec = script.sections.find((se) => se.id === secId)
+            const line = sec && sec.lines.find((l) => l.id === lineId)
+            return line ? JSON.parse(JSON.stringify(line)) : null
+          })
+          .filter(Boolean)
+      )
       return clipboardLines.length
     },
     cutSelectionToClipboard(scriptId) {
