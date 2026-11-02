@@ -267,6 +267,10 @@ export default function LineRow({ scriptId, sectionId, line, index, siblingCount
           placeholder="Write a line..."
           className="line-text"
           onFocus={() => pushUndo(scriptId)}
+          onUndoPoint={(html) => {
+            commitLineText(scriptId, sectionId, line.id, html)
+            pushUndo(scriptId)
+          }}
           onCommit={(html) => commitLineText(scriptId, sectionId, line.id, html)}
           onKeyDown={handleKeyDown}
           onMouseDown={handleMouseDown}

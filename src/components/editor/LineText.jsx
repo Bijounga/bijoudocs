@@ -68,8 +68,39 @@ async function extractImageDataUrl(dt) {
   return null
 }
 
-export default function LineText({ dataKey, value, placeholder, onCommit, onFocus, onKeyDown, onMouseDown, className, style }) {
+export default function LineText({ dataKey, value, placeholder, onCommit, onUndoPoint, onFocus, onKeyDown, onMouseDown, className, style }) {
   const ref = useRef(null)
+  // What the last edit in this line was and when, to cut typing into undo steps.
+  const lastEdit = useRef({ at: 0, kind: null, data: '', html: '' })
+
+  // Called before each edit lands in the DOM. Starts a new undo step when
+  // you've paused, switched between typing and deleting, started a new word,
+  // or done something bigger than a keystroke (paste, formatting) — the
+  // caller saves the text as it is right now as the step to go back to.
+  function handleBeforeInput(e) {
+    const t = e.inputType || ''
+    const kind = t === 'insertText' ? 'type' : t.startsWith('delete') ? 'delete' : 'other'
+    const data = t === 'insertText' ? e.data || '' : ''
+    const last = lastEdit.current
+    const now = Date.now()
+    const newWord = kind === 'type' && /\s/.test(last.data) && !/\s/.test(data)
+    // The line changed some way other than typing since the last edit (an undo, say).
+    const changedElsewhere = ref.current.innerHTML !== last.html
+    const startsStep = last.kind !== null && (now - last.at > 1000 || kind !== last.kind || kind === 'other' || newWord || changedElsewhere)
+    if (startsStep && onUndoPoint) onUndoPoint(ref.current.innerHTML)
+    lastEdit.current = { at: now, kind, data, html: last.html }
+  }
+  function handleInput() {
+    lastEdit.current.html = ref.current.innerHTML
+  }
+
+  // Native listener on purpose: React's onBeforeInput is a polyfill with no inputType.
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return undefined
+    el.addEventListener('beforeinput', handleBeforeInput)
+    return () => el.removeEventListener('beforeinput', handleBeforeInput)
+  })
 
   useEffect(() => {
     const el = ref.current
@@ -154,7 +185,11 @@ export default function LineText({ dataKey, value, placeholder, onCommit, onFocu
       suppressContentEditableWarning
       data-placeholder={placeholder}
       data-line-key={dataKey}
-      onFocus={onFocus}
+      onFocus={() => {
+        lastEdit.current = { at: 0, kind: null, data: '', html: '' }
+        if (onFocus) onFocus()
+      }}
+      onInput={handleInput}
       onBlur={() => onCommit(ref.current.innerHTML)}
       onKeyDown={(e) => onKeyDown(e, ref.current)}
       onMouseDown={onMouseDown}

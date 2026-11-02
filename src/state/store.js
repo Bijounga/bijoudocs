@@ -18,7 +18,7 @@ export const SECTION_AT_START = '__start__'
 import { checkSpelling } from '../lib/spellcheck.js'
 import { mergeExternalScript } from '../lib/externalMerge.js'
 
-const MAX_UNDO = 60
+const MAX_UNDO = 200 // typing adds a step per word, so this is roomier than it looks
 // Which script to land on when there's no explicit choice (launch, or the
 // open one was deleted): most recently edited, but never an archived one
 // while any unarchived script exists.
@@ -38,6 +38,8 @@ function scratchPadFor(s, scriptId) {
 }
 // In-memory only, like the prototype's own `clipboardLines` — never persisted.
 let clipboardLines = []
+// The last arrow-key nudge of map nodes, to fold a run of presses into one undo step.
+let lastNudge = { key: '', at: 0 }
 // The plain text of those lines as also put on the OS clipboard when they were
 // copied (null if the OS clipboard couldn't be written). Ctrl+V pastes the
 // lines only while the OS clipboard still holds this — copy something else
@@ -2680,6 +2682,27 @@ export const useStore = create(
           node.x = x
           node.y = y
         }
+      })
+      get().scheduleSave(scriptId, { flash: false })
+    },
+    // Moves nodes by a fixed step (arrow keys). A run of presses within a
+    // moment of each other is one undo step, not one per press.
+    nudgeMapNodes(scriptId, nodeIds, dx, dy) {
+      const now = Date.now()
+      const key = scriptId + ':' + nodeIds.join(',')
+      if (key !== lastNudge.key || now - lastNudge.at > 700) get().pushUndo(scriptId)
+      lastNudge = { key, at: now }
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        if (!script) return
+        nodeIds.forEach((id) => {
+          const node = script.mapLayout.nodes[id]
+          if (node && Number.isFinite(node.x) && Number.isFinite(node.y)) {
+            node.x += dx
+            node.y += dy
+          }
+        })
+        script.updatedAt = Date.now()
       })
       get().scheduleSave(scriptId, { flash: false })
     },

@@ -5956,10 +5956,7 @@ body.is-resizing-panel {
   flex: 1;
   min-width: 0;
   overflow-wrap: anywhere;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  white-space: pre-wrap; /* the whole note, line breaks included — no "…" and no need to open Bijou Footage to read it */
 }
 .ft-text b {
   font-weight: 600;

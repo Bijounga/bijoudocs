@@ -270,6 +270,12 @@ export const CHANGELOG = {
   ],
   '0.5.77': [
     'Fixed pasting over selected text in a line: it now replaces the selection instead of adding a copied line underneath. Copied lines only paste as lines while they are still what you copied last'
+  ],
+  '0.5.78': [
+    'Ctrl+Z while typing now steps back a word at a time instead of wiping the whole line, and Redo (Ctrl+Shift+Z or Ctrl+Y) brings your text back',
+    'Footage tab: notes show in full, no more “…” — readable on the Mac without opening Bijou Footage',
+    'Mind map: dragged nodes snap centre-to-centre, so a node under another lines up in the middle',
+    'Mind map: arrow keys move the selected nodes (Shift = bigger steps) when you are not typing'
   ]
 }
 

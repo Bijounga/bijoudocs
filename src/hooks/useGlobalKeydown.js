@@ -128,13 +128,20 @@ export function useGlobalKeydown() {
         (activeLineKey || active.tagName === 'TEXTAREA' || (active.tagName === 'INPUT' && active.type === 'text'))
       )
 
+      // What's typed in a line only reaches the store when the line is left or
+      // an undo step starts, so put it there first — otherwise undo would
+      // record the old text as the thing to redo back to, and redo would lose
+      // what you typed.
+      if (combo === 'ctrl+z' || combo === 'ctrl+shift+z' || combo === 'ctrl+y') {
+        if (activeLineKey && st.currentScriptId) commitActiveLine(st, st.currentScriptId, activeLineKey)
+      }
       if (combo === 'ctrl+z') {
         e.preventDefault()
         st.undo()
         forceSyncFocusedElement(useStore.getState())
         return
       }
-      if (combo === 'ctrl+shift+z') {
+      if (combo === 'ctrl+shift+z' || combo === 'ctrl+y') {
         e.preventDefault()
         st.redo()
         forceSyncFocusedElement(useStore.getState())

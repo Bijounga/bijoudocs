@@ -85,6 +85,9 @@ function sideAnchor(node, side) {
 }
 
 const SNAP_PX = 6 // screen px — divided by zoom below so it feels the same at any zoom level
+// Centre-to-centre alignment grabs from further away than edge snapping: a node
+// dragged under (or beside) another should land dead centre on it.
+const CENTER_SNAP_PX = 16
 
 // Figma-style alignment snapping for a node drag. `x`/`y` is the dragged
 // node's candidate top-left, `w`/`h` its size, `otherNodes` every node it
@@ -106,32 +109,61 @@ function snapPosition(x, y, w, h, otherNodes, zoom) {
     targetsX.push(n.x, n.x + nw / 2, n.x + nw)
     targetsY.push(n.y, n.y + nh / 2, n.y + nh)
   })
+  // Centre on centre first, from the wider range; only if no node's centre is
+  // close does the edge/centre mix below get a say.
+  const centerTol = CENTER_SNAP_PX / zoom
   let snapX = null
   let guideX = null
-  let bestDx = tol
-  ;[x, x + w / 2, x + w].forEach((cx) => {
-    targetsX.forEach((tx) => {
-      const d = Math.abs(cx - tx)
-      if (d < bestDx) {
-        bestDx = d
-        snapX = x + (tx - cx)
-        guideX = tx
-      }
-    })
+  let bestDx = centerTol
+  otherNodes.forEach((n) => {
+    const { w: nw } = nodeSize(n)
+    const tx = n.x + nw / 2
+    const d = Math.abs(x + w / 2 - tx)
+    if (d < bestDx) {
+      bestDx = d
+      snapX = x + (tx - (x + w / 2))
+      guideX = tx
+    }
   })
+  if (snapX == null) {
+    bestDx = tol
+    ;[x, x + w / 2, x + w].forEach((cx) => {
+      targetsX.forEach((tx) => {
+        const d = Math.abs(cx - tx)
+        if (d < bestDx) {
+          bestDx = d
+          snapX = x + (tx - cx)
+          guideX = tx
+        }
+      })
+    })
+  }
   let snapY = null
   let guideY = null
-  let bestDy = tol
-  ;[y, y + h / 2, y + h].forEach((cy) => {
-    targetsY.forEach((ty) => {
-      const d = Math.abs(cy - ty)
-      if (d < bestDy) {
-        bestDy = d
-        snapY = y + (ty - cy)
-        guideY = ty
-      }
-    })
+  let bestDy = centerTol
+  otherNodes.forEach((n) => {
+    const { h: nh } = nodeSize(n)
+    const ty = n.y + nh / 2
+    const d = Math.abs(y + h / 2 - ty)
+    if (d < bestDy) {
+      bestDy = d
+      snapY = y + (ty - (y + h / 2))
+      guideY = ty
+    }
   })
+  if (snapY == null) {
+    bestDy = tol
+    ;[y, y + h / 2, y + h].forEach((cy) => {
+      targetsY.forEach((ty) => {
+        const d = Math.abs(cy - ty)
+        if (d < bestDy) {
+          bestDy = d
+          snapY = y + (ty - cy)
+          guideY = ty
+        }
+      })
+    })
+  }
   return {
     x: snapX == null ? x : snapX,
     y: snapY == null ? y : snapY,
@@ -461,6 +493,25 @@ export default function MapView({ scriptId, script }) {
         }
       }
 
+      // Arrow keys nudge the selected nodes (Shift = a bigger step). Only when
+      // nothing is being typed into and no menu wants the arrows.
+      if (
+        !isEditingText &&
+        !ideaMenuOpen &&
+        validSelectedNodeIds.length &&
+        !(active && active.tagName === 'SELECT') &&
+        !e.ctrlKey &&
+        !e.metaKey &&
+        !e.altKey &&
+        ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)
+      ) {
+        e.preventDefault()
+        const step = e.shiftKey ? 50 : 10
+        const dx = e.key === 'ArrowLeft' ? -step : e.key === 'ArrowRight' ? step : 0
+        const dy = e.key === 'ArrowUp' ? -step : e.key === 'ArrowDown' ? step : 0
+        st.nudgeMapNodes(scriptId, validSelectedNodeIds, dx, dy)
+        return
+      }
       if (combo === st.keybinds.mapAddSection) {
         e.preventDefault()
         handleAddSection()
