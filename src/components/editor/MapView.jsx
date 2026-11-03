@@ -11,6 +11,7 @@ import ShapePicker, { SHAPES } from './ShapePicker.jsx'
 import { computeMainThread } from '../../lib/mapGraph.js'
 import { presetChain, wouldLoop } from '../../lib/ideaPresets.js'
 import { routeElbow, pathFromPoints } from '../../lib/mapEdgeRouting.js'
+import { saveFieldWord } from '../../state/lineRefs.js'
 
 function isIdeaNode(node) {
   return !!node && node.type === 'idea'
@@ -225,6 +226,25 @@ function anchorSideForNode(edge, sectionId, nodes) {
   return isFrom ? sideOnFrom : sideOnTo
 }
 
+// The word the caret (or the selection Chromium makes on right-clicking a
+// misspelling) is on inside a node's text field, with where it sits.
+function fieldWordAt(el) {
+  const v = el.value
+  let s = el.selectionStart
+  let t = el.selectionEnd
+  if (s == null || t == null) return null
+  if (s === t) {
+    const isWordChar = (ch) => /[\p{L}\p{N}'’]/u.test(ch)
+    while (s > 0 && isWordChar(v[s - 1])) s--
+    while (t < v.length && isWordChar(v[t])) t++
+  }
+  while (s < t && /['’]/.test(v[s])) s++
+  while (t > s && /['’]/.test(v[t - 1])) t--
+  const word = v.slice(s, t)
+  if (!word || /\s/.test(word)) return null
+  return { word, start: s, end: t }
+}
+
 function threadEndDirection(sectionId, nodes, edges) {
   const hasOutgoing = edges.some((e) => e.from === sectionId)
   if (hasOutgoing) return null
@@ -303,6 +323,9 @@ export default function MapView({ scriptId, script }) {
   const [ideaMenuAt, setIdeaMenuAt] = useState(null)
   const [ideaMenuIndex, setIdeaMenuIndex] = useState(0)
   const pointerRef = useRef(null) // last mouse position over the canvas (screen px)
+  // Set while the idea menu was opened by pressing Tab at the end of a chain:
+  // the node the new one grows out of, and whether the caret was in its text.
+  const menuFromRef = useRef(null)
   const [presetManagerOpen, setPresetManagerOpen] = useState(false)
   const spaceDownRef = useRef(false)
   const mapClipboardRef = useRef([]) // [{id, type: 'section'|'idea'}] — Ctrl+C/V within the map, not the app-wide line clipboard
@@ -402,7 +425,10 @@ export default function MapView({ scriptId, script }) {
   useEffect(() => {
     if (!ideaMenuOpen) return
     function onDocMouseDown(e) {
-      if (!e.target.closest('.map-idea-menu-wrap, .map-idea-menu')) setIdeaMenuOpen(false)
+      if (!e.target.closest('.map-idea-menu-wrap, .map-idea-menu')) {
+        menuFromRef.current = null
+        setIdeaMenuOpen(false)
+      }
     }
     document.addEventListener('mousedown', onDocMouseDown)
     return () => document.removeEventListener('mousedown', onDocMouseDown)
@@ -466,10 +492,74 @@ export default function MapView({ scriptId, script }) {
       // While the idea-node menu is open, a number picks an item directly
       // (1 = Blank, 2+ = presets in order) — a keybind-driven way to spawn
       // one specific preset, not just a blank node.
+      // Tab / Shift+Tab walks the chain: to the node this one points at (or the
+      // one pointing at it). Typing in a node carries on typing in the next;
+      // otherwise the next one is just selected, and Enter starts typing in it.
+      // Off the end of a chain, Tab opens the add-idea menu for a new node
+      // connected to this one.
+      if (e.key === 'Tab' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        if (ideaMenuOpen) {
+          e.preventDefault()
+          return
+        }
+        const inNode = active && active.closest ? active.closest('.map-node') : null
+        const isTextField = active && (active.tagName === 'TEXTAREA' || (active.tagName === 'INPUT' && active.type === 'text'))
+        let fromId = null
+        let typing = false
+        if (isTextField && inNode) {
+          fromId = inNode.dataset.sectionId
+          typing = true
+        } else if (!isEditingText && (!active || active === document.body || inNode)) {
+          fromId = inNode ? inNode.dataset.sectionId : validSelectedNodeIds[validSelectedNodeIds.length - 1]
+        }
+        if (fromId && script.mapLayout.nodes[fromId]) {
+          e.preventDefault()
+          if (e.repeat) return
+          const forward = !e.shiftKey
+          const target = chainNeighbour(fromId, forward)
+          if (target) {
+            if (typing) active.blur()
+            setSelectedNodeIds([target])
+            revealNode(target)
+            if (typing) focusNodeField(target)
+          } else if (forward) {
+            openMenuAfterNode(fromId, typing)
+          }
+          return
+        }
+      }
+      // Escape in a node's text leaves the field but keeps the node selected,
+      // so Enter takes you straight back in.
+      if (e.key === 'Escape' && !ideaMenuOpen && isEditingText && active.tagName === 'TEXTAREA') {
+        const inNode = active.closest('.map-node')
+        if (inNode) {
+          active.blur()
+          setSelectedNodeIds([inNode.dataset.sectionId])
+          return
+        }
+      }
+      if (
+        e.key === 'Enter' &&
+        !ideaMenuOpen &&
+        !isEditingText &&
+        (!active || active === document.body) &&
+        !e.ctrlKey &&
+        !e.metaKey &&
+        !e.altKey &&
+        validSelectedNodeIds.length === 1
+      ) {
+        if (focusNodeField(validSelectedNodeIds[0])) {
+          e.preventDefault()
+          return
+        }
+      }
       if (ideaMenuOpen && !isEditingText) {
         if (e.key === 'Escape') {
           e.preventDefault()
+          const from = menuFromRef.current
+          menuFromRef.current = null
           setIdeaMenuOpen(false)
+          if (from && from.typing) setTimeout(() => focusNodeField(from.nodeId), 0)
           return
         }
         // Arrow keys move the highlight (Blank + every preset), Enter picks it.
@@ -535,6 +625,7 @@ export default function MapView({ scriptId, script }) {
         e.preventDefault()
         if (e.repeat) return
         setPresetManagerOpen(false)
+        menuFromRef.current = null
         if (ideaMenuOpen) {
           setIdeaMenuOpen(false)
           return
@@ -800,7 +891,96 @@ export default function MapView({ scriptId, script }) {
   }
 
   function handleNodeContextMenu(e, sectionId) {
-    openContextMenu({ type: 'mapNode', scriptId, sectionId, selectedIds: validSelectedNodeIds, x: e.clientX, y: e.clientY })
+    // Right-clicked inside one of the node's text fields: capture the word
+    // now (the same moment script lines do) and look it up, so the menu can
+    // offer corrections for it.
+    const el = e.target
+    let spellKey = null
+    if (el && (el.tagName === 'TEXTAREA' || (el.tagName === 'INPUT' && el.type === 'text'))) {
+      const w = fieldWordAt(el)
+      if (w) {
+        spellKey = 'map:' + sectionId
+        saveFieldWord(el, w.start, w.end, w.word)
+        useStore.getState().runSpellCheck(spellKey, w.word)
+      }
+    }
+    openContextMenu({ type: 'mapNode', scriptId, sectionId, selectedIds: validSelectedNodeIds, spellKey, x: e.clientX, y: e.clientY })
+  }
+
+  // ---- keyboard walk along the chain (Tab / Shift+Tab, Enter) ----
+  // The first text box of a node (idea text, section summary).
+  function focusNodeField(id) {
+    const el = document.querySelector('.map-node[data-section-id="' + id + '"] textarea')
+    if (!el) return false
+    el.focus({ preventScroll: true })
+    el.setSelectionRange(el.value.length, el.value.length)
+    return true
+  }
+
+  // The node an edge leads on to (forward) or back from, or null at the end.
+  function chainNeighbour(fromId, forward) {
+    const cur = useStore.getState().scripts.find((sc) => sc.id === scriptId)
+    if (!cur) return null
+    const { nodes: ns, edges } = cur.mapLayout
+    const ids = edges
+      .filter((ed) => (forward ? ed.from : ed.to) === fromId)
+      .map((ed) => (forward ? ed.to : ed.from))
+      .filter((id) => id !== fromId && ns[id])
+    return ids[0] || null
+  }
+
+  // Pans just far enough to bring a node fully into view.
+  function revealNode(id) {
+    const rect = canvasRef.current && canvasRef.current.getBoundingClientRect()
+    const cur = useStore.getState().scripts.find((sc) => sc.id === scriptId)
+    const n = cur && cur.mapLayout.nodes[id]
+    if (!rect || !n) return
+    const { w, h } = nodeSize(n)
+    const z = zoomRef.current
+    const p = panRef.current
+    const m = 40
+    const left = p.x + n.x * z
+    const top = p.y + n.y * z
+    const right = left + w * z
+    const bottom = top + h * z
+    let nx = p.x
+    let ny = p.y
+    if (left < m) nx += m - left
+    else if (right > rect.width - m) nx -= right - (rect.width - m)
+    if (top < m) ny += m - top
+    else if (bottom > rect.height - m) ny -= bottom - (rect.height - m)
+    if (nx !== p.x || ny !== p.y) setPan({ x: nx, y: ny })
+  }
+
+  // Tab at the end of a chain: the same menu the add-idea keybind opens (arrows
+  // + Enter, or a number), beside the node, for a new node that grows out of it.
+  function openMenuAfterNode(fromId, typing) {
+    const cur = useStore.getState().scripts.find((sc) => sc.id === scriptId)
+    const n = cur && cur.mapLayout.nodes[fromId]
+    const rect = canvasRef.current && canvasRef.current.getBoundingClientRect()
+    if (!n || !rect) return
+    const { w, h } = nodeSize(n)
+    const dir = threadEndDirection(fromId, cur.mapLayout.nodes, cur.mapLayout.edges) || 'down'
+    const gapX = Math.max(280, w + 60)
+    const gapY = Math.max(190, h + 50)
+    const [dx, dy] = { up: [0, -gapY], down: [0, gapY], left: [-gapX, 0], right: [gapX, 0] }[dir]
+    const z = zoomRef.current
+    const p = panRef.current
+    // Beside the node, so it covers neither the node nor where the new one lands.
+    const onRight = dir !== 'right'
+    const at = {
+      x: rect.left + p.x + (onRight ? n.x + w + 12 : n.x) * z,
+      y: rect.top + p.y + (onRight ? n.y : n.y + h + 8) * z,
+      world: { x: n.x + dx + NODE_WIDTH / 2, y: n.y + dy + NODE_H / 2 }
+    }
+    if (typing) blurActiveEditableField()
+    menuFromRef.current = { nodeId: fromId, typing }
+    setPresetManagerOpen(false)
+    setSelectedNodeIds([fromId])
+    revealNode(fromId)
+    setIdeaMenuAt(at)
+    setIdeaMenuIndex(0)
+    setIdeaMenuOpen(true)
   }
 
   // Manual resize — every map node type now has edge handles (see
@@ -994,7 +1174,18 @@ export default function MapView({ scriptId, script }) {
     // preset below it, linked); the lot ends up selected together.
     const ids = preset ? addIdeaNodeChain(scriptId, x, y, preset.id) : [addIdeaNode(scriptId, x, y, {})]
     const made = ids.filter(Boolean)
-    if (made.length) setSelectedNodeIds(made)
+    // Opened with Tab off the end of a chain: the new node hangs off that one,
+    // and if the caret was in it, carries on in the new one.
+    const from = menuFromRef.current
+    menuFromRef.current = null
+    if (made.length && from) {
+      addMapEdge(scriptId, from.nodeId, made[0])
+      setSelectedNodeIds([made[0]])
+      revealNode(made[0])
+      if (from.typing) setTimeout(() => focusNodeField(made[0]), 0)
+    } else if (made.length) {
+      setSelectedNodeIds(made)
+    }
     setIdeaMenuOpen(false)
   }
 
@@ -1047,6 +1238,7 @@ export default function MapView({ scriptId, script }) {
           <button
             className={'icon-btn tb-icon tb-icon-menu' + (ideaMenuOpen ? ' active' : '')}
             onClick={() => {
+              menuFromRef.current = null
               setIdeaMenuAt(null)
               setIdeaMenuIndex(0)
               setIdeaMenuOpen((v) => !v)
@@ -1159,6 +1351,8 @@ export default function MapView({ scriptId, script }) {
           title={[
             'Drag on empty space to select',
             'Right-click for options',
+            'Tab / Shift+Tab: next / previous connected node — off the end, it adds one',
+            'Enter on a selected node: start typing in it (Esc to stop)',
             'Ctrl+C / Ctrl+V to duplicate',
             'Pull a connector dot onto another node to link them',
             'Click or pull a connected dot to disconnect it',

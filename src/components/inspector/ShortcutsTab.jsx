@@ -31,6 +31,12 @@ const BUILT_IN = [
     desc:
       'Every line and section has a grip handle on hover — click to select (shift-click or drag also work), drag to reorder, or drag a line onto the section checkpoints (or a checkpoint back into the section) to convert it.'
   },
+  {
+    keys: 'Tab',
+    label: 'Mind map: next node',
+    desc:
+      'Moves to the node this one is connected to (Shift+Tab: the one before). If you were typing, you carry on typing in it; if it was only selected, it is just highlighted and Enter starts typing. At the end of a chain it opens the add-idea menu for a new connected node.'
+  },
   { keys: 'Dbl-click', label: 'Open as a tab', desc: 'Double-click a section title, or use its new-tab button.' },
   { keys: 'Click', label: 'Resize a pasted image', desc: 'Each click cycles its size.' }
 ]

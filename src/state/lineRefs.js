@@ -235,6 +235,26 @@ export function consumeWordReplaceSelection(key) {
   return r
 }
 
+// The text field (a mind-map node's title/text/summary) a right-click
+// spelling fix applies to: the element plus where the misspelled word sits.
+// Module state for the same reason as the Range above.
+let savedFieldWord = null
+export function saveFieldWord(el, start, end, word) {
+  savedFieldWord = { el, start, end, word }
+}
+// One-shot. Types the correction over the word the way typing would, so the
+// field's own onChange/undo handling sees it like any other edit. Returns
+// false if the field is gone or its text moved on since the right-click.
+export function replaceFieldWord(newText) {
+  const f = savedFieldWord
+  savedFieldWord = null
+  if (!f || !f.el.isConnected || f.el.value.slice(f.start, f.end) !== f.word) return false
+  f.el.focus({ preventScroll: true })
+  f.el.setSelectionRange(f.start, f.end)
+  document.execCommand('insertText', false, newText)
+  return true
+}
+
 // Restores the saved range and swaps its text for `newText`, then commits
 // the line — the actual "replace" step for both synonym picks and
 // spellcheck corrections. Returns false (no-op) if there's nothing valid

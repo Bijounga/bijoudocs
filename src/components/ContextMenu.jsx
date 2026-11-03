@@ -1,7 +1,7 @@
 import React, { useLayoutEffect, useRef, useState } from 'react'
 import { useStore } from '../state/store.js'
 import { findLine, sectionsHaveContent } from '../lib/model.js'
-import { replaceCapturedSelection } from '../state/lineRefs.js'
+import { replaceCapturedSelection, replaceFieldWord } from '../state/lineRefs.js'
 import { NODE_WIDTH, NODE_H } from './editor/MapNode.jsx'
 import Icon from './icons.jsx'
 import { SHAPES } from './editor/ShapePicker.jsx'
@@ -90,6 +90,35 @@ export default function ContextMenu() {
     }
   }
 
+  // The spelling block at the top of a menu: the word was captured (and its
+  // lookup started, keyed to `key`) on the real right-click — only render it
+  // once that lookup's result is actually for this `key`, so a stale result
+  // from a previous right-click can never show here. `replace` types the
+  // chosen correction over the word.
+  function spellItemsFor(key, replace) {
+    if (spellCheckFor !== key) return []
+    if (spellCheckLoading) return [{ label: 'Checking spelling…', disabled: true, onClick: () => {} }, { separator: true }]
+    if (spellCheckError) return [{ label: spellCheckError, disabled: true, onClick: () => {} }, { separator: true }]
+    // A remembered word can still legitimately come back "misspelled" from
+    // LanguageTool (it has no idea what's in the user's own local
+    // dictionary) — checked separately, so this always wins over showing
+    // suggestions for a word the user already told us is fine.
+    if (spellCheckInDictionary) {
+      return [
+        { label: 'Remove "' + spellCheckWord + '" from dictionary', onClick: act(() => removeWordFromDictionary(spellCheckWord)) },
+        { separator: true }
+      ]
+    }
+    if (!spellCheckMisspelled) return []
+    return [
+      ...(spellCheckSuggestions.length
+        ? spellCheckSuggestions.map((s) => ({ label: s, suggestion: true, onClick: act(() => replace(s)) }))
+        : [{ label: 'No suggestions', disabled: true, onClick: () => {} }]),
+      { label: 'Add "' + spellCheckWord + '" to dictionary', onClick: act(() => addWordToDictionary(spellCheckWord)) },
+      { separator: true }
+    ]
+  }
+
   let items = []
   if (menu.type === 'script') {
     items = [
@@ -116,43 +145,11 @@ export default function ContextMenu() {
     // context-menu event, which never reliably delivered a misspelled
     // word/suggestions in real use — see src/lib/spellcheck.js. The word
     // (and its Range, for the later replace) was already captured back
-    // when this menu opened, in LineRow.jsx's onContextMenu handler, which
-    // also kicked off the lookup keyed to this same `key` — only render it
-    // once that lookup's result is actually for this line, so a stale
-    // result from a previous right-click can never show here.
-    const spellItems =
-      spellCheckFor === key
-        ? spellCheckLoading
-          ? [{ label: 'Checking spelling…', disabled: true, onClick: () => {} }, { separator: true }]
-          : spellCheckError
-            ? [{ label: spellCheckError, disabled: true, onClick: () => {} }, { separator: true }]
-            : spellCheckInDictionary
-              ? // A remembered word can still legitimately come back
-                // "misspelled" from LanguageTool (it has no idea what's in
-                // the user's own local dictionary) — checked separately,
-                // so this always wins over showing suggestions for a word
-                // the user already told us is fine.
-                [
-                  { label: 'Remove "' + spellCheckWord + '" from dictionary', onClick: act(() => removeWordFromDictionary(spellCheckWord)) },
-                  { separator: true }
-                ]
-              : spellCheckMisspelled
-                ? [
-                    ...(spellCheckSuggestions.length
-                      ? spellCheckSuggestions.map((s) => ({
-                          label: s,
-                          suggestion: true,
-                          onClick: act(() => {
-                            pushUndo(menu.scriptId)
-                            replaceCapturedSelection(key, s, commitLineText, menu.scriptId, menu.sectionId, menu.lineId)
-                          })
-                        }))
-                      : [{ label: 'No suggestions', disabled: true, onClick: () => {} }]),
-                    { label: 'Add "' + spellCheckWord + '" to dictionary', onClick: act(() => addWordToDictionary(spellCheckWord)) },
-                    { separator: true }
-                  ]
-                : []
-        : []
+    // when this menu opened, in LineRow.jsx's onContextMenu handler.
+    const spellItems = spellItemsFor(key, (s) => {
+      pushUndo(menu.scriptId)
+      replaceCapturedSelection(key, s, commitLineText, menu.scriptId, menu.sectionId, menu.lineId)
+    })
     items = [
       ...spellItems,
       { label: 'Tag…', onClick: act(() => openTagMenu(key)) },
@@ -213,7 +210,16 @@ export default function ContextMenu() {
     const isMain = script.mapLayout.mainThreadId === menu.sectionId
     const isFreeNode = freeIds.includes(menu.sectionId)
     const deleteLabel = ids.length > 1 ? 'Delete ' + ids.length + ' nodes' : isFreeNode ? 'Delete node' : 'Delete section'
+    // Right-clicked on a word inside the node's own text: same suggestions a
+    // script line gets (captured in MapView's handleNodeContextMenu).
+    const spellItems = menu.spellKey
+      ? spellItemsFor(menu.spellKey, (s) => {
+          pushUndo(menu.scriptId)
+          replaceFieldWord(s)
+        })
+      : []
     items = [
+      ...spellItems,
       ids.length === 1 && !isFreeNode
         ? { label: 'Open in new tab', onClick: act(() => openSectionTab(menu.scriptId, menu.sectionId)) }
         : null,
@@ -288,6 +294,9 @@ export default function ContextMenu() {
       className="context-menu"
       style={{ left: pos ? pos.x : menu.x, top: pos ? pos.y : menu.y, visibility: pos ? 'visible' : 'hidden' }}
       onContextMenu={(e) => e.preventDefault()}
+      // Keeps the text field a spelling fix is aimed at focused while a
+      // suggestion is clicked (a click on a plain div would blur it).
+      onMouseDown={(e) => e.preventDefault()}
     >
       {items.map((it, i) =>
         it.separator ? (

@@ -279,6 +279,11 @@ export const CHANGELOG = {
   ],
   '0.5.79': [
     'Footage tab: highlight part of a note and copy it (Ctrl+C / Cmd+C) — clicking a note still jumps to it, but dragging across the text just selects it'
+  ],
+  '0.5.80': [
+    'Mind map: Tab moves to the next connected node (Shift+Tab to the one before). If you were typing you carry on typing in it; if it was only selected, it is just highlighted and Enter starts typing (Esc stops)',
+    'Mind map: Tab at the end of a chain opens the add-idea menu beside the node — pick with arrows and Enter, a number, or the mouse — and the new node is connected to the one you were on',
+    'Mind map: right-click a misspelled word inside a node to get spelling suggestions, like on a script line'
   ]
 }
 
