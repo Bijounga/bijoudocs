@@ -191,7 +191,10 @@ export function useGlobalKeydown() {
         return
       }
 
-      if (st.selectedLines.length && combo === 'ctrl+c' && !editing) {
+      // Text highlighted in the Footage tab's notes copies as plain text, not as the selected lines.
+      const sel = window.getSelection()
+      const noteTextSelected = !!(sel && !sel.isCollapsed && sel.anchorNode && sel.anchorNode.parentElement && sel.anchorNode.parentElement.closest('.ft-list'))
+      if (st.selectedLines.length && combo === 'ctrl+c' && !editing && !noteTextSelected) {
         e.preventDefault()
         const n = st.copySelectionToClipboard(script.id)
         st.flashSaved('Copied ' + n + ' line' + (n === 1 ? '' : 's'))

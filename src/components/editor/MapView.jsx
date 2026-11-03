@@ -549,7 +549,9 @@ export default function MapView({ scriptId, script }) {
         setIdeaMenuOpen(true)
         return
       }
-      if (!isEditingText && combo === 'ctrl+c' && validSelectedNodeIds.length) {
+      const noteSel = window.getSelection()
+      const noteTextSelected = !!(noteSel && !noteSel.isCollapsed && noteSel.anchorNode && noteSel.anchorNode.parentElement && noteSel.anchorNode.parentElement.closest('.ft-list'))
+      if (!isEditingText && !noteTextSelected && combo === 'ctrl+c' && validSelectedNodeIds.length) {
         e.preventDefault()
         const nodes = script.mapLayout.nodes
         // Chapter nodes duplicate through the same generic path as idea

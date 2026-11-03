@@ -423,9 +423,23 @@ export default function FootageTab({ scriptId, script }) {
             const isStop = !!stop && stop.rowId === r.id
             return (
               <div key={r.id} className={'ft-row' + (isStop ? ' is-stop' : '')} data-row-id={r.id}>
-              <button
+              <div
                 className="ft-note"
-                onClick={() => open(r)}
+                role="button"
+                tabIndex={0}
+                onClick={(e) => {
+                  // Dragging across the text to copy it ends in a click — that's a
+                  // selection, not a request to jump to the note.
+                  const sel = window.getSelection()
+                  if (sel && !sel.isCollapsed && e.currentTarget.contains(sel.anchorNode)) return
+                  open(r)
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    open(r)
+                  }
+                }}
                 title={(r.from ? 'Synced from ' + r.from + ' — ' : 'Open in Bijou Footage at ') + clock(r.t) + (section ? ' in ' + section.name : '') + (r.source ? ' — from the ' + r.source + ' recording' : '')}
               >
                 <i className="ft-dot" style={{ background: sw.hex }} />
@@ -436,7 +450,7 @@ export default function FootageTab({ scriptId, script }) {
                   {r.n.text.trim() || (r.n.sketch ? 'Sketch' : 'No text')}
                 </span>
                 {r.n.star && <span className="ft-star">★</span>}
-              </button>
+              </div>
               <button
                 className="ft-flag"
                 onClick={() => toggleStop(r)}

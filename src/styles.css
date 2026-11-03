@@ -5927,6 +5927,7 @@ body.is-resizing-panel {
   color: var(--ink);
   font-size: 12.5px;
   line-height: 1.4;
+  cursor: pointer;
 }
 /* room on the right for the flag button */
 .ft-row .ft-note {
@@ -5955,6 +5956,9 @@ body.is-resizing-panel {
 .ft-text {
   flex: 1;
   min-width: 0;
+  user-select: text; /* highlight and copy part of a note */
+  -webkit-user-select: text;
+  cursor: text;
   overflow-wrap: anywhere;
   white-space: pre-wrap; /* the whole note, line breaks included — no "…" and no need to open Bijou Footage to read it */
 }

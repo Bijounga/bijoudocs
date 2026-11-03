@@ -276,6 +276,9 @@ export const CHANGELOG = {
     'Footage tab: notes show in full, no more “…” — readable on the Mac without opening Bijou Footage',
     'Mind map: dragged nodes snap centre-to-centre, so a node under another lines up in the middle',
     'Mind map: arrow keys move the selected nodes (Shift = bigger steps) when you are not typing'
+  ],
+  '0.5.79': [
+    'Footage tab: highlight part of a note and copy it (Ctrl+C / Cmd+C) — clicking a note still jumps to it, but dragging across the text just selects it'
   ]
 }
 
