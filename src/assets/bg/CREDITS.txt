@@ -31,3 +31,37 @@ tiki-log-cabin.webp — "Lake Agnes Cabin.JPG" by Paul5097 — CC BY-SA 3.0 — 
 
 tiki-totem-wall.png, ../tiki-band.png, ../tiki-band-v.png, ../tiki-bamboo-green.png — original artwork drawn for BijouDocs (SVG rendered with sharp; the green bamboo is the Tiki bamboo texture hue-shifted); no third-party source.
 tiki-totem-wall-night.png, tiki-plank-wall-dark.png — darkened (sharp brightness/hue) versions of tiki-totem-wall.png and tiki-plank-wall.png.
+
+
+ink-pines-left.webp — "Hasegawa Tohaku - Pine Trees (Shōrin-zu byōbu) - left hand screen.jpg" by Hasegawa Tōhaku (16th century; Tokyo National Museum) — Public domain — https://commons.wikimedia.org/wiki/File%3AHasegawa_Tohaku_-_Pine_Trees_(Sh%C5%8Drin-zu_by%C5%8Dbu)_-_left_hand_screen.jpg
+ink-pines-right.webp — "Hasegawa Tohaku - Pine Trees (Shōrin-zu byōbu) - right hand screen.jpg" by Hasegawa Tōhaku (16th century; Tokyo National Museum) — Public domain — https://commons.wikimedia.org/wiki/File%3AHasegawa_Tohaku_-_Pine_Trees_(Sh%C5%8Drin-zu_by%C5%8Dbu)_-_right_hand_screen.jpg
+ink-muromachi-landscape.webp — "Japan, Muromachi period - Landscape - 2015.483 - Cleveland Museum of Art.tif" by unknown artist, Muromachi period (Cleveland Museum of Art) — CC0 — https://commons.wikimedia.org/wiki/File%3AJapan%2C_Muromachi_period_-_Landscape_-_2015.483_-_Cleveland_Museum_of_Art.tif
+ink-literatus-autumn.webp — "Josui Sōen - Chinese Literatus in an Autumn Landscape - 2015.467 - Cleveland Museum of Art.tif" by Josui Sōen (Cleveland Museum of Art) — CC0 — https://commons.wikimedia.org/wiki/File%3AJosui_S%C5%8Den_-_Chinese_Literatus_in_an_Autumn_Landscape_-_2015.467_-_Cleveland_Museum_of_Art.tif
+cyan-ferns.webp — "Anna Atkins, Ferns. Specimen of Cyanotype, 1840s, NGA 136477.jpg" by Anna Atkins (National Gallery of Art) — CC0 — https://commons.wikimedia.org/wiki/File%3AAnna_Atkins%2C_Ferns._Specimen_of_Cyanotype%2C_1840s%2C_NGA_136477.jpg
+cyan-fern-wreath.webp — "Anna Atkins - Foreign Ferns - Google Art Project.jpg" by Anna Atkins — Public domain — https://commons.wikimedia.org/wiki/File%3AAnna_Atkins_-_Foreign_Ferns_-_Google_Art_Project.jpg
+cyan-sea-fan.webp — "Met DP-17302-028.jpg" by Anna Atkins, Photographs of British Algae (The Metropolitan Museum of Art) — CC0 — https://commons.wikimedia.org/wiki/File%3AMet_DP-17302-028.jpg
+cyan-seaweed.webp — "Met DP-17302-037.jpg" by Anna Atkins, Photographs of British Algae (The Metropolitan Museum of Art) — CC0 — https://commons.wikimedia.org/wiki/File%3AMet_DP-17302-037.jpg
+cyan-dictyota.webp — "Met DP-17302-021.jpg" by Anna Atkins, Photographs of British Algae (The Metropolitan Museum of Art) — CC0 — https://commons.wikimedia.org/wiki/File%3AMet_DP-17302-021.jpg
+card-drawer-wall.webp — "Firestone Library Princeton card cat.jpg" by Andreas Praefcke — CC BY 3.0 — https://commons.wikimedia.org/wiki/File%3AFirestone_Library_Princeton_card_cat.jpg
+card-oak-drawers.webp — "Wooden Card Catalog Furniture.jpg" by MarkBuckawicki — CC0 — https://commons.wikimedia.org/wiki/File%3AWooden_Card_Catalog_Furniture.jpg
+card-rylands.webp — "Card catalog John Rylands Library 01.jpg" by Alicia Fagerving — CC BY-SA 3.0 — https://commons.wikimedia.org/wiki/File%3ACard_catalog_John_Rylands_Library_01.jpg
+card-brass-pulls.webp — "2010 4559410051 card catalog.jpg" by Razvan Orendovici — CC BY 2.0 — https://commons.wikimedia.org/wiki/File%3A2010_4559410051_card_catalog.jpg
+card-marbled-blue.webp — "PaperMarbling001England1830.jpg" by unknown marbler, England c. 1830; scanned by Aristeas — Public domain — https://commons.wikimedia.org/wiki/File%3APaperMarbling001England1830.jpg
+card-marbled-peacock.webp — "Marbled endpaper from Die Nachfolge Christi ed. Ludwig Donin (Vienna ca. 1875) 1000ppi.png" by unknown marbler, Vienna c. 1875 — Public domain — https://commons.wikimedia.org/wiki/File%3AMarbled_endpaper_from_Die_Nachfolge_Christi_ed._Ludwig_Donin_(Vienna_ca._1875)_1000ppi.png
+
+riso-coral-teal.webp, riso-yellow-blue.webp, riso-pink-green.webp, riso-orange-violet.webp, ../paper-fibre.png, ../ink-stroke.png — original artwork drawn for BijouDocs (SVG rendered with sharp); no third-party source.
+
+wiz-long-room.webp — "Long Room Interior, Trinity College Dublin, Ireland - Diliff.jpg" by Diliff — CC BY-SA 4.0 — https://commons.wikimedia.org/wiki/File%3ALong_Room_Interior%2C_Trinity_College_Dublin%2C_Ireland_-_Diliff.jpg
+wiz-great-hall.webp — "Christ Church Great Hall.jpg" by Tristan Surtel — CC BY-SA 4.0 — https://commons.wikimedia.org/wiki/File%3AChrist_Church_Great_Hall.jpg
+wiz-cloisters.webp — "Gloucester Cathedral Cloisters 1.jpg" by Michael D Beckwith — CC0 — https://commons.wikimedia.org/wiki/File%3AGloucester_Cathedral_Cloisters_1.jpg
+wiz-steam-train.webp — "Jacobite on Glenfinnan Viaduct 4 20211024.jpg" by Daniel Kraft — CC BY-SA 3.0 — https://commons.wikimedia.org/wiki/File%3AJacobite_on_Glenfinnan_Viaduct_4_20211024.jpg
+wiz-forest-lane.webp — "Dülmen, Umland, Sonnenaufgang -- 2012 -- 8069.jpg" by Dietmar Rabich — CC BY-SA 4.0 — https://commons.wikimedia.org/wiki/File%3AD%C3%BClmen%2C_Umland%2C_Sonnenaufgang_--_2012_--_8069.jpg
+wiz-autumn-wood.webp (darkened) — "Ekebyhov October 2015 02.jpg" by Arild Vågen — CC BY-SA 4.0 — https://commons.wikimedia.org/wiki/File%3AEkebyhov_October_2015_02.jpg
+wiz-pine-path.webp (darkened) — "Root-covered path through green forest (Unsplash).jpg" by Ales Krivec — CC0 — https://commons.wikimedia.org/wiki/File%3ARoot-covered_path_through_green_forest_(Unsplash).jpg
+ronin-great-wave.webp — "Great Wave off Kanagawa2.jpg" by after Katsushika Hokusai — Public domain — https://commons.wikimedia.org/wiki/File%3AGreat_Wave_off_Kanagawa2.jpg
+ronin-red-fuji.webp — "Katsushika Hokusai - Fine Wind, Clear Morning (Gaifū kaisei) - Google Art Project.jpg" by Katsushika Hokusai — Public domain — https://commons.wikimedia.org/wiki/File%3AKatsushika_Hokusai_-_Fine_Wind%2C_Clear_Morning_(Gaif%C5%AB_kaisei)_-_Google_Art_Project.jpg
+ronin-sudden-shower.webp — "Hiroshige, Sudden shower over Shin-Ōhashi bridge and Atake, 1857.jpg" by Utagawa Hiroshige — Public domain — https://commons.wikimedia.org/wiki/File%3AHiroshige%2C_Sudden_shower_over_Shin-%C5%8Chashi_bridge_and_Atake%2C_1857.jpg
+ronin-dragon-king.webp — "Ryugu Tamatori Hime no su-Recovering the Stolen Jewel from the Palace of the Dragon King MET DP146820.jpg" by Utagawa Kuniyoshi (The Metropolitan Museum of Art) — CC0 — https://commons.wikimedia.org/wiki/File%3ARyugu_Tamatori_Hime_no_su-Recovering_the_Stolen_Jewel_from_the_Palace_of_the_Dragon_King_MET_DP146820.jpg
+ronin-two-dragons.webp (greyscale) — "Kanō Hōgai, Japanese - Two Dragons in Clouds - Google Art Project.jpg" by Kanō Hōgai — Public domain — https://commons.wikimedia.org/wiki/File%3AKan%C5%8D_H%C5%8Dgai%2C_Japanese_-_Two_Dragons_in_Clouds_-_Google_Art_Project.jpg
+ronin-splashed-ink.webp (greyscale) — "Sesshu - Haboku-Sansui.jpg" by Sesshū Tōyō — Public domain — https://commons.wikimedia.org/wiki/File%3ASesshu_-_Haboku-Sansui.jpg
+ronin-pines.webp (greyscale) — "Hasegawa Tohaku - Pine Trees (Shōrin-zu byōbu) - left hand screen.jpg" by Hasegawa Tōhaku — Public domain — https://commons.wikimedia.org/wiki/File%3AHasegawa_Tohaku_-_Pine_Trees_(Sh%C5%8Drin-zu_by%C5%8Dbu)_-_left_hand_screen.jpg

@@ -284,6 +284,9 @@ export const CHANGELOG = {
     'Mind map: Tab moves to the next connected node (Shift+Tab to the one before). If you were typing you carry on typing in it; if it was only selected, it is just highlighted and Enter starts typing (Esc stops)',
     'Mind map: Tab at the end of a chain opens the add-idea menu beside the node — pick with arrows and Enter, a number, or the mouse — and the new node is connected to the one you were on',
     'Mind map: right-click a misspelled word inside a node to get spelling suggestions, like on a script line'
+  ],
+  '0.5.81': [
+    'Six new themes in the Theme tab, each with several backgrounds to pick from: Ink Wash (misty pine screens, paper, vermilion stamps), Cyanotype (white ferns on Prussian blue), Card Catalog (library drawers, typewriter text), Riso Zine (two-colour print), Spellbound (a candlelit school of magic, plus forest backgrounds) and Ronin (black ink, brush lettering, woodblock prints)'
   ]
 }
 

@@ -2911,6 +2911,1951 @@ body {
   --cyan: #f7a541;
 }
 
+/* ---------- Ink Wash ----------
+   A painter's desk: Hasegawa Tōhaku's pine trees in mist behind everything,
+   warm washi paper for the panels and the page, warm-black sumi ink for text,
+   and one accent — vermilion seal red. Headings are set in a mincho with ink
+   bleed, each section opens over a dry-brush stroke, and whatever is "on"
+   (the open tab, a pressed button) is stamped like a seal. */
+@font-face {
+  font-family: 'Shippori Mincho B1';
+  src: url('./assets/fonts/shippori-mincho-b1-latin-700-normal.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Literata';
+  src: url('./assets/fonts/literata-latin-wght-normal.woff2') format('woff2');
+  font-weight: 200 900;
+  font-display: swap;
+}
+:root[data-theme='inkWash'] {
+  --bg: #ece5d3;
+  --panel: #f3eddd;
+  --panel-2: #f8f3e6;
+  --panel-3: #e6dec9;
+  --ink: #1d1b18;
+  --ink-dim: #4f4a41;
+  --ink-faint: #6b6457;
+  --line: #cfc5ad;
+  --line-soft: #e0d8c3;
+  --cyan: #b3261e;
+  --amber: #8a5a12;
+  --pink: #a03a5e;
+  --danger: #8f1d16;
+  --green: #3f6b3a;
+  --editor-page: #fcfaf3;
+  --ink-sumi: #1d1b18;
+  --ink-paper: #f3eddd;
+  --ink-seal: #b3261e;
+  --ink-seal-ink: #fff5e6;
+  --ink-serif: 'Shippori Mincho B1', 'Yu Mincho', 'Hiragino Mincho ProN', Georgia, serif;
+}
+[data-theme='inkWash'] .app-root {
+  background-color: #e9e1cd;
+  background-image: var(--theme-wallpaper, url('./assets/bg/ink-pines-left.webp'));
+  background-size: var(--theme-wallpaper-size, cover);
+  background-position: var(--theme-wallpaper-pos, center);
+  background-repeat: var(--theme-wallpaper-repeat, no-repeat);
+}
+[data-theme='inkWash'] .main {
+  background: transparent !important;
+}
+/* The page: a sheet of washi lying on the painting. Always near-white. */
+[data-theme='inkWash'] .editor-wrap,
+[data-theme='inkWash'] .outline-list {
+  background: url('./assets/paper-fibre.png') 0 0 / 480px 480px, var(--editor-page) !important;
+  border-radius: 2px !important;
+  box-shadow: 0 0 0 1px rgba(29, 27, 24, 0.08), 0 22px 44px -22px rgba(40, 30, 10, 0.45) !important;
+}
+/* The script itself is set like a book. */
+[data-theme='inkWash'] .line-text {
+  font-family: 'Literata', Georgia, serif;
+  font-size: 15.5px;
+}
+[data-theme='inkWash'] .line-text:focus {
+  background: rgba(29, 27, 24, 0.045);
+}
+[data-theme='inkWash'] .line-text,
+[data-theme='inkWash'] input,
+[data-theme='inkWash'] textarea,
+[data-theme='inkWash'] [contenteditable] {
+  caret-color: var(--ink-seal);
+}
+/* Paper chrome: the bars and side panels are the same washi, ruled in ink. */
+[data-theme='inkWash'] .topbar,
+[data-theme='inkWash'] .tabbar,
+[data-theme='inkWash'] .sidebar,
+[data-theme='inkWash'] .inspector {
+  background: url('./assets/paper-fibre.png') 0 0 / 480px 480px, var(--panel) !important;
+}
+[data-theme='inkWash'] .topbar {
+  border-bottom: 1px solid rgba(29, 27, 24, 0.22) !important;
+}
+[data-theme='inkWash'] .tabbar {
+  border-bottom: 1px solid rgba(29, 27, 24, 0.16) !important;
+}
+[data-theme='inkWash'] .sidebar {
+  border-right: 1px solid rgba(29, 27, 24, 0.2) !important;
+}
+[data-theme='inkWash'] .inspector {
+  border-left: 1px solid rgba(29, 27, 24, 0.2) !important;
+}
+[data-theme='inkWash'] .margin-stack {
+  background: url('./assets/paper-fibre.png') 0 0 / 480px 480px, rgba(248, 243, 230, 0.94) !important;
+  border: 1px solid rgba(29, 27, 24, 0.14) !important;
+  border-radius: 2px;
+  box-shadow: 0 14px 28px -18px rgba(40, 30, 10, 0.5);
+}
+[data-theme='inkWash'] .context-menu,
+[data-theme='inkWash'] .export-menu,
+[data-theme='inkWash'] .section-jump-menu,
+[data-theme='inkWash'] .line-search-menu,
+[data-theme='inkWash'] .tag-menu,
+[data-theme='inkWash'] .synonym-menu,
+[data-theme='inkWash'] .map-idea-menu,
+[data-theme='inkWash'] .shape-picker-menu,
+[data-theme='inkWash'] .diff-modal {
+  background: var(--editor-page) !important;
+  border: 1px solid rgba(29, 27, 24, 0.55) !important;
+  border-radius: 3px !important;
+  box-shadow: 0 18px 36px -14px rgba(40, 30, 10, 0.5) !important;
+}
+/* Headings in mincho; the script title is the largest thing on the page. */
+[data-theme='inkWash'] .title-input,
+[data-theme='inkWash'] .section-heading-input,
+[data-theme='inkWash'] .map-node-heading,
+[data-theme='inkWash'] .map-node-heading-input,
+[data-theme='inkWash'] .chapter-node-label,
+[data-theme='inkWash'] .idea-node-title,
+[data-theme='inkWash'] .titlebar-title {
+  font-family: var(--ink-serif) !important;
+  font-weight: 700 !important;
+}
+[data-theme='inkWash'] .topbar .title-input {
+  font-size: 20px !important;
+  letter-spacing: 0.01em;
+}
+/* Each section opens over a single dry-brush stroke. */
+[data-theme='inkWash'] .section-head {
+  background: url('./assets/ink-stroke.png') 0 100% / 100% 9px no-repeat;
+  padding-bottom: 15px;
+  margin-bottom: 6px;
+}
+[data-theme='inkWash'] .section-head .section-heading-input {
+  font-size: 21px !important;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+/* Buttons are bare ink marks: a wash on hover, a full dab of ink when on. */
+[data-theme='inkWash'] .icon-btn {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: 46% 54% 52% 48% / 55% 48% 52% 45% !important;
+  color: var(--ink-dim) !important;
+  transition: background 0.35s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s;
+}
+[data-theme='inkWash'] .icon-btn:hover:not(:disabled) {
+  background: rgba(29, 27, 24, 0.1) !important;
+  color: var(--ink) !important;
+}
+[data-theme='inkWash'] .icon-btn.active {
+  background: var(--ink-sumi) !important;
+  color: var(--ink-paper) !important;
+}
+[data-theme='inkWash'] .icon-btn:disabled {
+  opacity: 0.35;
+}
+/* Tabs are slips of paper; the open one is stamped in vermilion. */
+[data-theme='inkWash'] .tab-chip {
+  background: transparent !important;
+  border: 1px solid rgba(29, 27, 24, 0.28) !important;
+  border-radius: 2px !important;
+  color: var(--ink-dim) !important;
+  transition: background 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+[data-theme='inkWash'] .tab-chip:hover {
+  background: rgba(29, 27, 24, 0.08) !important;
+}
+[data-theme='inkWash'] .tab-chip.active {
+  background: var(--ink-seal) !important;
+  border-color: var(--ink-seal) !important;
+  color: var(--ink-seal-ink) !important;
+  box-shadow: inset 0 0 0 1.5px rgba(255, 245, 230, 0.6);
+  animation: ink-stamp 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+}
+[data-theme='inkWash'] .tab-chip.active * {
+  color: var(--ink-seal-ink) !important;
+}
+@keyframes ink-stamp {
+  from {
+    transform: scale(1.16) rotate(-2.5deg);
+    opacity: 0.35;
+  }
+}
+[data-theme='inkWash'] .new-script-btn {
+  background: transparent !important;
+  border: 1px solid rgba(29, 27, 24, 0.6) !important;
+  border-radius: 2px !important;
+  color: var(--ink) !important;
+  transition: background 0.3s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s;
+}
+[data-theme='inkWash'] .new-script-btn:hover {
+  background: var(--ink-sumi) !important;
+  color: var(--ink-paper) !important;
+}
+[data-theme='inkWash'] .checklist-add button {
+  background: var(--ink-seal) !important;
+  color: var(--ink-seal-ink) !important;
+  border: 0 !important;
+  border-radius: 2px !important;
+  box-shadow: inset 0 0 0 1.5px rgba(255, 245, 230, 0.55);
+}
+/* Scripts in the library are lines in a ledger; the open one is a lifted sheet. */
+[data-theme='inkWash'] .script-item {
+  background: transparent !important;
+  border: 0 !important;
+  border-bottom: 1px solid rgba(29, 27, 24, 0.12) !important;
+  border-radius: 0 !important;
+  transition: background 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+[data-theme='inkWash'] .script-item:hover {
+  background: rgba(29, 27, 24, 0.055) !important;
+}
+[data-theme='inkWash'] .script-item.active,
+[data-theme='inkWash'] .theme-row.active {
+  background: var(--editor-page) !important;
+  border-radius: 2px !important;
+  border-bottom-color: transparent !important;
+  box-shadow: 0 0 0 1px rgba(29, 27, 24, 0.1), 0 12px 22px -16px rgba(40, 30, 10, 0.55);
+}
+/* Fields are a ruled line to write on. */
+[data-theme='inkWash'] .search-wrap input,
+[data-theme='inkWash'] .sj-search,
+[data-theme='inkWash'] .ls-search,
+[data-theme='inkWash'] .outline-search {
+  background: transparent !important;
+  border: 0 !important;
+  border-bottom: 1px solid rgba(29, 27, 24, 0.45) !important;
+  border-radius: 0 !important;
+}
+[data-theme='inkWash'] .tag-pill,
+[data-theme='inkWash'] .section-chip {
+  border-radius: 2px;
+}
+/* The map lies on the painting under a veil of paper, so ink lines stay readable. */
+[data-theme='inkWash'] .map-canvas {
+  background-color: #e9e1cd !important;
+  background-image: linear-gradient(rgba(240, 233, 216, 0.5), rgba(240, 233, 216, 0.5)), var(--theme-wallpaper, url('./assets/bg/ink-pines-left.webp')) !important;
+  background-size: auto, var(--theme-wallpaper-size, cover) !important;
+  background-position: 0 0, var(--theme-wallpaper-pos, center) !important;
+  background-repeat: no-repeat, var(--theme-wallpaper-repeat, no-repeat) !important;
+}
+[data-theme='inkWash'] .map-node {
+  background: url('./assets/paper-fibre.png') 0 0 / 480px 480px, var(--editor-page) !important;
+  border: 1px solid rgba(29, 27, 24, 0.5) !important;
+  border-radius: 2px !important;
+  box-shadow: 0 14px 26px -16px rgba(40, 30, 10, 0.6) !important;
+}
+[data-theme='inkWash'] .map-node.is-selected {
+  box-shadow: 0 0 0 2px var(--ink-seal), 0 14px 26px -16px rgba(40, 30, 10, 0.6) !important;
+}
+[data-theme='inkWash'] .map-node-connector {
+  background: var(--ink-seal) !important;
+  border: 1px solid var(--ink-seal-ink) !important;
+}
+[data-theme='inkWash'] .map-edges-svg {
+  --ink-faint: #2c2925;
+  --cyan: #b3261e;
+}
+[data-theme='inkWash'] .map-edge {
+  stroke: #2c2925;
+}
+[data-theme='inkWash'] .map-edge.is-lit {
+  stroke: var(--ink-seal);
+}
+[data-theme='inkWash'] ::selection {
+  background: rgba(179, 38, 30, 0.2);
+  color: #1d1b18;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-theme='inkWash'] .tab-chip.active {
+    animation: none;
+  }
+}
+/* The title bar is the ink stick: the one dark thing on the desk. */
+:root[data-theme='inkWash'] {
+  --titlebar-bg: #1d1b18;
+  --titlebar-border: #0f0e0c;
+  --titlebar-text: #efe8d6;
+  --titlebar-weight: 700;
+  --caption-border: transparent;
+  --caption-bg: transparent;
+  --caption-bg-hover: rgba(239, 232, 214, 0.16);
+  --caption-bg-active: rgba(239, 232, 214, 0.26);
+  --caption-shadow: none;
+  --caption-icon: #efe8d6;
+  --caption-close-border: transparent;
+  --caption-close-bg: transparent;
+  --caption-close-bg-hover: #b3261e;
+  --caption-close-bg-active: #8f1d16;
+  --tip-bg: #1d1b18;
+  --tip-ink: #f3eddd;
+  --tip-border: #1d1b18;
+  --tip-radius: 2px;
+  --tip-shadow: 0 10px 22px -10px rgba(20, 14, 4, 0.6);
+  --tip-key-bg: #b3261e;
+  --tip-key-ink: #fff5e6;
+  --tip-key-border: #b3261e;
+}
+:root[data-theme='inkWash'] .teleprompter-body {
+  --cyan: #f0705f;
+}
+
+/* ---------- Cyanotype ----------
+   Anna Atkins's sun-prints: white ferns on deep Prussian blue. The chrome is
+   the print itself — blue, with pale lettering — and everything you read or
+   write on is a cream paper label laid over it, like the captions she pasted
+   onto her plates. Headings in Fell type, the script in a book face. */
+@font-face {
+  font-family: 'IM Fell English';
+  src: url('./assets/fonts/im-fell-english-latin-400-normal.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IM Fell English';
+  src: url('./assets/fonts/im-fell-english-latin-400-italic.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Newsreader';
+  src: url('./assets/fonts/newsreader-latin-wght-normal.woff2') format('woff2');
+  font-weight: 200 800;
+  font-display: swap;
+}
+:root[data-theme='cyanotype'] {
+  --bg: #0f2236;
+  --panel: #14304b;
+  --panel-2: #1a3a59;
+  --panel-3: #224667;
+  --ink: #e6eef5;
+  --ink-dim: #b9cbdb;
+  --ink-faint: #8fa8bf;
+  --line: #2f5478;
+  --line-soft: #234463;
+  --cyan: #a8d8f0;
+  --amber: #ecc67e;
+  --pink: #f2a8bc;
+  --danger: #ff9486;
+  --green: #9fd9ac;
+  --editor-page: #f6f1e3;
+  --cy-navy: #14263d;
+  --cy-paper: #f6f1e3;
+  --cy-fell: 'IM Fell English', 'Iowan Old Style', Georgia, serif;
+}
+/* Paper surfaces re-point the tokens, so everything on them turns to navy ink. */
+[data-theme='cyanotype'] .editor-wrap,
+[data-theme='cyanotype'] .outline-list,
+[data-theme='cyanotype'] .map-node,
+[data-theme='cyanotype'] .script-item.active,
+[data-theme='cyanotype'] .theme-row.active,
+[data-theme='cyanotype'] .tab-chip.active,
+[data-theme='cyanotype'] .context-menu,
+[data-theme='cyanotype'] .export-menu,
+[data-theme='cyanotype'] .section-jump-menu,
+[data-theme='cyanotype'] .line-search-menu,
+[data-theme='cyanotype'] .tag-menu,
+[data-theme='cyanotype'] .synonym-menu,
+[data-theme='cyanotype'] .map-idea-menu,
+[data-theme='cyanotype'] .shape-picker-menu,
+[data-theme='cyanotype'] .diff-modal {
+  --panel: #efe9d8;
+  --panel-2: #e9e2cd;
+  --panel-3: #dfd6bd;
+  --ink: #14263d;
+  --ink-dim: #3d5470;
+  --ink-faint: #586e88;
+  --line: #c6bca2;
+  --line-soft: #dcd4bd;
+  --cyan: #17507f;
+  --amber: #8a5a12;
+  --pink: #a8325a;
+  --danger: #a8281e;
+  --green: #2f6b3a;
+  color: var(--ink);
+}
+[data-theme='cyanotype'] .app-root {
+  background-color: #17385a;
+  background-image: var(--theme-wallpaper, url('./assets/bg/cyan-ferns.webp'));
+  background-size: var(--theme-wallpaper-size, cover);
+  background-position: var(--theme-wallpaper-pos, center);
+  background-repeat: var(--theme-wallpaper-repeat, no-repeat);
+}
+[data-theme='cyanotype'] .main {
+  background: transparent !important;
+}
+/* The page is a mounted plate: paper, a keyline, then the mount. */
+[data-theme='cyanotype'] .editor-wrap,
+[data-theme='cyanotype'] .outline-list {
+  background: url('./assets/paper-fibre.png') 0 0 / 480px 480px, var(--editor-page) !important;
+  border-radius: 1px !important;
+  box-shadow: 0 0 0 1px #cfc5aa, 0 0 0 7px var(--cy-paper), 0 0 0 8px rgba(10, 24, 40, 0.55), 0 26px 50px -18px rgba(4, 12, 22, 0.75) !important;
+}
+[data-theme='cyanotype'] .line-text {
+  font-family: 'Newsreader', Georgia, serif;
+  font-size: 16.5px;
+  line-height: 1.55;
+}
+[data-theme='cyanotype'] .line-text:focus {
+  background: rgba(23, 80, 127, 0.07);
+}
+/* The chrome: blue, dense enough to read on, thin enough to see the print through. */
+[data-theme='cyanotype'] .topbar,
+[data-theme='cyanotype'] .tabbar {
+  background: rgba(15, 34, 54, 0.94) !important;
+  border-bottom: 1px solid rgba(168, 216, 240, 0.2) !important;
+}
+[data-theme='cyanotype'] .sidebar,
+[data-theme='cyanotype'] .inspector {
+  background: rgba(17, 40, 63, 0.93) !important;
+}
+[data-theme='cyanotype'] .sidebar {
+  border-right: 1px solid rgba(168, 216, 240, 0.2) !important;
+}
+[data-theme='cyanotype'] .inspector {
+  border-left: 1px solid rgba(168, 216, 240, 0.2) !important;
+}
+[data-theme='cyanotype'] .margin-stack {
+  background: rgba(17, 40, 63, 0.92) !important;
+  border: 1px solid rgba(168, 216, 240, 0.24) !important;
+  border-radius: 2px;
+  box-shadow: 0 16px 30px -16px rgba(4, 12, 22, 0.8);
+}
+[data-theme='cyanotype'] .context-menu,
+[data-theme='cyanotype'] .export-menu,
+[data-theme='cyanotype'] .section-jump-menu,
+[data-theme='cyanotype'] .line-search-menu,
+[data-theme='cyanotype'] .tag-menu,
+[data-theme='cyanotype'] .synonym-menu,
+[data-theme='cyanotype'] .map-idea-menu,
+[data-theme='cyanotype'] .shape-picker-menu,
+[data-theme='cyanotype'] .diff-modal {
+  background: var(--cy-paper) !important;
+  border: 1px solid #bfb497 !important;
+  border-radius: 2px !important;
+  box-shadow: 0 0 0 1px rgba(10, 24, 40, 0.5), 0 20px 40px -14px rgba(4, 12, 22, 0.8) !important;
+}
+/* Headings in Fell type: the title upright, the section names in italic. */
+[data-theme='cyanotype'] .title-input,
+[data-theme='cyanotype'] .section-heading-input,
+[data-theme='cyanotype'] .map-node-heading,
+[data-theme='cyanotype'] .map-node-heading-input,
+[data-theme='cyanotype'] .chapter-node-label,
+[data-theme='cyanotype'] .idea-node-title,
+[data-theme='cyanotype'] .titlebar-title {
+  font-family: var(--cy-fell) !important;
+  font-weight: 400 !important;
+}
+[data-theme='cyanotype'] .topbar .title-input {
+  font-size: 22px !important;
+  letter-spacing: 0.01em;
+}
+[data-theme='cyanotype'] .section-head {
+  border-bottom: 3px double rgba(20, 38, 61, 0.4);
+  padding-bottom: 9px;
+  margin-bottom: 8px;
+}
+[data-theme='cyanotype'] .section-head .section-heading-input {
+  font-size: 23px !important;
+  font-style: italic;
+  letter-spacing: 0;
+  text-transform: none;
+}
+/* Buttons: pale line-work on the blue; what is on becomes a paper label. */
+[data-theme='cyanotype'] .icon-btn {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: 2px !important;
+  transition: background 0.4s cubic-bezier(0.16, 1, 0.3, 1), color 0.25s, border-color 0.25s;
+}
+[data-theme='cyanotype'] .icon-btn:hover:not(:disabled) {
+  background: rgba(168, 216, 240, 0.14) !important;
+  border-color: rgba(168, 216, 240, 0.3) !important;
+}
+[data-theme='cyanotype'] .icon-btn.active {
+  background: var(--cy-paper) !important;
+  color: var(--cy-navy) !important;
+}
+[data-theme='cyanotype'] .editor-wrap .icon-btn:hover:not(:disabled),
+[data-theme='cyanotype'] .outline-list .icon-btn:hover:not(:disabled) {
+  background: rgba(20, 38, 61, 0.08) !important;
+  border-color: rgba(20, 38, 61, 0.2) !important;
+}
+[data-theme='cyanotype'] .tab-chip {
+  background: transparent !important;
+  border: 1px solid rgba(168, 216, 240, 0.34) !important;
+  border-radius: 2px !important;
+  transition: background 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+[data-theme='cyanotype'] .tab-chip:hover {
+  background: rgba(168, 216, 240, 0.12) !important;
+}
+[data-theme='cyanotype'] .tab-chip.active {
+  background: var(--cy-paper) !important;
+  border-color: var(--cy-paper) !important;
+  color: var(--cy-navy) !important;
+  box-shadow: 0 6px 14px -8px rgba(4, 12, 22, 0.9);
+}
+[data-theme='cyanotype'] .new-script-btn {
+  background: transparent !important;
+  border: 1px solid rgba(168, 216, 240, 0.5) !important;
+  border-radius: 2px !important;
+  color: var(--ink) !important;
+  transition: background 0.4s cubic-bezier(0.16, 1, 0.3, 1), color 0.25s;
+}
+[data-theme='cyanotype'] .new-script-btn:hover {
+  background: var(--cy-paper) !important;
+  color: var(--cy-navy) !important;
+}
+[data-theme='cyanotype'] .checklist-add button {
+  background: var(--cy-paper) !important;
+  color: var(--cy-navy) !important;
+  border: 0 !important;
+  border-radius: 2px !important;
+}
+[data-theme='cyanotype'] .script-item {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: 2px !important;
+  transition: background 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+[data-theme='cyanotype'] .script-item:hover {
+  background: rgba(168, 216, 240, 0.1) !important;
+}
+[data-theme='cyanotype'] .script-item.active,
+[data-theme='cyanotype'] .theme-row.active {
+  background: var(--cy-paper) !important;
+  border-color: #cfc5aa !important;
+  box-shadow: 0 10px 20px -12px rgba(4, 12, 22, 0.9);
+}
+[data-theme='cyanotype'] .search-wrap input,
+[data-theme='cyanotype'] .sj-search,
+[data-theme='cyanotype'] .ls-search,
+[data-theme='cyanotype'] .outline-search {
+  background: rgba(6, 18, 31, 0.5) !important;
+  border: 1px solid rgba(168, 216, 240, 0.26) !important;
+  border-radius: 2px !important;
+}
+[data-theme='cyanotype'] .section-jump-menu .sj-search,
+[data-theme='cyanotype'] .line-search-menu .ls-search,
+[data-theme='cyanotype'] .outline-list .outline-search {
+  background: #fffdf6 !important;
+  border-color: #c6bca2 !important;
+}
+[data-theme='cyanotype'] .tag-pill,
+[data-theme='cyanotype'] .section-chip {
+  border-radius: 2px;
+}
+[data-theme='cyanotype'] .map-canvas {
+  background-color: #17385a !important;
+  background-image: linear-gradient(rgba(11, 26, 43, 0.5), rgba(11, 26, 43, 0.5)), var(--theme-wallpaper, url('./assets/bg/cyan-ferns.webp')) !important;
+  background-size: auto, var(--theme-wallpaper-size, cover) !important;
+  background-position: 0 0, var(--theme-wallpaper-pos, center) !important;
+  background-repeat: no-repeat, var(--theme-wallpaper-repeat, no-repeat) !important;
+}
+[data-theme='cyanotype'] .map-node {
+  background: var(--cy-paper) !important;
+  border: 1px solid #cfc5aa !important;
+  border-radius: 1px !important;
+  box-shadow: 0 0 0 1px rgba(10, 24, 40, 0.5), 0 16px 28px -14px rgba(4, 12, 22, 0.85) !important;
+}
+[data-theme='cyanotype'] .map-node.is-selected {
+  box-shadow: 0 0 0 2px #ecc67e, 0 16px 28px -14px rgba(4, 12, 22, 0.85) !important;
+}
+[data-theme='cyanotype'] .map-node-connector {
+  background: #ecc67e !important;
+  border: 1px solid var(--cy-navy) !important;
+}
+[data-theme='cyanotype'] .map-edges-svg {
+  --ink-faint: #dfeaf2;
+  --cyan: #ecc67e;
+}
+[data-theme='cyanotype'] .map-edge {
+  stroke: #dfeaf2;
+}
+[data-theme='cyanotype'] .map-edge.is-lit {
+  stroke: #ecc67e;
+}
+[data-theme='cyanotype'] ::selection {
+  background: rgba(168, 216, 240, 0.34);
+  color: #ffffff;
+}
+[data-theme='cyanotype'] .editor-wrap ::selection,
+[data-theme='cyanotype'] .outline-list ::selection,
+[data-theme='cyanotype'] .map-node ::selection {
+  background: rgba(23, 80, 127, 0.24);
+  color: #14263d;
+}
+:root[data-theme='cyanotype'] {
+  --titlebar-bg: #0b1a2a;
+  --titlebar-border: #061019;
+  --titlebar-text: #dfeaf2;
+  --titlebar-weight: 400;
+  --caption-border: transparent;
+  --caption-bg: transparent;
+  --caption-bg-hover: rgba(168, 216, 240, 0.18);
+  --caption-bg-active: rgba(168, 216, 240, 0.28);
+  --caption-shadow: none;
+  --caption-icon: #dfeaf2;
+  --caption-close-border: transparent;
+  --caption-close-bg: transparent;
+  --caption-close-bg-hover: #c0392b;
+  --caption-close-bg-active: #96281b;
+  /* A pasted paper caption. */
+  --tip-bg: #f6f1e3;
+  --tip-ink: #14263d;
+  --tip-border: #bfb497;
+  --tip-radius: 1px;
+  --tip-shadow: 0 0 0 1px rgba(10, 24, 40, 0.5), 0 10px 22px -8px rgba(4, 12, 22, 0.8);
+  --tip-key-bg: #14263d;
+  --tip-key-ink: #f6f1e3;
+  --tip-key-border: #14263d;
+}
+
+/* ---------- Card Catalog ----------
+   An old library's catalog room: oak drawers behind everything, manila side
+   panels, and every sheet an index card — red rule, then blue. The script is
+   typed in Courier Prime, tags are rubber stamps, tabs are brass label
+   holders, the accent is stamp-pad indigo and the selection is highlighter. */
+@font-face {
+  font-family: 'Courier Prime';
+  src: url('./assets/fonts/courier-prime-latin-400-normal.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Courier Prime';
+  src: url('./assets/fonts/courier-prime-latin-700-normal.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Special Elite';
+  src: url('./assets/fonts/special-elite-latin-400-normal.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+:root[data-theme='cardCatalog'] {
+  --bg: #d9c7a0;
+  --panel: #e9d7ab;
+  --panel-2: #f1e3be;
+  --panel-3: #dcc88f;
+  --ink: #231f1a;
+  --ink-dim: #4a4032;
+  --ink-faint: #5e523c;
+  --line: #bfa973;
+  --line-soft: #d4c08c;
+  --cyan: #34338a;
+  --amber: #8a4b08;
+  --pink: #a8325a;
+  --danger: #b3271f;
+  --green: #2f6b3a;
+  --editor-page: #fbf7ea;
+  --mono: 'Courier Prime', 'Courier New', monospace;
+  --cc-card: #fbf7ea;
+  --cc-red: #c8423a;
+  --cc-blue: #9db7d6;
+  --cc-brass: #8a6a2f;
+  --cc-indigo: #34338a;
+  --cc-type: 'Courier Prime', 'Courier New', monospace;
+  --cc-stamp: 'Special Elite', 'Courier Prime', 'Courier New', monospace;
+}
+[data-theme='cardCatalog'] .app-root {
+  background-color: #a9803f;
+  background-image: var(--theme-wallpaper, url('./assets/bg/card-drawer-wall.webp'));
+  background-size: var(--theme-wallpaper-size, cover);
+  background-position: var(--theme-wallpaper-pos, center);
+  background-repeat: var(--theme-wallpaper-repeat, no-repeat);
+}
+[data-theme='cardCatalog'] .main {
+  background: transparent !important;
+}
+/* The page is one tall index card: a red rule under the top margin. */
+[data-theme='cardCatalog'] .editor-wrap,
+[data-theme='cardCatalog'] .outline-list {
+  background: linear-gradient(var(--cc-red), var(--cc-red)) 0 18px / 100% 2px no-repeat, url('./assets/paper-fibre.png') 0 0 / 480px 480px, var(--editor-page) !important;
+  border-radius: 3px !important;
+  box-shadow: 0 0 0 1px rgba(35, 31, 26, 0.18), 0 2px 0 rgba(35, 31, 26, 0.18), 0 24px 44px -18px rgba(30, 18, 4, 0.7) !important;
+}
+[data-theme='cardCatalog'] .line-text {
+  font-family: var(--cc-type);
+  font-size: 15.5px;
+  line-height: 1.6;
+}
+[data-theme='cardCatalog'] .line-text:focus {
+  background: rgba(157, 183, 214, 0.22);
+}
+[data-theme='cardCatalog'] .line-text,
+[data-theme='cardCatalog'] input,
+[data-theme='cardCatalog'] textarea,
+[data-theme='cardCatalog'] [contenteditable] {
+  caret-color: var(--cc-indigo);
+}
+/* Manila chrome. */
+[data-theme='cardCatalog'] .topbar,
+[data-theme='cardCatalog'] .tabbar,
+[data-theme='cardCatalog'] .sidebar,
+[data-theme='cardCatalog'] .inspector {
+  background: url('./assets/paper-fibre.png') 0 0 / 480px 480px, var(--panel) !important;
+}
+[data-theme='cardCatalog'] .topbar {
+  border-bottom: 1px solid #a8925c !important;
+}
+[data-theme='cardCatalog'] .tabbar {
+  border-bottom: 1px solid #a8925c !important;
+  box-shadow: 0 6px 14px -8px rgba(30, 18, 4, 0.6);
+}
+[data-theme='cardCatalog'] .sidebar {
+  border-right: 1px solid #a8925c !important;
+}
+[data-theme='cardCatalog'] .inspector {
+  border-left: 1px solid #a8925c !important;
+}
+/* Side cards: an index card each, red line across the top. */
+[data-theme='cardCatalog'] .margin-stack {
+  background: linear-gradient(var(--cc-red), var(--cc-red)) 0 0 / 100% 3px no-repeat, var(--cc-card) !important;
+  border: 1px solid rgba(35, 31, 26, 0.22) !important;
+  border-radius: 3px;
+  box-shadow: 0 2px 0 rgba(35, 31, 26, 0.16), 0 16px 28px -16px rgba(30, 18, 4, 0.75);
+}
+[data-theme='cardCatalog'] .context-menu,
+[data-theme='cardCatalog'] .export-menu,
+[data-theme='cardCatalog'] .section-jump-menu,
+[data-theme='cardCatalog'] .line-search-menu,
+[data-theme='cardCatalog'] .tag-menu,
+[data-theme='cardCatalog'] .synonym-menu,
+[data-theme='cardCatalog'] .map-idea-menu,
+[data-theme='cardCatalog'] .shape-picker-menu,
+[data-theme='cardCatalog'] .diff-modal {
+  background: var(--cc-card) !important;
+  border: 1px solid #8a7a55 !important;
+  border-radius: 3px !important;
+  box-shadow: 0 2px 0 rgba(35, 31, 26, 0.2), 0 18px 36px -14px rgba(30, 18, 4, 0.7) !important;
+}
+/* Everything with a name is typed. */
+[data-theme='cardCatalog'] .title-input,
+[data-theme='cardCatalog'] .section-heading-input,
+[data-theme='cardCatalog'] .map-node-heading,
+[data-theme='cardCatalog'] .map-node-heading-input,
+[data-theme='cardCatalog'] .chapter-node-label,
+[data-theme='cardCatalog'] .idea-node-title,
+[data-theme='cardCatalog'] .titlebar-title,
+[data-theme='cardCatalog'] .script-item-title {
+  font-family: var(--cc-type) !important;
+  font-weight: 700 !important;
+}
+[data-theme='cardCatalog'] .topbar .title-input {
+  font-size: 19px !important;
+}
+/* A section heading sits on the card's rules: red first, then blue. */
+[data-theme='cardCatalog'] .section-head {
+  border-bottom: 2px solid var(--cc-red);
+  box-shadow: 0 4px 0 -3px var(--cc-blue);
+  padding-bottom: 7px;
+  margin-bottom: 10px;
+}
+[data-theme='cardCatalog'] .section-head .section-heading-input {
+  font-size: 17px !important;
+  letter-spacing: 0.04em;
+}
+/* Buttons: plain on the manila; what is on is inked with the stamp pad. */
+[data-theme='cardCatalog'] .icon-btn {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: 3px !important;
+  transition: background 0.18s ease-out, color 0.18s ease-out;
+}
+[data-theme='cardCatalog'] .icon-btn:hover:not(:disabled) {
+  background: rgba(35, 31, 26, 0.1) !important;
+}
+[data-theme='cardCatalog'] .icon-btn.active {
+  background: var(--cc-indigo) !important;
+  color: #f6f1e0 !important;
+}
+/* Tabs are brass label holders with a paper label slid in. */
+[data-theme='cardCatalog'] .tab-chip {
+  background: #f3ecd6 !important;
+  border: 2px solid var(--cc-brass) !important;
+  border-radius: 2px !important;
+  color: var(--ink-dim) !important;
+  font-family: var(--cc-type);
+  box-shadow: inset 0 0 0 1px #d3b566, 0 1px 0 rgba(35, 31, 26, 0.4);
+  transition: background 0.18s ease-out;
+}
+[data-theme='cardCatalog'] .tab-chip:hover {
+  background: #fffbee !important;
+}
+[data-theme='cardCatalog'] .tab-chip.active {
+  background: #fffdf4 !important;
+  border-color: #6f5320 !important;
+  color: var(--ink) !important;
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1px #e2c878, 0 2px 0 rgba(35, 31, 26, 0.45), 0 8px 14px -8px rgba(30, 18, 4, 0.7);
+}
+[data-theme='cardCatalog'] .new-script-btn {
+  background: var(--cc-card) !important;
+  border: 1px dashed #8a7a55 !important;
+  border-radius: 3px !important;
+  color: var(--ink) !important;
+  font-family: var(--cc-type);
+  transition: background 0.18s ease-out, border-color 0.18s ease-out;
+}
+[data-theme='cardCatalog'] .new-script-btn:hover {
+  background: #fffdf4 !important;
+  border-style: solid !important;
+}
+[data-theme='cardCatalog'] .checklist-add button {
+  background: var(--cc-red) !important;
+  color: #fffaf0 !important;
+  border: 0 !important;
+  border-radius: 3px !important;
+}
+/* The library is a drawer of cards; pull one up to open it. */
+[data-theme='cardCatalog'] .script-item {
+  background: linear-gradient(var(--cc-red), var(--cc-red)) 0 0 / 100% 2px no-repeat, var(--cc-card) !important;
+  border: 1px solid rgba(35, 31, 26, 0.22) !important;
+  border-radius: 3px !important;
+  box-shadow: 0 1px 0 rgba(35, 31, 26, 0.18);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s;
+}
+[data-theme='cardCatalog'] .script-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 0 rgba(35, 31, 26, 0.18), 0 10px 16px -10px rgba(30, 18, 4, 0.6);
+}
+[data-theme='cardCatalog'] .script-item.active,
+[data-theme='cardCatalog'] .theme-row.active {
+  background: linear-gradient(var(--cc-indigo), var(--cc-indigo)) 0 0 / 100% 3px no-repeat, #fffdf4 !important;
+  border-color: rgba(52, 51, 138, 0.55) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 3px 0 rgba(35, 31, 26, 0.2), 0 12px 18px -10px rgba(30, 18, 4, 0.7);
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-theme='cardCatalog'] .script-item {
+    transition: none;
+  }
+  [data-theme='cardCatalog'] .script-item:hover,
+  [data-theme='cardCatalog'] .script-item.active {
+    transform: none;
+  }
+}
+[data-theme='cardCatalog'] .search-wrap input,
+[data-theme='cardCatalog'] .sj-search,
+[data-theme='cardCatalog'] .ls-search,
+[data-theme='cardCatalog'] .outline-search {
+  background: var(--cc-card) !important;
+  border: 1px solid #a8925c !important;
+  border-radius: 3px !important;
+}
+/* Tags are rubber stamps; the due date is the date-due stamp. */
+[data-theme='cardCatalog'] .tag-pill {
+  font-family: var(--cc-stamp);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: 2px;
+  transform: rotate(-1.4deg);
+}
+[data-theme='cardCatalog'] .section-chip {
+  font-family: var(--cc-stamp);
+  border-radius: 2px;
+  background: var(--cc-card);
+}
+[data-theme='cardCatalog'] .topbar .date-field {
+  font-family: var(--cc-stamp);
+  border-radius: 2px !important;
+}
+[data-theme='cardCatalog'] .map-canvas {
+  background-color: #a9803f !important;
+  background-image: linear-gradient(rgba(30, 18, 4, 0.36), rgba(30, 18, 4, 0.36)), var(--theme-wallpaper, url('./assets/bg/card-drawer-wall.webp')) !important;
+  background-size: auto, var(--theme-wallpaper-size, cover) !important;
+  background-position: 0 0, var(--theme-wallpaper-pos, center) !important;
+  background-repeat: no-repeat, var(--theme-wallpaper-repeat, no-repeat) !important;
+}
+[data-theme='cardCatalog'] .map-node {
+  background: linear-gradient(var(--cc-red), var(--cc-red)) 0 0 / 100% 3px no-repeat, var(--cc-card) !important;
+  border: 1px solid rgba(35, 31, 26, 0.3) !important;
+  border-radius: 3px !important;
+  box-shadow: 0 2px 0 rgba(35, 31, 26, 0.25), 0 16px 26px -14px rgba(20, 12, 2, 0.85) !important;
+}
+[data-theme='cardCatalog'] .map-node.is-selected {
+  box-shadow: 0 0 0 3px #ffd66b, 0 16px 26px -14px rgba(20, 12, 2, 0.85) !important;
+}
+[data-theme='cardCatalog'] .map-node-connector {
+  background: var(--cc-brass) !important;
+  border: 1px solid #f3e3b0 !important;
+}
+[data-theme='cardCatalog'] .map-edges-svg {
+  --ink-faint: #fbf3dc;
+  --cyan: #ffd66b;
+}
+[data-theme='cardCatalog'] .map-edge {
+  stroke: #fbf3dc;
+  filter: drop-shadow(0 1px 1px rgba(20, 12, 2, 0.8));
+}
+[data-theme='cardCatalog'] .map-edge.is-lit {
+  stroke: #ffd66b;
+}
+[data-theme='cardCatalog'] ::selection {
+  background: #ffe36e;
+  color: #231f1a;
+}
+:root[data-theme='cardCatalog'] {
+  --titlebar-bg: #3a2a1a;
+  --titlebar-border: #1f150b;
+  --titlebar-text: #f1e3be;
+  --titlebar-weight: 700;
+  --caption-border: transparent;
+  --caption-bg: transparent;
+  --caption-bg-hover: rgba(241, 227, 190, 0.18);
+  --caption-bg-active: rgba(241, 227, 190, 0.28);
+  --caption-shadow: none;
+  --caption-icon: #f1e3be;
+  --caption-close-border: transparent;
+  --caption-close-bg: transparent;
+  --caption-close-bg-hover: #c8423a;
+  --caption-close-bg-active: #9c2f28;
+  --tip-bg: #fbf7ea;
+  --tip-ink: #231f1a;
+  --tip-border: #8a7a55;
+  --tip-radius: 3px;
+  --tip-shadow: 0 2px 0 rgba(35, 31, 26, 0.2), 0 10px 20px -8px rgba(30, 18, 4, 0.6);
+  --tip-key-bg: #34338a;
+  --tip-key-ink: #f6f1e0;
+  --tip-key-border: #34338a;
+}
+:root[data-theme='cardCatalog'] .teleprompter-body {
+  --cyan: #b9b8ff;
+}
+
+/* ---------- Riso Zine ----------
+   A two-colour risograph print: grainy off-white stock, a coral plate and a
+   teal plate that never quite line up, halftone dots where a tint is needed.
+   Everything is drawn in one condensed-to-wide grotesque. What is on is
+   printed solid; edges show the second ink peeking out from behind. */
+@font-face {
+  font-family: 'Bricolage Grotesque';
+  src: url('./assets/fonts/bricolage-grotesque-latin-wght-normal.woff2') format('woff2');
+  font-weight: 200 800;
+  font-display: swap;
+}
+:root[data-theme='risoZine'] {
+  --bg: #ebe4d6;
+  --panel: #f4efe4;
+  --panel-2: #fbf7ee;
+  --panel-3: #e7dfcf;
+  --ink: #1c1930;
+  --ink-dim: #46425c;
+  --ink-faint: #645f79;
+  --line: #cfc6b4;
+  --line-soft: #e0d8c8;
+  --cyan: #0b6e86;
+  --amber: #b3420b;
+  --pink: #c81e58;
+  --danger: #c22a2a;
+  --green: #1f7a4a;
+  --editor-page: #fffdf7;
+  --sans: 'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif;
+  --rz-ink: #1c1930;
+  --rz-coral: #f15060;
+  --rz-teal: #00838a;
+  --rz-paper: #f4efe4;
+  --rz-font: 'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif;
+}
+[data-theme='risoZine'] .app-root {
+  background-color: #f4efe4;
+  background-image: var(--theme-wallpaper, url('./assets/bg/riso-coral-teal.webp'));
+  background-size: var(--theme-wallpaper-size, cover);
+  background-position: var(--theme-wallpaper-pos, center);
+  background-repeat: var(--theme-wallpaper-repeat, no-repeat);
+}
+[data-theme='risoZine'] .main {
+  background: transparent !important;
+}
+/* The page: two plates out of register — teal peeking out up-left, coral down-right. */
+[data-theme='risoZine'] .editor-wrap,
+[data-theme='risoZine'] .outline-list {
+  background: url('./assets/paper-fibre.png') 0 0 / 480px 480px, var(--editor-page) !important;
+  border-radius: 0 !important;
+  box-shadow: -5px -5px 0 rgba(0, 131, 138, 0.9), 5px 5px 0 rgba(241, 80, 96, 0.92) !important;
+}
+[data-theme='risoZine'] .line-text {
+  font-size: 15.5px;
+}
+[data-theme='risoZine'] .line-text:focus {
+  background: rgba(0, 131, 138, 0.09);
+}
+[data-theme='risoZine'] .line-text,
+[data-theme='risoZine'] input,
+[data-theme='risoZine'] textarea,
+[data-theme='risoZine'] [contenteditable] {
+  caret-color: var(--rz-coral);
+}
+[data-theme='risoZine'] .topbar,
+[data-theme='risoZine'] .tabbar,
+[data-theme='risoZine'] .sidebar,
+[data-theme='risoZine'] .inspector {
+  background: url('./assets/paper-fibre.png') 0 0 / 480px 480px, var(--panel) !important;
+}
+[data-theme='risoZine'] .topbar {
+  border-bottom: 2px solid var(--rz-ink) !important;
+}
+[data-theme='risoZine'] .tabbar {
+  border-bottom: 2px solid var(--rz-ink) !important;
+}
+[data-theme='risoZine'] .sidebar {
+  border-right: 2px solid var(--rz-ink) !important;
+}
+[data-theme='risoZine'] .inspector {
+  border-left: 2px solid var(--rz-ink) !important;
+}
+[data-theme='risoZine'] .margin-stack {
+  background: var(--panel-2) !important;
+  border: 2px solid var(--rz-ink) !important;
+  border-radius: 0;
+  box-shadow: 4px 4px 0 rgba(0, 131, 138, 0.9);
+}
+[data-theme='risoZine'] .context-menu,
+[data-theme='risoZine'] .export-menu,
+[data-theme='risoZine'] .section-jump-menu,
+[data-theme='risoZine'] .line-search-menu,
+[data-theme='risoZine'] .tag-menu,
+[data-theme='risoZine'] .synonym-menu,
+[data-theme='risoZine'] .map-idea-menu,
+[data-theme='risoZine'] .shape-picker-menu,
+[data-theme='risoZine'] .diff-modal {
+  background: var(--editor-page) !important;
+  border: 2px solid var(--rz-ink) !important;
+  border-radius: 0 !important;
+  box-shadow: 5px 5px 0 rgba(241, 80, 96, 0.92) !important;
+}
+/* Headlines: heavy, tight, and printed twice — the coral plate slipped. */
+[data-theme='risoZine'] .title-input,
+[data-theme='risoZine'] .section-heading-input,
+[data-theme='risoZine'] .map-node-heading,
+[data-theme='risoZine'] .map-node-heading-input,
+[data-theme='risoZine'] .chapter-node-label,
+[data-theme='risoZine'] .idea-node-title,
+[data-theme='risoZine'] .titlebar-title {
+  font-family: var(--rz-font) !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.01em;
+}
+[data-theme='risoZine'] .topbar .title-input {
+  font-size: 23px !important;
+  letter-spacing: -0.02em;
+  text-shadow: 2px 2px 0 rgba(241, 80, 96, 0.85);
+}
+/* A row of halftone dots closes each section heading. */
+[data-theme='risoZine'] .section-head {
+  background: radial-gradient(circle, rgba(0, 131, 138, 0.75) 1.6px, transparent 2px) 0 100% / 8px 8px repeat-x;
+  padding-bottom: 14px;
+  margin-bottom: 6px;
+}
+[data-theme='risoZine'] .section-head .section-heading-input {
+  font-size: 24px !important;
+  letter-spacing: -0.02em;
+  text-transform: none;
+  text-shadow: 2px 2px 0 rgba(241, 80, 96, 0.5);
+}
+/* Buttons: ink outline on paper; hover floods with coral, on prints solid teal. */
+[data-theme='risoZine'] .icon-btn {
+  background: var(--panel-2) !important;
+  border: 1.5px solid var(--rz-ink) !important;
+  border-radius: 999px !important;
+  color: var(--rz-ink) !important;
+  transition: background 0.16s ease-out, transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.16s ease-out;
+}
+[data-theme='risoZine'] .icon-btn:hover:not(:disabled) {
+  background: var(--rz-coral) !important;
+  transform: translate(-1px, -1px);
+  box-shadow: 2px 2px 0 rgba(0, 131, 138, 0.9);
+}
+[data-theme='risoZine'] .icon-btn:active:not(:disabled) {
+  transform: translate(1px, 1px);
+  box-shadow: none;
+}
+[data-theme='risoZine'] .icon-btn.active {
+  background: var(--rz-teal) !important;
+  color: #ffffff !important;
+}
+[data-theme='risoZine'] .icon-btn:disabled {
+  opacity: 0.4;
+}
+[data-theme='risoZine'] .tab-chip {
+  background: var(--panel-2) !important;
+  border: 1.5px solid var(--rz-ink) !important;
+  border-radius: 0 !important;
+  color: var(--rz-ink) !important;
+  font-weight: 600;
+  transition: background 0.16s ease-out, transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.16s ease-out;
+}
+[data-theme='risoZine'] .tab-chip:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 2px 2px 0 rgba(0, 131, 138, 0.9);
+}
+[data-theme='risoZine'] .tab-chip.active {
+  background: var(--rz-coral) !important;
+  box-shadow: 3px 3px 0 rgba(0, 131, 138, 0.9);
+}
+[data-theme='risoZine'] .new-script-btn {
+  background: var(--rz-ink) !important;
+  border: 1.5px solid var(--rz-ink) !important;
+  border-radius: 0 !important;
+  color: var(--rz-paper) !important;
+  font-weight: 700;
+  transition: background 0.16s ease-out, color 0.16s ease-out, transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.16s ease-out;
+}
+[data-theme='risoZine'] .new-script-btn:hover {
+  background: var(--rz-coral) !important;
+  color: var(--rz-ink) !important;
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 rgba(0, 131, 138, 0.9);
+}
+[data-theme='risoZine'] .checklist-add button {
+  background: var(--rz-coral) !important;
+  color: var(--rz-ink) !important;
+  border: 1.5px solid var(--rz-ink) !important;
+  border-radius: 999px !important;
+}
+[data-theme='risoZine'] .script-item {
+  background: var(--panel-2) !important;
+  border: 1.5px solid var(--rz-ink) !important;
+  border-radius: 0 !important;
+  transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.16s ease-out;
+}
+[data-theme='risoZine'] .script-item:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 rgba(0, 131, 138, 0.9);
+}
+[data-theme='risoZine'] .script-item.active,
+[data-theme='risoZine'] .theme-row.active {
+  background: var(--rz-coral) !important;
+  border-color: var(--rz-ink) !important;
+  box-shadow: 4px 4px 0 rgba(0, 131, 138, 0.9);
+}
+[data-theme='risoZine'] .script-item.active * {
+  color: var(--rz-ink) !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-theme='risoZine'] .icon-btn,
+  [data-theme='risoZine'] .tab-chip,
+  [data-theme='risoZine'] .new-script-btn,
+  [data-theme='risoZine'] .script-item {
+    transition: none;
+  }
+  [data-theme='risoZine'] .icon-btn:hover:not(:disabled),
+  [data-theme='risoZine'] .tab-chip:hover,
+  [data-theme='risoZine'] .new-script-btn:hover,
+  [data-theme='risoZine'] .script-item:hover {
+    transform: none;
+  }
+}
+[data-theme='risoZine'] .search-wrap input,
+[data-theme='risoZine'] .sj-search,
+[data-theme='risoZine'] .ls-search,
+[data-theme='risoZine'] .outline-search {
+  background: var(--editor-page) !important;
+  border: 1.5px solid var(--rz-ink) !important;
+  border-radius: 0 !important;
+}
+[data-theme='risoZine'] .tag-pill,
+[data-theme='risoZine'] .section-chip {
+  border-radius: 0;
+  font-family: var(--rz-font);
+  font-weight: 700;
+}
+[data-theme='risoZine'] .map-canvas {
+  background-color: #f4efe4 !important;
+  background-image: linear-gradient(rgba(244, 239, 228, 0.6), rgba(244, 239, 228, 0.6)), var(--theme-wallpaper, url('./assets/bg/riso-coral-teal.webp')) !important;
+  background-size: auto, var(--theme-wallpaper-size, cover) !important;
+  background-position: 0 0, var(--theme-wallpaper-pos, center) !important;
+  background-repeat: no-repeat, var(--theme-wallpaper-repeat, no-repeat) !important;
+}
+[data-theme='risoZine'] .map-node {
+  background: var(--editor-page) !important;
+  border: 2px solid var(--rz-ink) !important;
+  border-radius: 0 !important;
+  box-shadow: 4px 4px 0 rgba(241, 80, 96, 0.92) !important;
+}
+[data-theme='risoZine'] .map-node.is-selected {
+  box-shadow: -4px -4px 0 rgba(0, 131, 138, 0.9), 4px 4px 0 rgba(241, 80, 96, 0.92) !important;
+}
+[data-theme='risoZine'] .map-node-connector {
+  background: var(--rz-coral) !important;
+  border: 1.5px solid var(--rz-ink) !important;
+}
+[data-theme='risoZine'] .map-edges-svg {
+  --ink-faint: #1c1930;
+  --cyan: #f15060;
+}
+[data-theme='risoZine'] .map-edge {
+  stroke: #1c1930;
+}
+[data-theme='risoZine'] .map-edge.is-lit {
+  stroke: #f15060;
+}
+[data-theme='risoZine'] ::selection {
+  background: rgba(241, 80, 96, 0.34);
+  color: #1c1930;
+}
+:root[data-theme='risoZine'] {
+  --titlebar-bg: #1c1930;
+  --titlebar-border: #1c1930;
+  --titlebar-text: #f4efe4;
+  --titlebar-weight: 800;
+  --caption-border: transparent;
+  --caption-bg: transparent;
+  --caption-bg-hover: rgba(244, 239, 228, 0.18);
+  --caption-bg-active: rgba(244, 239, 228, 0.3);
+  --caption-shadow: none;
+  --caption-icon: #f4efe4;
+  --caption-close-border: transparent;
+  --caption-close-bg: transparent;
+  --caption-close-bg-hover: #f15060;
+  --caption-close-bg-active: #c9374a;
+  --tip-bg: #1c1930;
+  --tip-ink: #f4efe4;
+  --tip-border: #1c1930;
+  --tip-radius: 0;
+  --tip-shadow: 3px 3px 0 rgba(241, 80, 96, 0.92);
+  --tip-key-bg: #f15060;
+  --tip-key-ink: #1c1930;
+  --tip-key-border: #f15060;
+}
+:root[data-theme='risoZine'] .teleprompter-body {
+  --cyan: #5fd0d6;
+}
+
+/* ---------- Spellbound ----------
+   A school of magic after dark: the old library behind everything, chrome the
+   colour of night stone lit by candles — gold lettering, gold rules — and
+   every sheet you write on a piece of aged parchment with burnt edges.
+   Headings in a gothic hand, the script in Garamond, the section strip a row
+   of house banners, and the open script sealed with wax. */
+@font-face {
+  font-family: 'Grenze Gotisch';
+  src: url('./assets/fonts/grenze-gotisch-latin-wght-normal.woff2') format('woff2');
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Almendra';
+  src: url('./assets/fonts/almendra-latin-700-normal.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'EB Garamond';
+  src: url('./assets/fonts/eb-garamond-latin-wght-normal.woff2') format('woff2');
+  font-weight: 400 800;
+  font-display: swap;
+}
+:root[data-theme='spellbound'] {
+  --bg: #120e16;
+  --panel: #1a1520;
+  --panel-2: #221b2a;
+  --panel-3: #2c2336;
+  --ink: #f1e6cf;
+  --ink-dim: #cbbd9f;
+  --ink-faint: #a39474;
+  --line: #4a3b2a;
+  --line-soft: #33283a;
+  --cyan: #e9c46a;
+  --amber: #f0a04b;
+  --pink: #e58aa0;
+  --danger: #ff8a78;
+  --green: #8fd3a6;
+  --editor-page: #f7efd9;
+  --sb-gold: #e9c46a;
+  --sb-gold-deep: #b8892b;
+  --sb-night: #120e16;
+  --sb-parchment: #f7efd9;
+  --sb-sepia: #2a1d10;
+  --sb-wax: #8f1d2c;
+  --sb-gothic: 'Grenze Gotisch', 'Old English Text MT', Georgia, serif;
+  --sb-story: 'Almendra', 'Book Antiqua', Georgia, serif;
+}
+/* Parchment surfaces re-point the tokens, so everything on them turns to sepia ink. */
+[data-theme='spellbound'] .editor-wrap,
+[data-theme='spellbound'] .outline-list,
+[data-theme='spellbound'] .map-node,
+[data-theme='spellbound'] .script-item.active,
+[data-theme='spellbound'] .theme-row.active,
+[data-theme='spellbound'] .context-menu,
+[data-theme='spellbound'] .export-menu,
+[data-theme='spellbound'] .section-jump-menu,
+[data-theme='spellbound'] .line-search-menu,
+[data-theme='spellbound'] .tag-menu,
+[data-theme='spellbound'] .synonym-menu,
+[data-theme='spellbound'] .map-idea-menu,
+[data-theme='spellbound'] .shape-picker-menu,
+[data-theme='spellbound'] .diff-modal {
+  --panel: #efe4c8;
+  --panel-2: #e8dcbd;
+  --panel-3: #dccfa9;
+  --ink: #2a1d10;
+  --ink-dim: #55402a;
+  --ink-faint: #6e5638;
+  --line: #c4b089;
+  --line-soft: #dccfab;
+  --cyan: #7a1626;
+  --amber: #8a5210;
+  --pink: #9c2f55;
+  --danger: #a3241a;
+  --green: #2c6a3c;
+  color: var(--ink);
+}
+[data-theme='spellbound'] .app-root {
+  background-color: #2a1c10;
+  background-image: var(--theme-wallpaper, url('./assets/bg/wiz-long-room.webp'));
+  background-size: var(--theme-wallpaper-size, cover);
+  background-position: var(--theme-wallpaper-pos, center);
+  background-repeat: var(--theme-wallpaper-repeat, no-repeat);
+}
+[data-theme='spellbound'] .main {
+  background: transparent !important;
+}
+/* The page: parchment, darker towards its edges, standing in candlelight. */
+[data-theme='spellbound'] .editor-wrap,
+[data-theme='spellbound'] .outline-list {
+  background: url('./assets/paper-fibre.png') 0 0 / 480px 480px, var(--editor-page) !important;
+  border-radius: 3px !important;
+  box-shadow: inset 0 0 70px rgba(138, 92, 34, 0.2), inset 0 0 0 1px rgba(120, 84, 36, 0.35), 0 0 0 1px rgba(10, 6, 2, 0.6), 0 30px 60px -18px rgba(0, 0, 0, 0.85) !important;
+}
+[data-theme='spellbound'] .line-text {
+  font-family: 'EB Garamond', Georgia, serif;
+  font-size: 17.5px;
+  line-height: 1.5;
+}
+[data-theme='spellbound'] .line-text:focus {
+  background: rgba(138, 92, 34, 0.1);
+}
+[data-theme='spellbound'] .line-text,
+[data-theme='spellbound'] input,
+[data-theme='spellbound'] textarea,
+[data-theme='spellbound'] [contenteditable] {
+  caret-color: var(--sb-gold-deep);
+}
+/* Night-stone chrome with gold hairlines. */
+[data-theme='spellbound'] .topbar,
+[data-theme='spellbound'] .tabbar {
+  background: rgba(18, 14, 22, 0.95) !important;
+  border-bottom: 1px solid rgba(233, 196, 106, 0.28) !important;
+}
+[data-theme='spellbound'] .sidebar,
+[data-theme='spellbound'] .inspector {
+  background: rgba(22, 17, 27, 0.94) !important;
+}
+[data-theme='spellbound'] .sidebar {
+  border-right: 1px solid rgba(233, 196, 106, 0.28) !important;
+}
+[data-theme='spellbound'] .inspector {
+  border-left: 1px solid rgba(233, 196, 106, 0.28) !important;
+}
+[data-theme='spellbound'] .margin-stack {
+  background: rgba(22, 17, 27, 0.93) !important;
+  border: 1px solid rgba(233, 196, 106, 0.3) !important;
+  border-radius: 3px;
+  box-shadow: 0 18px 34px -16px rgba(0, 0, 0, 0.9);
+}
+[data-theme='spellbound'] .context-menu,
+[data-theme='spellbound'] .export-menu,
+[data-theme='spellbound'] .section-jump-menu,
+[data-theme='spellbound'] .line-search-menu,
+[data-theme='spellbound'] .tag-menu,
+[data-theme='spellbound'] .synonym-menu,
+[data-theme='spellbound'] .map-idea-menu,
+[data-theme='spellbound'] .shape-picker-menu,
+[data-theme='spellbound'] .diff-modal {
+  background: var(--sb-parchment) !important;
+  border: 1px solid #b89a5e !important;
+  border-radius: 3px !important;
+  box-shadow: inset 0 0 30px rgba(138, 92, 34, 0.16), 0 0 0 1px rgba(10, 6, 2, 0.6), 0 22px 44px -14px rgba(0, 0, 0, 0.85) !important;
+}
+/* The title is gilded gothic lettering; headings use a storybook hand whose
+   capitals stay readable. */
+[data-theme='spellbound'] .title-input,
+[data-theme='spellbound'] .titlebar-title {
+  font-family: var(--sb-gothic) !important;
+  font-weight: 600 !important;
+}
+[data-theme='spellbound'] .section-heading-input,
+[data-theme='spellbound'] .map-node-heading,
+[data-theme='spellbound'] .map-node-heading-input,
+[data-theme='spellbound'] .chapter-node-label,
+[data-theme='spellbound'] .idea-node-title {
+  font-family: var(--sb-story) !important;
+  font-weight: 700 !important;
+}
+[data-theme='spellbound'] .topbar .title-input {
+  color: var(--sb-gold) !important;
+  font-size: 26px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.01em;
+}
+/* A section closes on a gold rule that tapers out at both ends. */
+[data-theme='spellbound'] .section-head {
+  background: linear-gradient(90deg, rgba(184, 137, 43, 0), #b8892b 12%, #d9b25a 50%, #b8892b 88%, rgba(184, 137, 43, 0)) 0 100% / 100% 2px no-repeat;
+  padding-bottom: 10px;
+  margin-bottom: 8px;
+}
+[data-theme='spellbound'] .section-head .section-heading-input {
+  font-size: 24px !important;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+/* Buttons: gold line-work that warms up under the cursor; what is on is gilded. */
+[data-theme='spellbound'] .icon-btn {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: 3px !important;
+  transition: background 0.45s cubic-bezier(0.16, 1, 0.3, 1), color 0.3s, border-color 0.3s;
+}
+[data-theme='spellbound'] .icon-btn:hover:not(:disabled) {
+  background: rgba(233, 196, 106, 0.16) !important;
+  border-color: rgba(233, 196, 106, 0.4) !important;
+  color: var(--sb-gold) !important;
+}
+[data-theme='spellbound'] .icon-btn.active {
+  background: var(--sb-gold) !important;
+  color: var(--sb-night) !important;
+}
+[data-theme='spellbound'] .editor-wrap .icon-btn:hover:not(:disabled),
+[data-theme='spellbound'] .outline-list .icon-btn:hover:not(:disabled) {
+  background: rgba(122, 22, 38, 0.1) !important;
+  border-color: rgba(122, 22, 38, 0.3) !important;
+  color: #7a1626 !important;
+}
+[data-theme='spellbound'] .tab-chip {
+  background: transparent !important;
+  border: 1px solid rgba(233, 196, 106, 0.4) !important;
+  border-radius: 3px !important;
+  transition: background 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+[data-theme='spellbound'] .tab-chip:hover {
+  background: rgba(233, 196, 106, 0.14) !important;
+}
+[data-theme='spellbound'] .tab-chip.active {
+  background: var(--sb-gold) !important;
+  border-color: var(--sb-gold) !important;
+  color: var(--sb-night) !important;
+  font-weight: 600;
+}
+[data-theme='spellbound'] .tab-chip.active * {
+  color: var(--sb-night) !important;
+}
+[data-theme='spellbound'] .new-script-btn {
+  background: transparent !important;
+  border: 1px solid rgba(233, 196, 106, 0.6) !important;
+  border-radius: 3px !important;
+  color: var(--sb-gold) !important;
+  transition: background 0.45s cubic-bezier(0.16, 1, 0.3, 1), color 0.3s;
+}
+[data-theme='spellbound'] .new-script-btn:hover {
+  background: var(--sb-gold) !important;
+  color: var(--sb-night) !important;
+}
+[data-theme='spellbound'] .checklist-add button {
+  background: var(--sb-wax) !important;
+  color: #f7e9d2 !important;
+  border: 1px solid rgba(233, 196, 106, 0.5) !important;
+  border-radius: 3px !important;
+}
+[data-theme='spellbound'] .script-item {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: 3px !important;
+  transition: background 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+[data-theme='spellbound'] .script-item:hover {
+  background: rgba(233, 196, 106, 0.1) !important;
+}
+/* The open script is a letter, sealed with wax. */
+[data-theme='spellbound'] .script-item.active,
+[data-theme='spellbound'] .theme-row.active {
+  background: var(--sb-parchment) !important;
+  border-color: #b89a5e !important;
+  box-shadow: inset 0 0 24px rgba(138, 92, 34, 0.18), 0 12px 22px -12px rgba(0, 0, 0, 0.9);
+}
+[data-theme='spellbound'] .script-item.active {
+  background: radial-gradient(circle at calc(100% - 16px) 16px, #b3303f 0 2px, var(--sb-wax) 2.5px 6px, rgba(143, 29, 44, 0) 6.5px), var(--sb-parchment) !important;
+}
+[data-theme='spellbound'] .search-wrap input,
+[data-theme='spellbound'] .sj-search,
+[data-theme='spellbound'] .ls-search,
+[data-theme='spellbound'] .outline-search {
+  background: rgba(6, 4, 8, 0.55) !important;
+  border: 1px solid rgba(233, 196, 106, 0.3) !important;
+  border-radius: 3px !important;
+}
+[data-theme='spellbound'] .section-jump-menu .sj-search,
+[data-theme='spellbound'] .line-search-menu .ls-search,
+[data-theme='spellbound'] .outline-list .outline-search {
+  background: #fdf8e8 !important;
+  border-color: #c4b089 !important;
+}
+[data-theme='spellbound'] .tag-pill,
+[data-theme='spellbound'] .section-chip {
+  border-radius: 3px;
+}
+/* The section strip: a row of house banners — scarlet, gold, emerald, sapphire. */
+[data-theme='spellbound'] .section-timeline {
+  height: 28px;
+  background: #0b080d;
+  border-bottom: 1px solid rgba(233, 196, 106, 0.4);
+}
+[data-theme='spellbound'] .timeline-segment {
+  background: #6f1524;
+  border-right: 1px solid #0b080d;
+  box-shadow: inset 0 -2px 0 rgba(233, 196, 106, 0.55);
+}
+[data-theme='spellbound'] .timeline-segment:nth-child(4n + 2) {
+  background: #7a5a14;
+}
+[data-theme='spellbound'] .timeline-segment:nth-child(4n + 3) {
+  background: #17503a;
+}
+[data-theme='spellbound'] .timeline-segment:nth-child(4n + 4) {
+  background: #1b376b;
+}
+[data-theme='spellbound'] .timeline-segment:hover {
+  filter: brightness(1.25);
+}
+[data-theme='spellbound'] .timeline-segment-label,
+[data-theme='spellbound'] .timeline-segment.done .timeline-segment-label {
+  color: #fbf1d8;
+  font-family: var(--sb-story);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+}
+[data-theme='spellbound'] .timeline-segment.done {
+  background-image: linear-gradient(rgba(11, 8, 13, 0.45), rgba(11, 8, 13, 0.45));
+}
+[data-theme='spellbound'] .map-canvas {
+  background-color: #2a1c10 !important;
+  background-image: linear-gradient(rgba(12, 8, 14, 0.6), rgba(12, 8, 14, 0.6)), var(--theme-wallpaper, url('./assets/bg/wiz-long-room.webp')) !important;
+  background-size: auto, var(--theme-wallpaper-size, cover) !important;
+  background-position: 0 0, var(--theme-wallpaper-pos, center) !important;
+  background-repeat: no-repeat, var(--theme-wallpaper-repeat, no-repeat) !important;
+}
+[data-theme='spellbound'] .map-node {
+  background: var(--sb-parchment) !important;
+  border: 1px solid #b89a5e !important;
+  border-radius: 3px !important;
+  box-shadow: inset 0 0 26px rgba(138, 92, 34, 0.2), 0 0 0 1px rgba(10, 6, 2, 0.6), 0 18px 30px -14px rgba(0, 0, 0, 0.9) !important;
+}
+[data-theme='spellbound'] .map-node.is-selected {
+  box-shadow: inset 0 0 26px rgba(138, 92, 34, 0.2), 0 0 0 2px var(--sb-gold), 0 18px 30px -14px rgba(0, 0, 0, 0.9) !important;
+}
+[data-theme='spellbound'] .map-node-connector {
+  background: var(--sb-gold) !important;
+  border: 1px solid var(--sb-night) !important;
+}
+[data-theme='spellbound'] .map-edges-svg {
+  --ink-faint: #e3d3ad;
+  --cyan: #ffd978;
+}
+[data-theme='spellbound'] .map-edge {
+  stroke: #e3d3ad;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.9));
+}
+[data-theme='spellbound'] .map-edge.is-lit {
+  stroke: #ffd978;
+}
+[data-theme='spellbound'] ::selection {
+  background: rgba(233, 196, 106, 0.34);
+  color: #ffffff;
+}
+[data-theme='spellbound'] .editor-wrap ::selection,
+[data-theme='spellbound'] .outline-list ::selection,
+[data-theme='spellbound'] .map-node ::selection {
+  background: rgba(201, 162, 39, 0.4);
+  color: #2a1d10;
+}
+:root[data-theme='spellbound'] {
+  --titlebar-bg: #0b080d;
+  --titlebar-border: #000000;
+  --titlebar-text: #e9c46a;
+  --titlebar-weight: 600;
+  --caption-border: transparent;
+  --caption-bg: transparent;
+  --caption-bg-hover: rgba(233, 196, 106, 0.18);
+  --caption-bg-active: rgba(233, 196, 106, 0.3);
+  --caption-shadow: none;
+  --caption-icon: #e9c46a;
+  --caption-close-border: transparent;
+  --caption-close-bg: transparent;
+  --caption-close-bg-hover: #8f1d2c;
+  --caption-close-bg-active: #6a1421;
+  /* A scrap of parchment. */
+  --tip-bg: #f7efd9;
+  --tip-ink: #2a1d10;
+  --tip-border: #b89a5e;
+  --tip-radius: 3px;
+  --tip-shadow: 0 0 0 1px rgba(10, 6, 2, 0.6), 0 12px 24px -8px rgba(0, 0, 0, 0.85);
+  --tip-key-bg: #8f1d2c;
+  --tip-key-ink: #f7e9d2;
+  --tip-key-border: #8f1d2c;
+}
+
+/* ---------- Ronin ----------
+   Ink the loud way: sumi-black chrome, heavy brush lettering, bone-white
+   line-work and one colour — the crimson of a seal or a rising sun. Behind it
+   the great woodblock prints (the Great Wave first). Pages stay clean paper;
+   a thick dry-brush stroke closes every section heading, and whatever is on
+   is painted solid crimson. The quiet counterpart is Ink Wash. */
+@font-face {
+  font-family: 'Potta One';
+  src: url('./assets/fonts/potta-one-latin-400-normal.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Yusei Magic';
+  src: url('./assets/fonts/yusei-magic-latin-400-normal.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+:root[data-theme='ronin'] {
+  /* Hand-lettered like manga dialogue, for the script and the whole UI. */
+  --sans: 'Yusei Magic', 'Segoe UI', system-ui, sans-serif;
+  --bg: #0e0e10;
+  --panel: #151517;
+  --panel-2: #1c1c1f;
+  --panel-3: #26262a;
+  --ink: #f2ede3;
+  --ink-dim: #c9c3b6;
+  --ink-faint: #9a948a;
+  --line: #3a3a3f;
+  --line-soft: #2a2a2e;
+  --cyan: #ff5a52;
+  --amber: #f0b35a;
+  --pink: #f28ab0;
+  --danger: #ff7a6e;
+  --green: #8fd3a6;
+  --editor-page: #faf7f0;
+  --rn-black: #0e0e10;
+  --rn-bone: #f2ede3;
+  --rn-crimson: #c8102e;
+  --rn-paper: #faf7f0;
+  --rn-brush: 'Potta One', 'Segoe UI', system-ui, sans-serif;
+}
+/* Paper surfaces re-point the tokens, so everything on them turns to black ink. */
+[data-theme='ronin'] .editor-wrap,
+[data-theme='ronin'] .outline-list,
+[data-theme='ronin'] .map-node,
+[data-theme='ronin'] .script-item.active,
+[data-theme='ronin'] .theme-row.active,
+[data-theme='ronin'] .context-menu,
+[data-theme='ronin'] .export-menu,
+[data-theme='ronin'] .section-jump-menu,
+[data-theme='ronin'] .line-search-menu,
+[data-theme='ronin'] .tag-menu,
+[data-theme='ronin'] .synonym-menu,
+[data-theme='ronin'] .map-idea-menu,
+[data-theme='ronin'] .shape-picker-menu,
+[data-theme='ronin'] .diff-modal {
+  --panel: #f0ece2;
+  --panel-2: #e9e4d8;
+  --panel-3: #ddd7c8;
+  --ink: #141414;
+  --ink-dim: #45423c;
+  --ink-faint: #666159;
+  --line: #c9c3b4;
+  --line-soft: #dedacd;
+  --cyan: #b80f2a;
+  --amber: #8a5210;
+  --pink: #a8325a;
+  --danger: #a3241a;
+  --green: #2c6a3c;
+  color: var(--ink);
+}
+[data-theme='ronin'] .app-root {
+  background-color: #1b2a3a;
+  background-image: var(--theme-wallpaper, url('./assets/bg/ronin-great-wave.webp'));
+  background-size: var(--theme-wallpaper-size, cover);
+  background-position: var(--theme-wallpaper-pos, center);
+  background-repeat: var(--theme-wallpaper-repeat, no-repeat);
+}
+[data-theme='ronin'] .main {
+  background: transparent !important;
+}
+[data-theme='ronin'] .editor-wrap,
+[data-theme='ronin'] .outline-list {
+  background: url('./assets/paper-fibre.png') 0 0 / 480px 480px, var(--editor-page) !important;
+  border-radius: 0 !important;
+  box-shadow: 0 0 0 3px var(--rn-black), 0 28px 54px -18px rgba(0, 0, 0, 0.85) !important;
+}
+[data-theme='ronin'] .line-text {
+  font-size: 16px;
+}
+[data-theme='ronin'] .line-text:focus {
+  background: rgba(20, 20, 20, 0.055);
+}
+[data-theme='ronin'] .line-text,
+[data-theme='ronin'] input,
+[data-theme='ronin'] textarea,
+[data-theme='ronin'] [contenteditable] {
+  caret-color: var(--rn-crimson);
+}
+/* Sumi-black chrome; the bars end on a crimson line. */
+[data-theme='ronin'] .topbar,
+[data-theme='ronin'] .tabbar {
+  background: rgba(14, 14, 16, 0.96) !important;
+  border-bottom: 1px solid rgba(242, 237, 227, 0.18) !important;
+}
+[data-theme='ronin'] .tabbar {
+  border-bottom: 2px solid var(--rn-crimson) !important;
+}
+[data-theme='ronin'] .sidebar,
+[data-theme='ronin'] .inspector {
+  background: rgba(16, 16, 18, 0.95) !important;
+}
+[data-theme='ronin'] .sidebar {
+  border-right: 1px solid rgba(242, 237, 227, 0.2) !important;
+}
+[data-theme='ronin'] .inspector {
+  border-left: 1px solid rgba(242, 237, 227, 0.2) !important;
+}
+[data-theme='ronin'] .margin-stack {
+  background: rgba(16, 16, 18, 0.94) !important;
+  border: 1px solid rgba(242, 237, 227, 0.24) !important;
+  border-radius: 0;
+  box-shadow: 0 18px 34px -16px rgba(0, 0, 0, 0.9);
+}
+[data-theme='ronin'] .context-menu,
+[data-theme='ronin'] .export-menu,
+[data-theme='ronin'] .section-jump-menu,
+[data-theme='ronin'] .line-search-menu,
+[data-theme='ronin'] .tag-menu,
+[data-theme='ronin'] .synonym-menu,
+[data-theme='ronin'] .map-idea-menu,
+[data-theme='ronin'] .shape-picker-menu,
+[data-theme='ronin'] .diff-modal {
+  background: var(--rn-paper) !important;
+  border: 2px solid var(--rn-black) !important;
+  border-radius: 0 !important;
+  box-shadow: 0 22px 44px -14px rgba(0, 0, 0, 0.85) !important;
+}
+/* Everything with a name is brushed on. */
+[data-theme='ronin'] .title-input,
+[data-theme='ronin'] .section-heading-input,
+[data-theme='ronin'] .map-node-heading,
+[data-theme='ronin'] .map-node-heading-input,
+[data-theme='ronin'] .chapter-node-label,
+[data-theme='ronin'] .idea-node-title,
+[data-theme='ronin'] .titlebar-title {
+  font-family: var(--rn-brush) !important;
+  font-weight: 400 !important;
+}
+[data-theme='ronin'] .topbar .title-input {
+  font-size: 23px !important;
+  letter-spacing: 0.01em;
+}
+/* One thick dry-brush stroke under each section heading. */
+[data-theme='ronin'] .section-head {
+  background: url('./assets/ink-stroke.png') 0 100% / 100% 15px no-repeat;
+  padding-bottom: 20px;
+  margin-bottom: 6px;
+}
+[data-theme='ronin'] .section-head .section-heading-input {
+  font-size: 22px !important;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+/* Buttons: bone line-work; hover is a wash, on is solid crimson. */
+[data-theme='ronin'] .icon-btn {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: 0 !important;
+  transition: background 0.3s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s;
+}
+[data-theme='ronin'] .icon-btn:hover:not(:disabled) {
+  background: rgba(242, 237, 227, 0.14) !important;
+}
+[data-theme='ronin'] .icon-btn.active {
+  background: var(--rn-crimson) !important;
+  color: #ffffff !important;
+}
+[data-theme='ronin'] .editor-wrap .icon-btn:hover:not(:disabled),
+[data-theme='ronin'] .outline-list .icon-btn:hover:not(:disabled) {
+  background: rgba(20, 20, 20, 0.1) !important;
+}
+[data-theme='ronin'] .tab-chip {
+  background: transparent !important;
+  border: 1px solid rgba(242, 237, 227, 0.4) !important;
+  border-radius: 0 !important;
+  transition: background 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+[data-theme='ronin'] .tab-chip:hover {
+  background: rgba(242, 237, 227, 0.14) !important;
+}
+[data-theme='ronin'] .tab-chip.active {
+  background: var(--rn-crimson) !important;
+  border-color: var(--rn-crimson) !important;
+  color: #ffffff !important;
+  font-weight: 600;
+}
+[data-theme='ronin'] .tab-chip.active * {
+  color: #ffffff !important;
+}
+[data-theme='ronin'] .new-script-btn {
+  background: var(--rn-bone) !important;
+  border: 1px solid var(--rn-bone) !important;
+  border-radius: 0 !important;
+  color: var(--rn-black) !important;
+  font-weight: 600;
+  transition: background 0.3s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s, border-color 0.2s;
+}
+[data-theme='ronin'] .new-script-btn:hover {
+  background: var(--rn-crimson) !important;
+  border-color: var(--rn-crimson) !important;
+  color: #ffffff !important;
+}
+[data-theme='ronin'] .checklist-add button {
+  background: var(--rn-crimson) !important;
+  color: #ffffff !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+}
+[data-theme='ronin'] .script-item {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: 0 !important;
+  transition: background 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+[data-theme='ronin'] .script-item:hover {
+  background: rgba(242, 237, 227, 0.1) !important;
+}
+[data-theme='ronin'] .script-item.active,
+[data-theme='ronin'] .theme-row.active {
+  background: var(--rn-paper) !important;
+  border-color: var(--rn-black) !important;
+  box-shadow: 0 12px 22px -12px rgba(0, 0, 0, 0.9);
+}
+/* The open script carries a red sun. */
+[data-theme='ronin'] .script-item.active {
+  background: radial-gradient(circle at calc(100% - 17px) 17px, var(--rn-crimson) 0 7px, rgba(200, 16, 46, 0) 7.5px), var(--rn-paper) !important;
+}
+[data-theme='ronin'] .search-wrap input,
+[data-theme='ronin'] .sj-search,
+[data-theme='ronin'] .ls-search,
+[data-theme='ronin'] .outline-search {
+  background: rgba(0, 0, 0, 0.5) !important;
+  border: 1px solid rgba(242, 237, 227, 0.3) !important;
+  border-radius: 0 !important;
+}
+[data-theme='ronin'] .section-jump-menu .sj-search,
+[data-theme='ronin'] .line-search-menu .ls-search,
+[data-theme='ronin'] .outline-list .outline-search {
+  background: #ffffff !important;
+  border-color: #141414 !important;
+}
+[data-theme='ronin'] .tag-pill,
+[data-theme='ronin'] .section-chip {
+  border-radius: 0;
+}
+/* The section strip: black, bone labels, a crimson stroke under what's done. */
+[data-theme='ronin'] .section-timeline {
+  background: #050506;
+  border-bottom: 1px solid rgba(242, 237, 227, 0.25);
+}
+[data-theme='ronin'] .timeline-segment {
+  background: #151517;
+  border-right: 1px solid rgba(242, 237, 227, 0.22);
+}
+[data-theme='ronin'] .timeline-segment:hover {
+  background: #2a2a2e;
+}
+[data-theme='ronin'] .timeline-segment-label,
+[data-theme='ronin'] .timeline-segment.done .timeline-segment-label {
+  color: #f2ede3;
+}
+[data-theme='ronin'] .timeline-segment.done {
+  box-shadow: inset 0 -3px 0 var(--rn-crimson);
+}
+[data-theme='ronin'] .map-canvas {
+  background-color: #1b2a3a !important;
+  background-image: linear-gradient(rgba(10, 10, 12, 0.6), rgba(10, 10, 12, 0.6)), var(--theme-wallpaper, url('./assets/bg/ronin-great-wave.webp')) !important;
+  background-size: auto, var(--theme-wallpaper-size, cover) !important;
+  background-position: 0 0, var(--theme-wallpaper-pos, center) !important;
+  background-repeat: no-repeat, var(--theme-wallpaper-repeat, no-repeat) !important;
+}
+[data-theme='ronin'] .map-node {
+  background: var(--rn-paper) !important;
+  border: 2px solid var(--rn-black) !important;
+  border-radius: 0 !important;
+  box-shadow: 0 18px 30px -14px rgba(0, 0, 0, 0.9) !important;
+}
+[data-theme='ronin'] .map-node.is-selected {
+  box-shadow: 0 0 0 3px var(--rn-crimson), 0 18px 30px -14px rgba(0, 0, 0, 0.9) !important;
+}
+[data-theme='ronin'] .map-node-connector {
+  background: var(--rn-crimson) !important;
+  border: 1px solid var(--rn-bone) !important;
+}
+[data-theme='ronin'] .map-edges-svg {
+  --ink-faint: #f2ede3;
+  --cyan: #ff5a52;
+}
+[data-theme='ronin'] .map-edge {
+  stroke: #f2ede3;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.9));
+}
+[data-theme='ronin'] .map-edge.is-lit {
+  stroke: #ff5a52;
+}
+[data-theme='ronin'] ::selection {
+  background: rgba(255, 90, 82, 0.4);
+  color: #ffffff;
+}
+[data-theme='ronin'] .editor-wrap ::selection,
+[data-theme='ronin'] .outline-list ::selection,
+[data-theme='ronin'] .map-node ::selection {
+  background: rgba(200, 16, 46, 0.22);
+  color: #141414;
+}
+:root[data-theme='ronin'] {
+  --titlebar-bg: #050506;
+  --titlebar-border: #000000;
+  --titlebar-text: #f2ede3;
+  --titlebar-weight: 400;
+  --caption-border: transparent;
+  --caption-bg: transparent;
+  --caption-bg-hover: rgba(242, 237, 227, 0.18);
+  --caption-bg-active: rgba(242, 237, 227, 0.3);
+  --caption-shadow: none;
+  --caption-icon: #f2ede3;
+  --caption-close-border: transparent;
+  --caption-close-bg: transparent;
+  --caption-close-bg-hover: #c8102e;
+  --caption-close-bg-active: #9c0c24;
+  --tip-bg: #faf7f0;
+  --tip-ink: #141414;
+  --tip-border: #141414;
+  --tip-radius: 0;
+  --tip-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.85);
+  --tip-key-bg: #c8102e;
+  --tip-key-ink: #ffffff;
+  --tip-key-border: #c8102e;
+}
+
 /* MS-DOS: the Windows 95 navy titlebar gradient with gray beveled caption
    squares, matching the theme's own topbar. */
 :root[data-theme='dos'] {

@@ -80,6 +80,39 @@ import tikiAlohaRed from '../assets/bg/tiki-aloha-red.png'
 import tikiCabin from '../assets/bg/tiki-cabin.webp'
 import tikiLogCabin from '../assets/bg/tiki-log-cabin.webp'
 import tikiPlankWall from '../assets/bg/tiki-plank-wall.png'
+import inkPinesLeft from '../assets/bg/ink-pines-left.webp'
+import inkPinesRight from '../assets/bg/ink-pines-right.webp'
+import inkMuromachiLandscape from '../assets/bg/ink-muromachi-landscape.webp'
+import inkLiteratusAutumn from '../assets/bg/ink-literatus-autumn.webp'
+import cyanFerns from '../assets/bg/cyan-ferns.webp'
+import cyanFernWreath from '../assets/bg/cyan-fern-wreath.webp'
+import cyanSeaFan from '../assets/bg/cyan-sea-fan.webp'
+import cyanSeaweed from '../assets/bg/cyan-seaweed.webp'
+import cyanDictyota from '../assets/bg/cyan-dictyota.webp'
+import cardDrawerWall from '../assets/bg/card-drawer-wall.webp'
+import cardOakDrawers from '../assets/bg/card-oak-drawers.webp'
+import cardRylands from '../assets/bg/card-rylands.webp'
+import cardBrassPulls from '../assets/bg/card-brass-pulls.webp'
+import cardMarbledBlue from '../assets/bg/card-marbled-blue.webp'
+import cardMarbledPeacock from '../assets/bg/card-marbled-peacock.webp'
+import risoCoralTeal from '../assets/bg/riso-coral-teal.webp'
+import risoYellowBlue from '../assets/bg/riso-yellow-blue.webp'
+import risoPinkGreen from '../assets/bg/riso-pink-green.webp'
+import risoOrangeViolet from '../assets/bg/riso-orange-violet.webp'
+import wizLongRoom from '../assets/bg/wiz-long-room.webp'
+import wizGreatHall from '../assets/bg/wiz-great-hall.webp'
+import wizCloisters from '../assets/bg/wiz-cloisters.webp'
+import wizSteamTrain from '../assets/bg/wiz-steam-train.webp'
+import wizForestLane from '../assets/bg/wiz-forest-lane.webp'
+import wizAutumnWood from '../assets/bg/wiz-autumn-wood.webp'
+import wizPinePath from '../assets/bg/wiz-pine-path.webp'
+import roninGreatWave from '../assets/bg/ronin-great-wave.webp'
+import roninRedFuji from '../assets/bg/ronin-red-fuji.webp'
+import roninSuddenShower from '../assets/bg/ronin-sudden-shower.webp'
+import roninDragonKing from '../assets/bg/ronin-dragon-king.webp'
+import roninTwoDragons from '../assets/bg/ronin-two-dragons.webp'
+import roninSplashedInk from '../assets/bg/ronin-splashed-ink.webp'
+import roninPines from '../assets/bg/ronin-pines.webp'
 
 // Pure-CSS backgrounds (no image): the Y2K themes' own metal and the amber
 // LCD back wall from Bijou Footage.
@@ -249,6 +282,59 @@ export const THEME_VARIANTS = {
     { id: 'log-cabin', label: 'Log cabin', url: tikiLogCabin },
     { id: 'plank-wall', label: 'Plank wall', url: tikiPlankWall, tile: [512, 256] },
     { id: 'plank-wall-dark', label: 'Dark plank wall', url: tikiPlankWallDark, tile: [512, 256] }
+  ],
+  // Ink paintings on folding screens: Hasegawa Tōhaku's Pine Trees (both
+  // screens) and two Muromachi-period landscapes (Cleveland Museum of Art, CC0).
+  inkWash: [
+    { id: 'pines-left', label: 'Pine trees (left screen)', url: inkPinesLeft },
+    { id: 'pines-right', label: 'Pine trees (right screen)', url: inkPinesRight },
+    { id: 'muromachi', label: 'Mountain landscape', url: inkMuromachiLandscape },
+    { id: 'literatus', label: 'Scholar in autumn', url: inkLiteratusAutumn }
+  ],
+  // Anna Atkins's cyanotype photograms, 1840s–50s (National Gallery of Art, the Met).
+  cyanotype: [
+    { id: 'ferns', label: 'Ferns', url: cyanFerns },
+    { id: 'sea-fan', label: 'Seaweed (dark)', url: cyanSeaFan },
+    { id: 'dictyota', label: 'Dictyota', url: cyanDictyota },
+    { id: 'seaweed', label: 'Seaweed (pale)', url: cyanSeaweed },
+    { id: 'fern-wreath', label: 'Foreign ferns', url: cyanFernWreath }
+  ],
+  // Card-catalog drawers, then marbled endpapers from old books.
+  cardCatalog: [
+    { id: 'drawer-wall', label: 'Wall of drawers', url: cardDrawerWall },
+    { id: 'oak-drawers', label: 'Oak drawers', url: cardOakDrawers },
+    { id: 'rylands', label: 'John Rylands Library', url: cardRylands },
+    { id: 'brass-pulls', label: 'Brass pulls', url: cardBrassPulls },
+    { id: 'marbled-blue', label: 'Marbled endpaper (1830)', url: cardMarbledBlue },
+    { id: 'marbled-peacock', label: 'Peacock endpaper (1875)', url: cardMarbledPeacock }
+  ],
+  // Two-ink risograph prints drawn for the theme (one sheet per ink pair).
+  risoZine: [
+    { id: 'coral-teal', label: 'Coral and teal', url: risoCoralTeal },
+    { id: 'yellow-blue', label: 'Yellow and blue', url: risoYellowBlue },
+    { id: 'pink-green', label: 'Pink and green', url: risoPinkGreen },
+    { id: 'orange-violet', label: 'Orange and violet', url: risoOrangeViolet }
+  ],
+  // The real places a school of magic looks like: an old library, a dining
+  // hall, fan-vaulted cloisters, a steam train on a viaduct.
+  spellbound: [
+    { id: 'long-room', label: 'The old library', url: wizLongRoom },
+    { id: 'great-hall', label: 'The great hall', url: wizGreatHall },
+    { id: 'cloisters', label: 'Cloisters', url: wizCloisters },
+    { id: 'steam-train', label: 'Steam train', url: wizSteamTrain },
+    { id: 'forest-lane', label: 'Forest lane at dawn', url: wizForestLane },
+    { id: 'autumn-wood', label: 'Autumn wood', url: wizAutumnWood },
+    { id: 'pine-path', label: 'Pine path (cold)', url: wizPinePath }
+  ],
+  // Ukiyo-e woodblock prints: Hokusai, Hiroshige, Kuniyoshi.
+  ronin: [
+    { id: 'great-wave', label: 'The Great Wave', url: roninGreatWave },
+    { id: 'red-fuji', label: 'Red Fuji', url: roninRedFuji },
+    { id: 'sudden-shower', label: 'Sudden shower', url: roninSuddenShower },
+    { id: 'dragon-king', label: 'Dragon king', url: roninDragonKing },
+    { id: 'two-dragons', label: 'Ink dragons (black and white)', url: roninTwoDragons },
+    { id: 'splashed-ink', label: 'Splashed ink (black and white)', url: roninSplashedInk },
+    { id: 'pines', label: 'Pines in mist (black and white)', url: roninPines }
   ]
 }
 
