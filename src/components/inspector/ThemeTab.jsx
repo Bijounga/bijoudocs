@@ -3,6 +3,7 @@ import { useStore } from '../../state/store.js'
 import Icon from '../icons.jsx'
 import { THEME_TOKENS, DEFAULT_CUSTOM_THEME_COLORS } from '../../lib/themeTokens.js'
 import { THEME_VARIANTS, activeVariant } from '../../lib/themeVariants.js'
+import { familyOfTheme, defaultMemberOf, baseThemeOf } from '../../lib/themeFamilies.js'
 
 // Swatch colors are hardcoded here (not read from CSS vars) so every theme's
 // preview renders correctly regardless of which theme is currently active —
@@ -10,6 +11,8 @@ import { THEME_VARIANTS, activeVariant } from '../../lib/themeVariants.js'
 const THEMES = [
   { id: 'dark', label: 'Dark', swatches: ['#14151a', '#1b1d23', '#ece9e2', '#4fd1c5'] },
   { id: 'midnight', label: 'Midnight', swatches: ['#0a0b0d', '#0f1014', '#ece9e2', '#4fd1c5'] },
+  { id: 'liquidGlass', label: 'Liquid Glass', swatches: ['#6f8db0', '#f4f5f9', '#1d1d1f', '#007aff'] },
+  { id: 'liquidGlassDark', label: 'Liquid Glass Dark', swatches: ['#111216', '#1c1c1f', '#f5f5f7', '#0a84ff'] },
   { id: 'dos', label: 'MS-DOS', swatches: ['#0000aa', '#0000aa', '#ffffff', '#ffff55'] },
   { id: 'aero', label: 'Frutiger Aero', swatches: ['#0a3d62', '#eaf6ff', '#0b2545', '#0f9fdb'] },
   { id: 'vaporwave', label: 'Vaporwave', swatches: ['#2b1055', '#e8d9ff', '#2a1a4a', '#ff4fb8'] },
@@ -31,8 +34,31 @@ const THEMES = [
   { id: 'fable', label: 'Fable', swatches: ['#b9a26c', '#e8d9ab', '#3b2a17', '#9c2b2b'] },
   { id: 'fantasy', label: 'Earthen', swatches: ['#1a120b', '#241a10', '#f0e0c0', '#d4af37'] },
   { id: 'highContrast', label: 'High Contrast', swatches: ['#000000', '#0d0d0d', '#ffffff', '#00e5ff'] },
-  { id: 'monochrome', label: 'Monochrome', swatches: ['#16171a', '#1c1d21', '#eaeaea', '#e8e8e8'] }
+  { id: 'monochrome', label: 'Monochrome', swatches: ['#16171a', '#1c1d21', '#eaeaea', '#e8e8e8'] },
+  // The other half of each illustrated theme (themeFamilies.js): same world, opposite light.
+  { id: 'inkWashDark', label: 'Ink Wash Night', swatches: ['#14130f', '#1c1a16', '#ece5d3', '#e2574c'] },
+  { id: 'cyanotypeLight', label: 'Cyanotype Paper', swatches: ['#e9e3d2', '#f6f1e3', '#14263d', '#17507f'] },
+  { id: 'cardCatalogDark', label: 'Card Catalog Walnut', swatches: ['#1f150b', '#2e2114', '#f3e6c4', '#e8c35a'] },
+  { id: 'risoZineDark', label: 'Riso Zine Black', swatches: ['#14121f', '#1c1930', '#f4efe4', '#3fd0d6'] },
+  { id: 'spellboundLight', label: 'Spellbound Parchment', swatches: ['#e6d9b8', '#f7efd9', '#2a1d10', '#7a1626'] },
+  { id: 'roninLight', label: 'Ronin Paper', swatches: ['#e9e4d8', '#faf7f0', '#141414', '#b80f2a'] },
+  { id: 'xpDark', label: 'Windows XP Noir', swatches: ['#1a1a1a', '#2b2b2b', '#f0f0f0', '#ff8a2a'] },
+  { id: 'minecraftDark', label: 'Minecraft Deepslate', swatches: ['#101012', '#2c2c30', '#ececec', '#6fd24a'] },
+  { id: 'terrariaLight', label: 'Terraria Day', swatches: ['#9cc4f5', '#dfe6ff', '#171a52', '#2a35b0'] },
+  { id: 'terrariaDark', label: 'Terraria Underground', swatches: ['#07081c', '#11132e', '#eef0ff', '#ffd84a'] },
+  { id: 'aeroBlack', label: 'Frutiger Aero Black', swatches: ['#020305', '#07090d', '#f2f6fa', '#3fd0e8'] }
 ]
+
+// One card per family (themeFamilies.js) or per lone theme, in the order the
+// themes are listed above. A family's card shows its first member's swatches.
+const CARDS = []
+THEMES.forEach((t) => {
+  const fam = familyOfTheme(t.id)
+  if (!fam) return CARDS.push({ id: t.id, label: t.label, swatches: t.swatches, members: [{ id: t.id, label: t.label }] })
+  if (CARDS.some((c) => c.id === fam.id)) return
+  const first = THEMES.find((x) => x.id === defaultMemberOf(fam)) || t
+  CARDS.push({ id: fam.id, label: fam.label, swatches: first.swatches, members: fam.members, start: defaultMemberOf(fam) })
+})
 
 // The 4 tokens the small preview swatch strip shows, out of all 15 —
 // enough to recognize a theme at a glance without a huge row.
@@ -43,6 +69,9 @@ export default function ThemeTab() {
   const setTheme = useStore((s) => s.setTheme)
   const themeVariants = useStore((s) => s.themeVariants)
   const setThemeVariant = useStore((s) => s.setThemeVariant)
+  const glassFrost = useStore((s) => s.glassFrost)
+  const themeFamilyPick = useStore((s) => s.themeFamilyPick)
+  const setGlassFrost = useStore((s) => s.setGlassFrost)
   const editorPageContrast = useStore((s) => s.editorPageContrast)
   const toggleEditorPageContrast = useStore((s) => s.toggleEditorPageContrast)
   const customThemes = useStore((s) => s.customThemes)
@@ -73,33 +102,64 @@ export default function ThemeTab() {
         <input type="checkbox" checked={editorPageContrast} onChange={toggleEditorPageContrast} />
         Page contrast
       </label>
-      {THEMES.map((t) => (
-        <React.Fragment key={t.id}>
-          <button className={'theme-row' + (theme === t.id ? ' active' : '')} onClick={() => setTheme(t.id)}>
+      {CARDS.map((c) => {
+        const open = c.members.some((m) => m.id === theme)
+        // The member shown: the open one, else the one last used in this family, else the first.
+        const pick = open ? theme : c.members.some((m) => m.id === themeFamilyPick[c.id]) ? themeFamilyPick[c.id] : c.start || c.members[0].id
+        const swatches = (THEMES.find((x) => x.id === pick) || c).swatches
+        return (
+        <React.Fragment key={c.id}>
+          <button className={'theme-row' + (open ? ' active' : '')} onClick={() => setTheme(pick)}>
             <div className="theme-swatches">
-              {t.swatches.map((c, i) => (
-                <span key={i} className="theme-swatch" style={{ background: c }} />
+              {swatches.map((s, i) => (
+                <span key={i} className="theme-swatch" style={{ background: s }} />
               ))}
             </div>
-            <span className="theme-row-label">{t.label}</span>
-            {theme === t.id && <Icon name="check" size={14} className="theme-row-check" />}
+            <span className="theme-row-label">
+              {c.label}
+              {c.members.length > 1 && <span className="theme-row-sub">{c.members.length} variations</span>}
+            </span>
+            {open && <Icon name="check" size={14} className="theme-row-check" />}
           </button>
-          {theme === t.id && THEME_VARIANTS[t.id] && (
+          {open && c.members.length > 1 && (
+            <div className="theme-variations" role="radiogroup" aria-label="Variation">
+              {c.members.map((m) => (
+                <button
+                  key={m.id}
+                  role="radio"
+                  aria-checked={theme === m.id}
+                  className={'theme-variation' + (theme === m.id ? ' active' : '')}
+                  onClick={() => setTheme(m.id)}
+                >
+                  <span className="theme-variation-dot" />
+                  {m.label}
+                </button>
+              ))}
+            </div>
+          )}
+          {open && THEME_VARIANTS[baseThemeOf(theme)] && (
             <div className="theme-variants">
-              {THEME_VARIANTS[t.id].map((v) => (
+              {THEME_VARIANTS[baseThemeOf(theme)].map((v) => (
                 <button
                   key={v.id}
-                  className={'theme-variant' + (activeVariant(t.id, themeVariants).id === v.id ? ' active' : '')}
+                  className={'theme-variant' + (activeVariant(baseThemeOf(theme), themeVariants).id === v.id ? ' active' : '')}
                   style={{ backgroundImage: v.css || 'url("' + v.url + '")', imageRendering: v.pixel ? 'pixelated' : 'auto' }}
-                  onClick={() => setThemeVariant(t.id, v.id)}
+                  onClick={() => setThemeVariant(baseThemeOf(theme), v.id)}
                   title={v.label}
                   aria-label={v.label}
                 />
               ))}
             </div>
           )}
+          {open && (theme === 'liquidGlass' || theme === 'liquidGlassDark') && (
+            <label className="glass-frost" title="How frosted the glass is: clear shows the picture sharply, frosted blurs it">
+              Frosted
+              <input type="range" min="0" max="100" value={glassFrost} onChange={(e) => setGlassFrost(+e.target.value)} aria-label="Frosted" />
+            </label>
+          )}
         </React.Fragment>
-      ))}
+        )
+      })}
 
       {customThemes.length > 0 && <div className="insp-section-title">Your themes</div>}
       {customThemes.map((t) => (

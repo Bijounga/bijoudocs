@@ -113,6 +113,18 @@ import roninDragonKing from '../assets/bg/ronin-dragon-king.webp'
 import roninTwoDragons from '../assets/bg/ronin-two-dragons.webp'
 import roninSplashedInk from '../assets/bg/ronin-splashed-ink.webp'
 import roninPines from '../assets/bg/ronin-pines.webp'
+import glassTahoeDay from '../assets/bg/glass-tahoe-day.webp'
+import glassTahoeSunset from '../assets/bg/glass-tahoe-sunset.webp'
+import glassTahoeDusk from '../assets/bg/glass-tahoe-dusk.webp'
+import glassTahoeWinter from '../assets/bg/glass-tahoe-winter.webp'
+import glassYosemite from '../assets/bg/glass-yosemite.webp'
+import glassYosemiteFog from '../assets/bg/glass-yosemite-fog.webp'
+import glassBigSur from '../assets/bg/glass-big-sur.webp'
+import glassWave from '../assets/bg/glass-wave.webp'
+import glassTide from '../assets/bg/glass-abstract-tide.webp'
+import glassBloom from '../assets/bg/glass-abstract-bloom.webp'
+import glassPearl from '../assets/bg/glass-abstract-pearl.webp'
+import glassAurora from '../assets/bg/glass-abstract-aurora.webp'
 
 // Pure-CSS backgrounds (no image): the Y2K themes' own metal and the amber
 // LCD back wall from Bijou Footage.
@@ -335,6 +347,37 @@ export const THEME_VARIANTS = {
     { id: 'two-dragons', label: 'Ink dragons (black and white)', url: roninTwoDragons },
     { id: 'splashed-ink', label: 'Splashed ink (black and white)', url: roninSplashedInk },
     { id: 'pines', label: 'Pines in mist (black and white)', url: roninPines }
+  ],
+  // Liquid Glass: real photos and four structured abstracts to sit behind the
+  // glass (never a flat colour: glass over flat grey reads as plastic).
+  liquidGlass: [
+    { id: 'tahoe-day', label: 'Emerald Bay', url: glassTahoeDay },
+    { id: 'tahoe-sunset', label: 'Tahoe sunset', url: glassTahoeSunset },
+    { id: 'tahoe-winter', label: 'Tahoe winter', url: glassTahoeWinter },
+    { id: 'tahoe-dusk', label: 'Tahoe dusk', url: glassTahoeDusk },
+    { id: 'yosemite', label: 'Yosemite', url: glassYosemite },
+    { id: 'big-sur', label: 'Big Sur', url: glassBigSur },
+    { id: 'wave', label: 'Wave', url: glassWave },
+    { id: 'yosemite-fog', label: 'Yosemite fog', url: glassYosemiteFog },
+    { id: 'tide', label: 'Tide', url: glassTide },
+    { id: 'bloom', label: 'Bloom', url: glassBloom },
+    { id: 'pearl', label: 'Pearl', url: glassPearl },
+    { id: 'aurora', label: 'Aurora', url: glassAurora }
+  ],
+  // The dark glass starts on the dusk picture; the rest of the list is the same.
+  liquidGlassDark: [
+    { id: 'tahoe-dusk', label: 'Tahoe dusk', url: glassTahoeDusk },
+    { id: 'tahoe-sunset', label: 'Tahoe sunset', url: glassTahoeSunset },
+    { id: 'yosemite-fog', label: 'Yosemite fog', url: glassYosemiteFog },
+    { id: 'big-sur', label: 'Big Sur', url: glassBigSur },
+    { id: 'tide', label: 'Tide', url: glassTide },
+    { id: 'aurora', label: 'Aurora', url: glassAurora },
+    { id: 'wave', label: 'Wave', url: glassWave },
+    { id: 'tahoe-winter', label: 'Tahoe winter', url: glassTahoeWinter },
+    { id: 'yosemite', label: 'Yosemite', url: glassYosemite },
+    { id: 'tahoe-day', label: 'Emerald Bay', url: glassTahoeDay },
+    { id: 'bloom', label: 'Bloom', url: glassBloom },
+    { id: 'pearl', label: 'Pearl', url: glassPearl }
   ]
 }
 

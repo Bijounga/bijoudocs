@@ -14,15 +14,41 @@ const CONNECTOR_SIDES = ['top', 'right', 'bottom', 'left']
 // rendering never calls this: the CSS itself falls back to
 // var(--panel-2) directly, so it keeps tracking the live theme even for
 // a node whose color was never touched.
+// A theme colour token as [r, g, b, a] (0-255, a 0-1), from #hex, rgb() or
+// rgba() in the comma or the space syntax; null if it is none of those.
+function parseColor(v) {
+  const hex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(v)
+  if (hex) {
+    const h = hex[1].length === 3 ? hex[1].split('').map((c) => c + c).join('') : hex[1]
+    return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16), 1]
+  }
+  const fn = /^rgba?\(([^)]+)\)$/i.exec(v)
+  if (!fn) return null
+  const n = fn[1].split(/[\s,/]+/).filter(Boolean).map(parseFloat)
+  if (n.length < 3 || n.slice(0, 3).some(isNaN)) return null
+  return [n[0], n[1], n[2], n.length > 3 && !isNaN(n[3]) ? n[3] : 1]
+}
+const toHex = (c) => '#' + c.map((x) => Math.max(0, Math.min(255, Math.round(x))).toString(16).padStart(2, '0')).join('')
+let bgCache = { key: '', value: '#ffffff' }
 function themeBgColor() {
-  const v = getComputedStyle(document.documentElement).getPropertyValue('--panel-2').trim()
-  return v || '#ffffff'
+  const root = document.documentElement
+  // Called for every idea node on every render, so only recomputed when the theme or its inline colours change.
+  const key = (root.dataset.theme || '') + '|' + (root.dataset.variant || '') + '|' + root.style.cssText
+  if (bgCache.key === key) return bgCache.value
+  const cs = getComputedStyle(root)
+  const fill = parseColor(cs.getPropertyValue('--panel-2').trim())
+  // A translucent token (the glass themes) is offered as it looks over the theme's own background.
+  const under = parseColor(cs.getPropertyValue('--bg').trim()) || [255, 255, 255, 1]
+  let value = '#ffffff'
+  if (fill) value = toHex(fill.slice(0, 3).map((x, i) => x * fill[3] + under[i] * (1 - fill[3])))
+  bgCache = { key, value }
+  return value
 }
 
 // A freeform note on the map, not tied to any real section — same
 // position/connector/edge machinery as MapNode, its own title+text+color
 // instead of a section's heading+beatSummary.
-export default function IdeaNode({
+function IdeaNode({
   scriptId,
   id,
   node,
@@ -390,3 +416,6 @@ export default function IdeaNode({
     </div>
   )
 }
+
+// Props are stable while nothing about the node changed, so panning and zooming the map skip every node.
+export default React.memo(IdeaNode)

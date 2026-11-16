@@ -16,3 +16,4 @@ fonts (Minecraft, Minecrafter, Andy) are not installed.
 - EB Garamond (via @fontsource-variable/eb-garamond) - Spellbound theme script text
 - Potta One (via @fontsource/potta-one) - Ronin theme headings
 - Yusei Magic (via @fontsource/yusei-magic) - Ronin theme script text and UI
+- Inter (Rasmus Andersson, inter-latin-opsz-normal.woff2, licence in LICENSE-inter.txt) - Liquid Glass theme

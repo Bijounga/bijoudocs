@@ -288,7 +288,13 @@ export const CHANGELOG = {
   '0.5.81': [
     'Six new themes in the Theme tab, each with several backgrounds to pick from: Ink Wash (misty pine screens, paper, vermilion stamps), Cyanotype (white ferns on Prussian blue), Card Catalog (library drawers, typewriter text), Riso Zine (two-colour print), Spellbound (a candlelit school of magic, plus forest backgrounds) and Ronin (black ink, brush lettering, woodblock prints)'
   ],
-  '0.5.82': ['The paper themes (Ink Wash, Cyanotype, Card Catalog, Riso Zine, Spellbound, Ronin) now show their faint paper grain, which was missing in 0.5.81']
+  '0.5.82': ['The paper themes (Ink Wash, Cyanotype, Card Catalog, Riso Zine, Spellbound, Ronin) now show their faint paper grain, which was missing in 0.5.81'],
+  '0.5.83': [
+    'New Liquid Glass themes (light and dark): frosted, see-through panes over a photo or abstract background, with a Frosted slider in Settings > Appearance',
+    'The mind map pans, zooms and drags much more smoothly, especially with lots of nodes',
+    'Themes that are the same look in a different light now share one card with Variation pills (Light, Dark...) instead of separate cards',
+    'New dark and light variations: Ink Wash Night, Cyanotype Paper, Card Catalog Walnut, Riso Zine Black, Spellbound Parchment, Ronin Paper, Windows XP Noir, Minecraft Deepslate, Terraria Day and Underground, Frutiger Aero Black'
+  ]
 }
 
 function parseVersion(v) {

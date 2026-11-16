@@ -17,7 +17,7 @@ export const NODE_H = 110
 
 const CONNECTOR_SIDES = ['top', 'right', 'bottom', 'left']
 
-export default function MapNode({
+function MapNode({
   scriptId,
   sec,
   node,
@@ -209,3 +209,6 @@ export default function MapNode({
     </div>
   )
 }
+
+// Props are stable while nothing about the node changed, so panning and zooming the map skip every node.
+export default React.memo(MapNode)

@@ -20,6 +20,8 @@ import { useGlobalKeydown } from './hooks/useGlobalKeydown.js'
 import { installGlobalDragSelectListeners } from './state/dragSelect.js'
 import { THEME_TOKENS } from './lib/themeTokens.js'
 import { activeVariant } from './lib/themeVariants.js'
+import { startRefraction, stopRefraction } from './lib/glassRefraction.js'
+import { themeAttrs, baseThemeOf } from './lib/themeFamilies.js'
 
 export default function App() {
   const loaded = useStore((s) => s.loaded)
@@ -28,6 +30,7 @@ export default function App() {
   const theme = useStore((s) => s.theme)
   const customThemes = useStore((s) => s.customThemes)
   const themeVariants = useStore((s) => s.themeVariants)
+  const glassFrost = useStore((s) => s.glassFrost)
   const editorPageContrast = useStore((s) => s.editorPageContrast)
   const scripts = useStore((s) => s.scripts)
   const currentScriptId = useStore((s) => s.currentScriptId)
@@ -76,18 +79,33 @@ export default function App() {
   // should apply now (inline style always beats a stylesheet selector).
   useEffect(() => {
     const custom = theme.startsWith('custom:') ? customThemes.find((t) => t.id === theme) : null
-    document.documentElement.setAttribute('data-theme', custom ? 'dark' : theme)
+    // A variant (Ink Wash Night...) wears its base theme's data-theme plus its own data-variant.
+    const attrs = custom ? { theme: 'dark', variant: '' } : themeAttrs(theme)
+    document.documentElement.setAttribute('data-theme', attrs.theme)
+    if (attrs.variant) document.documentElement.setAttribute('data-variant', attrs.variant)
+    else document.documentElement.removeAttribute('data-variant')
     THEME_TOKENS.forEach(({ key }) => {
       if (custom) document.documentElement.style.setProperty(key, custom.colors[key])
       else document.documentElement.style.removeProperty(key)
     })
   }, [theme, customThemes])
 
+  // Liquid Glass: the Frosted slider is one CSS variable, and the side panels
+  // bend the picture at their rim (declared after the data-theme effect, so
+  // the panels' corner radius is already the glass one when it is measured).
+  useEffect(() => {
+    document.documentElement.style.setProperty('--lg-frost', String(glassFrost))
+  }, [glassFrost])
+  useEffect(() => {
+    if (theme === 'liquidGlass' || theme === 'liquidGlassDark') startRefraction()
+    else stopRefraction()
+  }, [theme, loaded])
+
   // Themes with background variations (see themeVariants.js) read the chosen
   // image from these variables; every other theme clears them.
   useEffect(() => {
     const root = document.documentElement.style
-    const v = activeVariant(theme, themeVariants)
+    const v = activeVariant(baseThemeOf(theme), themeVariants)
     if (v) {
       // Absolute, because a relative url() inside a custom property can
       // resolve against the stylesheet's folder instead of the page's in

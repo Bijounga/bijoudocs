@@ -13,7 +13,7 @@ const CONNECTOR_SIDES = ['top', 'right', 'bottom', 'left']
 // the map, unconnected to the first. Everything a chapter node IS
 // connected to (via the normal edge mechanism) becomes its members, in
 // flattenMapOrder's own connectivity order — see lib/mapGraph.js.
-export default function ChapterNode({
+function ChapterNode({
   scriptId,
   id,
   node,
@@ -152,3 +152,6 @@ export default function ChapterNode({
     </div>
   )
 }
+
+// Props are stable while nothing about the node changed, so panning and zooming the map skip every node.
+export default React.memo(ChapterNode)

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useStore } from '../../state/store.js'
 import { comboFromEvent } from '../../lib/keybinds.js'
@@ -1212,21 +1212,132 @@ export default function MapView({ scriptId, script }) {
     }
   }
 
-  const { order, litEdgeIds } = computeMainThread(script.mapLayout)
-  const nodes = script.mapLayout.nodes
-  // Built once per render, reused per-edge below (each edge just filters
+  // Everything below is derived from the layout alone, so it is worked out when
+  // the layout changes, not on every render: panning and zooming only change
+  // `pan`/`zoom`, and used to redo all of it (and re-render every node) per tick.
+  const mapLayout = script.mapLayout
+  const nodes = mapLayout.nodes
+  const { order, litEdgeIds } = useMemo(() => computeMainThread(mapLayout), [mapLayout])
+  // Built once per layout, reused per-edge below (each edge just filters
   // out its own two endpoints) rather than rebuilt inside the edges.map
   // loop — same box list, only the exclusion differs per edge.
-  const routingObstacles = Object.entries(nodes).map(([id, n]) => ({
-    id,
-    x: n.x,
-    y: n.y,
-    width: n.width || NODE_WIDTH,
-    // A real measured height (auto-sizing shape nodes) is trustworthy
-    // as-is; anything else still only has the nominal NODE_H to go on,
-    // so keep using the generous estimate for those.
-    height: n.height || OBSTACLE_EST_HEIGHT
-  }))
+  const routingObstacles = useMemo(
+    () =>
+      Object.entries(nodes).map(([id, n]) => ({
+        id,
+        x: n.x,
+        y: n.y,
+        width: n.width || NODE_WIDTH,
+        // A real measured height (auto-sizing shape nodes) is trustworthy
+        // as-is; anything else still only has the nominal NODE_H to go on,
+        // so keep using the generous estimate for those.
+        height: n.height || OBSTACLE_EST_HEIGHT
+      })),
+    [nodes]
+  )
+  // Which connector dots each node has a line on, and the end-of-thread "+"
+  // direction, from one pass over the edges. A node's Set is reused while its
+  // sides are unchanged, so a memoised node does not re-render because some
+  // other node moved.
+  const sidesCache = useRef(new Map())
+  const { sidesById, endDirById } = useMemo(() => {
+    const incident = {}
+    mapLayout.edges.forEach((edge) => {
+      ;(incident[edge.from] = incident[edge.from] || []).push(edge)
+      ;(incident[edge.to] = incident[edge.to] || []).push(edge)
+    })
+    const sides = {}
+    const ends = {}
+    const next = new Map()
+    Object.keys(nodes).forEach((id) => {
+      const mine = incident[id] || []
+      const set = new Set(mine.map((edge) => anchorSideForNode(edge, id, nodes)).filter(Boolean))
+      const old = sidesCache.current.get(id)
+      const keep = old && old.size === set.size && [...set].every((x) => old.has(x)) ? old : set
+      next.set(id, keep)
+      sides[id] = keep
+      // same rule as threadEndDirection(): nothing growing out of it, something feeding in
+      const incoming = mine.filter((edge) => edge.to === id)
+      if (mine.some((edge) => edge.from === id) || !incoming.length) {
+        ends[id] = null
+      } else {
+        const src = nodes[incoming[incoming.length - 1].from]
+        const me = nodes[id]
+        if (!src || !me) ends[id] = null
+        else {
+          const dx = me.x - src.x
+          const dy = me.y - src.y
+          ends[id] = Math.abs(dy) >= Math.abs(dx) ? (dy >= 0 ? 'down' : 'up') : dx >= 0 ? 'right' : 'left'
+        }
+      }
+    })
+    sidesCache.current = next
+    return { sidesById: sides, endDirById: ends }
+  }, [nodes, mapLayout.edges])
+  // The handlers handed to every node, stable across renders (they read the latest closures through a ref),
+  // so React.memo on the node components can skip them.
+  const handlersRef = useRef({})
+  handlersRef.current = { handleNodeMouseDown, handleConnectorMouseDown, goToSection, handleAddInDirection, handleNodeContextMenu, handleResizeMouseDown, handleBendMouseDown }
+  const stable = useMemo(
+    () => ({
+      onNodeMouseDown: (...a) => handlersRef.current.handleNodeMouseDown(...a),
+      onConnectorMouseDown: (...a) => handlersRef.current.handleConnectorMouseDown(...a),
+      onDoubleClick: (...a) => handlersRef.current.goToSection(...a),
+      onAddInDirection: (...a) => handlersRef.current.handleAddInDirection(...a),
+      onContextMenu: (...a) => handlersRef.current.handleNodeContextMenu(...a),
+      onResizeMouseDown: (...a) => handlersRef.current.handleResizeMouseDown(...a),
+      onBendMouseDown: (...a) => handlersRef.current.handleBendMouseDown(...a)
+    }),
+    []
+  )
+  // The routed lines: re-routed when nodes or edges change, not when the view pans or zooms.
+  const edgeEls = useMemo(
+    () =>
+      mapLayout.edges.map((edge) => {
+        const from = nodes[edge.from]
+        const to = nodes[edge.to]
+        if (!from || !to) return null
+        const [sideA, sideB] = pickSides(from, to)
+        const a = sideAnchor(from, sideA)
+        const b = sideAnchor(to, sideB)
+        const obstacles = routingObstacles.filter((n) => n.id !== edge.from && n.id !== edge.to)
+        const { axis, points, handle } = routeElbow(a, sideA, b, sideB, edge.bendOffset, obstacles)
+        const d = pathFromPoints(points)
+        const lit = litEdgeIds.has(edge.id)
+        const selected = selectedEdgeId === edge.id
+        return (
+          <g key={edge.id} className={'map-edge-group' + (selected ? ' is-selected' : '')}>
+            <path
+              d={d}
+              className={'map-edge-hit'}
+              onClick={(e) => {
+                e.stopPropagation()
+                setSelectedEdgeId(edge.id)
+              }}
+            />
+            <path
+              d={d}
+              className={'map-edge' + (lit ? ' is-lit' : '') + (selected ? ' is-selected' : '')}
+              markerEnd={lit ? 'url(#map-arrow-lit)' : 'url(#map-arrow)'}
+            />
+            {/* Reroute handle — a fat invisible hit-circle plus a small
+                visible dot, hover/selection-revealed in CSS (same
+                convention as .map-node-connector). Dragging it moves
+                edge.bendOffset via the shared 'bend' drag mode. */}
+            <circle
+              cx={handle.x}
+              cy={handle.y}
+              r="9"
+              className="map-edge-bend-hit"
+              style={{ cursor: axis === 'x' ? 'ew-resize' : 'ns-resize' }}
+              onMouseDown={(e) => stable.onBendMouseDown(e, edge, axis)}
+            />
+            <circle cx={handle.x} cy={handle.y} r="3.5" className="map-edge-bend-handle" />
+          </g>
+        )
+      }),
+    [mapLayout.edges, nodes, routingObstacles, litEdgeIds, selectedEdgeId, stable]
+  )
 
   return (
     <div className="main map-main">
@@ -1382,49 +1493,7 @@ export default function MapView({ scriptId, script }) {
                 <path d="M0,0 L10,5 L0,10 z" fill="var(--cyan)" />
               </marker>
             </defs>
-            {script.mapLayout.edges.map((edge) => {
-              const from = nodes[edge.from]
-              const to = nodes[edge.to]
-              if (!from || !to) return null
-              const [sideA, sideB] = pickSides(from, to)
-              const a = sideAnchor(from, sideA)
-              const b = sideAnchor(to, sideB)
-              const obstacles = routingObstacles.filter((n) => n.id !== edge.from && n.id !== edge.to)
-              const { axis, points, handle } = routeElbow(a, sideA, b, sideB, edge.bendOffset, obstacles)
-              const d = pathFromPoints(points)
-              const lit = litEdgeIds.has(edge.id)
-              const selected = selectedEdgeId === edge.id
-              return (
-                <g key={edge.id} className={'map-edge-group' + (selected ? ' is-selected' : '')}>
-                  <path
-                    d={d}
-                    className={'map-edge-hit'}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setSelectedEdgeId(edge.id)
-                    }}
-                  />
-                  <path
-                    d={d}
-                    className={'map-edge' + (lit ? ' is-lit' : '') + (selected ? ' is-selected' : '')}
-                    markerEnd={lit ? 'url(#map-arrow-lit)' : 'url(#map-arrow)'}
-                  />
-                  {/* Reroute handle — a fat invisible hit-circle plus a small
-                      visible dot, hover/selection-revealed in CSS (same
-                      convention as .map-node-connector). Dragging it moves
-                      edge.bendOffset via the shared 'bend' drag mode. */}
-                  <circle
-                    cx={handle.x}
-                    cy={handle.y}
-                    r="9"
-                    className="map-edge-bend-hit"
-                    style={{ cursor: axis === 'x' ? 'ew-resize' : 'ns-resize' }}
-                    onMouseDown={(e) => handleBendMouseDown(e, edge, axis)}
-                  />
-                  <circle cx={handle.x} cy={handle.y} r="3.5" className="map-edge-bend-handle" />
-                </g>
-              )
-            })}
+            {edgeEls}
             {connectPreview &&
               nodes[connectPreview.fromId] &&
               (() => {
@@ -1450,12 +1519,6 @@ export default function MapView({ scriptId, script }) {
           {script.sections.map((sec) => {
             const node = nodes[sec.id]
             if (!node) return null
-            const connectedSides = new Set(
-              script.mapLayout.edges
-                .filter((edge) => edge.from === sec.id || edge.to === sec.id)
-                .map((edge) => anchorSideForNode(edge, sec.id, nodes))
-                .filter(Boolean)
-            )
             return (
               <MapNode
                 key={sec.id}
@@ -1467,73 +1530,57 @@ export default function MapView({ scriptId, script }) {
                 isSelected={validSelectedNodeIds.includes(sec.id)}
                 order={order.get(sec.id)}
                 hideSummaries={script.mapLayout.hideSummaries}
-                threadEndDir={threadEndDirection(sec.id, nodes, script.mapLayout.edges)}
-                connectedSides={connectedSides}
-                onNodeMouseDown={handleNodeMouseDown}
-                onConnectorMouseDown={handleConnectorMouseDown}
-                onDoubleClick={goToSection}
-                onAddInDirection={handleAddInDirection}
-                onContextMenu={handleNodeContextMenu}
-                onResizeMouseDown={handleResizeMouseDown}
+                threadEndDir={endDirById[sec.id]}
+                connectedSides={sidesById[sec.id]}
+                onNodeMouseDown={stable.onNodeMouseDown}
+                onConnectorMouseDown={stable.onConnectorMouseDown}
+                onDoubleClick={stable.onDoubleClick}
+                onAddInDirection={stable.onAddInDirection}
+                onContextMenu={stable.onContextMenu}
+                onResizeMouseDown={stable.onResizeMouseDown}
               />
             )
           })}
           {Object.entries(nodes)
             .filter(([, n]) => isIdeaNode(n))
-            .map(([id, node]) => {
-              const connectedSides = new Set(
-                script.mapLayout.edges
-                  .filter((edge) => edge.from === id || edge.to === id)
-                  .map((edge) => anchorSideForNode(edge, id, nodes))
-                  .filter(Boolean)
-              )
-              return (
-                <IdeaNode
-                  key={id}
-                  scriptId={scriptId}
-                  id={id}
-                  node={node}
-                  isLit={order.has(id)}
-                  isSelected={validSelectedNodeIds.includes(id)}
-                  hideSummaries={script.mapLayout.hideSummaries}
-                  hideOutlines={script.mapLayout.hideOutlines}
-                  order={order.get(id)}
-                  threadEndDir={threadEndDirection(id, nodes, script.mapLayout.edges)}
-                  connectedSides={connectedSides}
-                  onNodeMouseDown={handleNodeMouseDown}
-                  onConnectorMouseDown={handleConnectorMouseDown}
-                  onAddInDirection={handleAddInDirection}
-                  onContextMenu={handleNodeContextMenu}
-                  onResizeMouseDown={handleResizeMouseDown}
-                />
-              )
-            })}
+            .map(([id, node]) => (
+              <IdeaNode
+                key={id}
+                scriptId={scriptId}
+                id={id}
+                node={node}
+                isLit={order.has(id)}
+                isSelected={validSelectedNodeIds.includes(id)}
+                hideSummaries={script.mapLayout.hideSummaries}
+                hideOutlines={script.mapLayout.hideOutlines}
+                order={order.get(id)}
+                threadEndDir={endDirById[id]}
+                connectedSides={sidesById[id]}
+                onNodeMouseDown={stable.onNodeMouseDown}
+                onConnectorMouseDown={stable.onConnectorMouseDown}
+                onAddInDirection={stable.onAddInDirection}
+                onContextMenu={stable.onContextMenu}
+                onResizeMouseDown={stable.onResizeMouseDown}
+              />
+            ))}
           {Object.entries(nodes)
             .filter(([, n]) => isChapterNode(n))
-            .map(([id, node]) => {
-              const connectedSides = new Set(
-                script.mapLayout.edges
-                  .filter((edge) => edge.from === id || edge.to === id)
-                  .map((edge) => anchorSideForNode(edge, id, nodes))
-                  .filter(Boolean)
-              )
-              return (
-                <ChapterNode
-                  key={id}
-                  scriptId={scriptId}
-                  id={id}
-                  node={node}
-                  isSelected={validSelectedNodeIds.includes(id)}
-                  threadEndDir={threadEndDirection(id, nodes, script.mapLayout.edges)}
-                  connectedSides={connectedSides}
-                  onNodeMouseDown={handleNodeMouseDown}
-                  onConnectorMouseDown={handleConnectorMouseDown}
-                  onAddInDirection={handleAddInDirection}
-                  onContextMenu={handleNodeContextMenu}
-                  onResizeMouseDown={handleResizeMouseDown}
-                />
-              )
-            })}
+            .map(([id, node]) => (
+              <ChapterNode
+                key={id}
+                scriptId={scriptId}
+                id={id}
+                node={node}
+                isSelected={validSelectedNodeIds.includes(id)}
+                threadEndDir={endDirById[id]}
+                connectedSides={sidesById[id]}
+                onNodeMouseDown={stable.onNodeMouseDown}
+                onConnectorMouseDown={stable.onConnectorMouseDown}
+                onAddInDirection={stable.onAddInDirection}
+                onContextMenu={stable.onContextMenu}
+                onResizeMouseDown={stable.onResizeMouseDown}
+              />
+            ))}
         </div>
       </div>
     </div>

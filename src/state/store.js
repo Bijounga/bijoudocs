@@ -16,6 +16,7 @@ import { presetChain } from '../lib/ideaPresets.js'
 // addSection's "before the first section" marker.
 export const SECTION_AT_START = '__start__'
 import { checkSpelling } from '../lib/spellcheck.js'
+import { familyOfTheme } from '../lib/themeFamilies.js'
 import { mergeExternalScript } from '../lib/externalMerge.js'
 
 const MAX_UNDO = 200 // typing adds a step per word, so this is roomier than it looks
@@ -216,6 +217,10 @@ export const useStore = create(
     // Chosen background variation per theme, e.g. { minecraft: 'cave' } —
     // see src/lib/themeVariants.js.
     themeVariants: {},
+    // Liquid Glass: how frosted the glass is, 0 (clear) to 100 (frosted).
+    glassFrost: 60,
+    // The variation last used in each theme family (themeFamilies.js), so clicking a family card goes back to it.
+    themeFamilyPick: {},
     // User-made themes — a theme id here is 'custom:' + this entry's own
     // id, so `theme` can point at either a built-in (a plain id, handled
     // via the data-theme attribute + styles.css) or one of these (handled
@@ -266,6 +271,8 @@ export const useStore = create(
         if (settings && typeof settings.editorPageContrast === 'boolean') s.editorPageContrast = settings.editorPageContrast
         if (settings && typeof settings.mapHideBars === 'boolean') s.mapHideBars = settings.mapHideBars
         if (settings && settings.themeVariants && typeof settings.themeVariants === 'object') s.themeVariants = settings.themeVariants
+        if (settings && typeof settings.glassFrost === 'number') s.glassFrost = settings.glassFrost
+        if (settings && settings.themeFamilyPick && typeof settings.themeFamilyPick === 'object') s.themeFamilyPick = settings.themeFamilyPick
         if (settings && Array.isArray(settings.customThemes)) s.customThemes = settings.customThemes
         if (settings && typeof settings.zoom === 'number') s.zoom = settings.zoom
         if (settings && settings.leftMarginWidth) s.leftMarginWidth = settings.leftMarginWidth
@@ -473,6 +480,8 @@ export const useStore = create(
         editorPageContrast: s.editorPageContrast,
         mapHideBars: s.mapHideBars,
         themeVariants: s.themeVariants,
+        glassFrost: s.glassFrost,
+        themeFamilyPick: s.themeFamilyPick,
         customThemes: s.customThemes,
         zoom: s.zoom,
         leftMarginWidth: s.leftMarginWidth,
@@ -500,8 +509,18 @@ export const useStore = create(
       get().saveAppSettings()
     },
     setTheme(theme) {
+      const fam = familyOfTheme(theme)
       set((s) => {
         s.theme = theme
+        if (fam) s.themeFamilyPick[fam.id] = theme
+      })
+      get().saveAppSettings()
+    },
+    // Only a CSS variable changes (App.jsx), so dragging the slider repaints the glass and nothing else.
+    setGlassFrost(v) {
+      const n = Math.max(0, Math.min(100, Math.round(v)))
+      set((s) => {
+        s.glassFrost = n
       })
       get().saveAppSettings()
     },
