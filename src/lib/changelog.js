@@ -295,7 +295,8 @@ export const CHANGELOG = {
     'Themes that are the same look in a different light now share one card with Variation pills (Light, Dark...) instead of separate cards',
     'New dark and light variations: Ink Wash Night, Cyanotype Paper, Card Catalog Walnut, Riso Zine Black, Spellbound Parchment, Ronin Paper, Windows XP Noir, Minecraft Deepslate, Terraria Day and Underground, Frutiger Aero Black'
   ],
-  '0.5.84': ['Liquid Glass: dropdown lists (Footage project picker, Teleprompter font, mind map) are readable again instead of white with pale text']
+  '0.5.84': ['Liquid Glass: dropdown lists (Footage project picker, Teleprompter font, mind map) are readable again instead of white with pale text'],
+  '0.5.85': ['Ctrl+Shift+A (hide the top bars) now works in the script editor and outline too, with a small Show bars button in the title bar to bring them back']
 }
 
 function parseVersion(v) {

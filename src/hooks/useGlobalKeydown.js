@@ -118,6 +118,13 @@ export function useGlobalKeydown() {
         return
       }
       if (e.target && e.target.closest && e.target.closest('.scratchpad')) return
+      // Hide the top bars from the script editor and outline too (the mind map
+      // has its own handler for the same key, so leave it that one's job).
+      if (combo === st.keybinds.mapHideBars && !st.mapViewOpen) {
+        e.preventDefault()
+        st.toggleMapHideBars()
+        return
+      }
       const active = document.activeElement
       const activeLineKey = active && active.dataset ? active.dataset.lineKey : null
       const activeHeadingFor = active && active.dataset ? active.dataset.headingFor : null

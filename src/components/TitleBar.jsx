@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import iconUrl from '../assets/titlebar-icon.png'
 import VersionBadge from './VersionBadge.jsx'
+import { useStore } from '../state/store.js'
 
 // The window's own title bar, replacing the hidden native one (see
 // titleBarStyle in electron/main/index.js) so every theme can restyle it.
@@ -10,6 +11,11 @@ export default function TitleBar() {
   const api = window.bijou
   const isMac = api?.platform === 'darwin'
   const [maximized, setMaximized] = useState(false)
+  // With the top bars hidden outside the mind map there is no toolbar to bring
+  // them back from, so the title bar carries the way back.
+  const barsHidden = useStore((s) => s.mapHideBars && !s.mapViewOpen)
+  const toggleBars = useStore((s) => s.toggleMapHideBars)
+  const barsKey = useStore((s) => s.keybinds.mapHideBars)
 
   useEffect(() => {
     if (!api?.windowIsMaximized) return
@@ -22,6 +28,11 @@ export default function TitleBar() {
       {!isMac && <img className="titlebar-icon" src={iconUrl} alt="" draggable={false} />}
       <span className="titlebar-title">BijouDocs</span>
       <VersionBadge />
+      {barsHidden && (
+        <button className="titlebar-showbars" tabIndex={-1} onClick={toggleBars} title={'Show the top bars again (' + barsKey + ')'}>
+          Show bars
+        </button>
+      )}
       {!isMac && api?.windowMinimize && (
         <div className="titlebar-captions">
           <button className="titlebar-caption" tabIndex={-1} title="Minimize" onClick={() => api.windowMinimize()}>

@@ -35,7 +35,7 @@ export default function App() {
   const scripts = useStore((s) => s.scripts)
   const currentScriptId = useStore((s) => s.currentScriptId)
   const focusMode = useStore((s) => s.focusMode)
-  const mapBarsHidden = useStore((s) => s.mapHideBars && s.mapViewOpen)
+  const mapBarsHidden = useStore((s) => s.mapHideBars)
   const sidebarHidden = useStore((s) => s.sidebarHidden)
   const hideTags = useStore((s) => s.hideTags)
   const hideNotes = useStore((s) => s.hideNotes)
