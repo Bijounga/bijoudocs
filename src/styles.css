@@ -11686,3 +11686,11 @@ body.is-resizing-panel {
   background: radial-gradient(circle at 35% 30%, #ffffff, #8fdcff 55%, #263243 100%) !important;
 }
 /* VARIANT-OVERRIDES:END */
+
+/* Liquid Glass: a <select>'s popup list is drawn by the system, not over the
+   wallpaper, so a see-through select left it white with pale text. Give the
+   options solid colours (and tell the system which scheme the popup should use). */
+:root[data-theme='liquidGlass'] { color-scheme: light; }
+:root[data-theme='liquidGlassDark'] { color-scheme: dark; }
+:root[data-theme='liquidGlass'] :is(option, optgroup) { background-color: #f4f5fa; color: #1d1d1f; }
+:root[data-theme='liquidGlassDark'] :is(option, optgroup) { background-color: #1f1f24; color: #f2f2f5; }
