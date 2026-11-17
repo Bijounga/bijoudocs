@@ -43,6 +43,16 @@ export default function ContextMenu() {
   const linkMapNodesInOrder = useStore((s) => s.linkMapNodesInOrder)
   const linkMapNodesByPosition = useStore((s) => s.linkMapNodesByPosition)
   const unlinkMapNodes = useStore((s) => s.unlinkMapNodes)
+  const addProblemNode = useStore((s) => s.addProblemNode)
+  const groupIntoProblem = useStore((s) => s.groupIntoProblem)
+  const ungroupProblem = useStore((s) => s.ungroupProblem)
+  const setMapFocus = useStore((s) => s.setMapFocus)
+  const toggleProblemFolded = useStore((s) => s.toggleProblemFolded)
+  const releaseFromProblem = useStore((s) => s.releaseFromProblem)
+  const fitFrameToContents = useStore((s) => s.fitFrameToContents)
+  const syncFrames = useStore((s) => s.syncFrames)
+  const toggleWayOut = useStore((s) => s.toggleWayOut)
+  const toggleProblemCompress = useStore((s) => s.toggleProblemCompress)
   const keybinds = useStore((s) => s.keybinds)
   const scripts = useStore((s) => s.scripts)
   const openScript = useStore((s) => s.openScript)
@@ -209,6 +219,12 @@ export default function ContextMenu() {
     const targetSections = sectionIds.map((id) => script.sections.find((se) => se.id === id)).filter(Boolean)
     const isMain = script.mapLayout.mainThreadId === menu.sectionId
     const isFreeNode = freeIds.includes(menu.sectionId)
+    // Problems: nodes you can step inside (idea nodes and problems can be wrapped in one).
+    const clicked = nodes[menu.sectionId]
+    const isProblem = !!clicked && clicked.type === 'problem'
+    const groupable = ids.filter((id) => nodes[id] && (nodes[id].type === 'idea' || nodes[id].type === 'problem'))
+    const insideProblem = !!clicked && !!clicked.parent && !!nodes[clicked.parent] && nodes[clicked.parent].type === 'problem'
+    const isWayOut = !!clicked && !!clicked.exit
     const deleteLabel = ids.length > 1 ? 'Delete ' + ids.length + ' nodes' : isFreeNode ? 'Delete node' : 'Delete section'
     // Right-clicked on a word inside the node's own text: same suggestions a
     // script line gets (captured in MapView's handleNodeContextMenu).
@@ -220,6 +236,34 @@ export default function ContextMenu() {
       : []
     items = [
       ...spellItems,
+      ids.length === 1 && isProblem ? { label: 'Focus on this problem', shortcut: 'Enter', onClick: act(() => setMapFocus(menu.scriptId, menu.sectionId)) } : null,
+      ids.length === 1 && isProblem
+        ? { label: clicked.folded ? 'Open it up again' : 'Fold into one card', onClick: act(() => toggleProblemFolded(menu.scriptId, menu.sectionId)) }
+        : null,
+      ids.length === 1 && isProblem && !clicked.folded
+        ? { label: 'Fit the frame to what is in it', onClick: act(() => fitFrameToContents(menu.scriptId, menu.sectionId)) }
+        : null,
+      ids.length === 1 && isProblem
+        ? { label: clicked.compress ? 'Tell it in full in the Outline' : 'Tell it as one line in the Outline', onClick: act(() => toggleProblemCompress(menu.scriptId, menu.sectionId)) }
+        : null,
+      ids.length === 1 && isProblem ? { label: 'Remove the frame (keep the nodes)', onClick: act(() => ungroupProblem(menu.scriptId, menu.sectionId)) } : null,
+      groupable.length && groupable.length === ids.length
+        ? {
+            label: groupable.length > 1 ? 'Group ' + groupable.length + ' into a problem' : 'Wrap in a problem',
+            shortcut: keybinds.mapGroupProblem,
+            onClick: act(() => {
+              const pid = groupIntoProblem(menu.scriptId, groupable)
+              if (pid) requestMapSelection(menu.scriptId, [pid])
+            })
+          }
+        : null,
+      ids.some((id) => nodes[id] && nodes[id].parent && nodes[nodes[id].parent])
+        ? { label: 'Take out of this problem', onClick: act(() => releaseFromProblem(menu.scriptId, ids)) }
+        : null,
+      ids.length === 1 && insideProblem
+        ? { label: isWayOut ? 'Not the way out any more' : 'Mark as the way out', shortcut: keybinds.mapWayOut, onClick: act(() => toggleWayOut(menu.scriptId, menu.sectionId)) }
+        : null,
+      (isProblem || groupable.length || insideProblem) && ids.length === 1 ? { separator: true } : null,
       ids.length === 1 && !isFreeNode
         ? { label: 'Open in new tab', onClick: act(() => openSectionTab(menu.scriptId, menu.sectionId)) }
         : null,
@@ -250,9 +294,9 @@ export default function ContextMenu() {
         onClick: act(() => toggleStruckForMapNodes(menu.scriptId, ids))
       },
       { separator: true },
-      ids.length > 1 ? { label: 'Align to a line', onClick: act(() => alignMapNodesToLine(menu.scriptId, ids)) } : null,
-      ids.length > 1 ? { label: 'Snap to grid', onClick: act(() => snapMapNodesToGrid(menu.scriptId, ids)) } : null,
-      ids.length > 1 ? { label: 'Space evenly', onClick: act(() => spaceMapNodesEvenly(menu.scriptId, ids)) } : null,
+      ids.length > 1 ? { label: 'Align to a line', onClick: act(() => { alignMapNodesToLine(menu.scriptId, ids); syncFrames(menu.scriptId, ids) }) } : null,
+      ids.length > 1 ? { label: 'Snap to grid', onClick: act(() => { snapMapNodesToGrid(menu.scriptId, ids); syncFrames(menu.scriptId, ids) }) } : null,
+      ids.length > 1 ? { label: 'Space evenly', onClick: act(() => { spaceMapNodesEvenly(menu.scriptId, ids); syncFrames(menu.scriptId, ids) }) } : null,
       {
         label: deleteLabel,
         danger: true,
@@ -284,6 +328,7 @@ export default function ContextMenu() {
           }))
         ]
       },
+      { label: 'Add problem', onClick: act(() => addProblemNode(menu.scriptId, x, y)) },
       { label: 'Add chapter node', onClick: act(() => addChapterNode(menu.scriptId, x, y)) }
     ]
   }

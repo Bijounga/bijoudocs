@@ -47,6 +47,7 @@ export default function LineRow({ scriptId, sectionId, line, index, siblingCount
   const clearLineSelection = useStore((s) => s.clearLineSelection)
   const openContextMenu = useStore((s) => s.openContextMenu)
   const toggleLineBookmark = useStore((s) => s.toggleLineBookmark)
+  const requestComment = useStore((s) => s.requestComment)
   const resumeLineKey = useStore((s) => {
     const script = s.scripts.find((sc) => sc.id === scriptId)
     return script && script.resumeLineKey
@@ -64,6 +65,7 @@ export default function LineRow({ scriptId, sectionId, line, index, siblingCount
   const menuOpen = openTagMenuFor === key
   const takesOpen = takesMenuFor === key
   const synonymOpen = synonymMenuFor === key
+  const hasComment = !!line.text && line.text.indexOf('data-cmt') >= 0
 
   function handleFindSynonyms() {
     const captured = captureWordSelection(key)
@@ -306,6 +308,15 @@ export default function LineRow({ scriptId, sectionId, line, index, siblingCount
           </button>
           <button className="line-btn" onClick={handleFindSynonyms} title={'Find synonyms (' + keybinds.findSynonyms + ')'}>
             <Icon name="search" />
+          </button>
+          <button
+            className={'line-btn' + (hasComment ? ' has-comment' : '')}
+            // Keeps the text you selected (and the caret) while you click it.
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => requestComment(key)}
+            title={'Comment on this line — or on the text you have selected (' + keybinds.addComment + ')'}
+          >
+            <Icon name="comment" />
           </button>
           <button
             className={'line-btn note-trigger' + (line.note ? ' has-note' : '')}

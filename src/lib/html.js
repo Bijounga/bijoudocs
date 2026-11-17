@@ -40,11 +40,11 @@ export function sanitizeHtml(html) {
         } else child.remove()
       } else if (tag === 'SPAN') {
         const color = child.style && child.style.color
-        Array.from(child.attributes).forEach((a) => {
-          if (a.name !== 'style') child.removeAttribute(a.name)
-        })
+        // A comment's highlight is a span carrying its id (see the comments feature).
+        const cmt = child.getAttribute('data-cmt')
+        Array.from(child.attributes).forEach((a) => child.removeAttribute(a.name))
         if (color) child.setAttribute('style', 'color:' + color + ';')
-        else child.removeAttribute('style')
+        if (cmt && /^[A-Za-z0-9_-]{1,40}$/.test(cmt)) child.setAttribute('data-cmt', cmt)
         walk(child)
       } else if (tag === 'FONT') {
         const color = child.getAttribute('color')
@@ -65,6 +65,42 @@ export function sanitizeHtml(html) {
     })
   })(tmp)
   return tmp.innerHTML
+}
+
+// Comment highlights: spans carrying data-cmt="<thread id>" inside a line's HTML.
+// Takes the highlight off one comment (the text stays).
+export function unwrapComment(html, id) {
+  if (!html || html.indexOf('data-cmt') < 0) return html
+  const d = document.createElement('div')
+  d.innerHTML = html
+  d.querySelectorAll('span[data-cmt]').forEach((sp) => {
+    if (sp.getAttribute('data-cmt') !== id) return
+    while (sp.firstChild) sp.parentNode.insertBefore(sp.firstChild, sp)
+    sp.remove()
+  })
+  return d.innerHTML
+}
+
+// Takes every comment highlight off (a copied line is not part of the comment).
+export function stripCommentSpans(html) {
+  if (!html || html.indexOf('data-cmt') < 0) return html
+  const d = document.createElement('div')
+  d.innerHTML = html
+  d.querySelectorAll('span[data-cmt]').forEach((sp) => {
+    while (sp.firstChild) sp.parentNode.insertBefore(sp.firstChild, sp)
+    sp.remove()
+  })
+  return d.innerHTML
+}
+
+// The ids of the comments highlighted in a line's HTML.
+export function commentIdsIn(html) {
+  if (!html || html.indexOf('data-cmt') < 0) return []
+  const out = []
+  const re = /data-cmt="([A-Za-z0-9_-]+)"/g
+  let m
+  while ((m = re.exec(html))) if (!out.includes(m[1])) out.push(m[1])
+  return out
 }
 
 export function hexToRgb(hex) {

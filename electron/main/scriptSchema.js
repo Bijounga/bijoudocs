@@ -57,6 +57,8 @@ function migrateScript(raw, { forceNewId = false } = {}) {
   // node in the flattened outline).
   script.resumeLineKey = typeof script.resumeLineKey === 'string' ? script.resumeLineKey : null
   script.resumeOutlineNodeId = typeof script.resumeOutlineNodeId === 'string' ? script.resumeOutlineNodeId : null
+  // Comment threads left on the script (the highlighted text lives in the lines' own HTML).
+  script.comments = Array.isArray(raw.comments) ? raw.comments : []
   const rawMap = raw.mapLayout && typeof raw.mapLayout === 'object' ? raw.mapLayout : {}
   script.mapLayout = {
     nodes: rawMap.nodes && typeof rawMap.nodes === 'object' ? rawMap.nodes : {},

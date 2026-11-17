@@ -265,6 +265,11 @@ export function useGlobalKeydown() {
         st.toggleHideTags()
         return
       }
+      if (combo === st.keybinds.addComment) {
+        e.preventDefault()
+        st.requestComment()
+        return
+      }
       if (combo === st.keybinds.hideNotes) {
         e.preventDefault()
         st.toggleHideNotes()

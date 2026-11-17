@@ -14,6 +14,8 @@ import WhatsNewModal from './components/WhatsNewModal.jsx'
 import SaveHistoryPanel from './components/SaveHistoryPanel.jsx'
 import TeleprompterView from './components/TeleprompterView.jsx'
 import ContextMenu from './components/ContextMenu.jsx'
+import CommentBubble from './components/CommentBubble.jsx'
+import PadBridge from './components/PadBridge.jsx'
 import UpdateBanner from './components/UpdateBanner.jsx'
 import SaveConflictBanner from './components/SaveConflictBanner.jsx'
 import { useGlobalKeydown } from './hooks/useGlobalKeydown.js'
@@ -281,9 +283,11 @@ export default function App() {
       <SaveHistoryPanel />
       {script && <TeleprompterView script={script} />}
       <ContextMenu />
+      {script && <CommentBubble script={script} />}
       {script && <SaveConflictBanner scriptId={script.id} />}
       <UpdateBanner />
       <Scratchpad script={script} />
+      <PadBridge script={script} />
       <Tooltip />
     </div>
   )

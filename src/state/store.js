@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 import { mkLine, mkSection, defaultCategories } from '../lib/model.js'
-import { sanitizeHtml, stripHtmlToText } from '../lib/html.js'
+import { sanitizeHtml, stripHtmlToText, unwrapComment, stripCommentSpans } from '../lib/html.js'
 import { uid } from '../lib/id.js'
 import { diffWords, flattenText } from '../lib/diff.js'
 import { buildExportContent, parseImportedText } from '../lib/exportImport.js'
@@ -12,6 +12,7 @@ import { CHANGELOG, changelogSince } from '../lib/changelog.js'
 import { fetchSynonyms } from '../lib/synonyms.js'
 import { MAIN_TAB_ID, getPad, nextTabName } from '../lib/scratchNotes.js'
 import { presetChain } from '../lib/ideaPresets.js'
+import { descendantIds } from '../lib/mapGraph.js'
 
 // addSection's "before the first section" marker.
 export const SECTION_AT_START = '__start__'
@@ -65,6 +66,143 @@ const hasPosition = (n) => Number.isFinite(n.x) && Number.isFinite(n.y)
 // saves as null and renders at the origin — Allumeria had two such
 // sections ~23,000px from everything else, which made "Fit every node"
 // frame mostly empty space.
+// ---------- problem frames ----------
+// A problem is a labelled box (a node with its own x/y and manualWidth/Height)
+// drawn around idea nodes on the map; nothing is hidden. What is inside it is
+// worked out from where things sit: a node belongs to the smallest frame its
+// centre is in, kept as `parent` so the Outline can nest. Frames can sit inside
+// bigger frames (only ever a strictly smaller one in a bigger one).
+const FRAME_W = 420
+const FRAME_H = 300
+// Room a frame leaves around what is in it: the left is wider (the contents sit
+// indented under the title, against a rail), the bottom holds the "add" button.
+const PAD_L = 56
+const PAD_T = 52
+const PAD_R = 28
+const PAD_B = 56
+// The least room a frame keeps around a member it grows for.
+const GROW_L = 24
+const GROW_T = 46
+const GROW_R = 20
+const GROW_B = 48
+const frameSize = (n) => ({ w: n.manualWidth || FRAME_W, h: n.manualHeight || FRAME_H })
+const boxOf = (n) => (n.type === 'problem' ? frameSize(n) : { w: n.width || 220, h: n.height || 150 })
+
+// Membership is sticky: a node joins a frame when it is added in it, grouped into it, or
+// dropped with its centre inside it (the smallest such frame), and stays in it however
+// far it is dragged afterwards (the frame stretches to hold it) until it is taken out
+// on purpose. `evalIds`: the nodes just added/moved, the only ones re-filed by where
+// they are; `absorbFrameId`: a frame just drawn/resized, which takes in the free nodes
+// it now covers. Always: drop a parent that no longer exists, stretch each frame to
+// hold its members, keep one way out per frame. Returns true if anything changed.
+function syncFramesIn(nodes, evalIds, absorbFrameId) {
+  const frames = Object.entries(nodes)
+    // A folded frame is a small card now, so it does not take new nodes in.
+    .filter(([, n]) => n.type === 'problem' && hasPosition(n) && !n.folded)
+    .map(([id, n]) => ({ id, x: n.x, y: n.y, ...frameSize(n) }))
+  let changed = false
+  Object.entries(nodes).forEach(([id, n]) => {
+    if (n.type !== 'idea' && n.type !== 'problem') return
+    if (n.parent !== undefined && !(nodes[n.parent] && nodes[n.parent].type === 'problem')) {
+      delete n.parent
+      changed = true
+    }
+    if (!evalIds || !evalIds.has(id) || !hasPosition(n) || !frames.length) return
+    const { w, h } = boxOf(n)
+    const cx = n.x + w / 2
+    const cy = n.y + h / 2
+    const myArea = n.type === 'problem' ? w * h : 0
+    let best = null
+    frames.forEach((f) => {
+      if (f.id === id || f.w * f.h <= myArea) return
+      if (cx >= f.x && cx <= f.x + f.w && cy >= f.y && cy <= f.y + f.h && (!best || f.w * f.h < best.w * best.h)) best = f
+    })
+    if (best && n.parent !== best.id) {
+      n.parent = best.id
+      changed = true
+    }
+  })
+  if (absorbFrameId && nodes[absorbFrameId] && nodes[absorbFrameId].type === 'problem' && !nodes[absorbFrameId].folded) {
+    const f = nodes[absorbFrameId]
+    const fz = frameSize(f)
+    Object.entries(nodes).forEach(([id, n]) => {
+      if (id === absorbFrameId || (n.type !== 'idea' && n.type !== 'problem') || n.parent || !hasPosition(n)) return
+      const { w, h } = boxOf(n)
+      if (n.type === 'problem' && w * h >= fz.w * fz.h) return
+      const cx = n.x + w / 2
+      const cy = n.y + h / 2
+      if (cx >= f.x && cx <= f.x + fz.w && cy >= f.y && cy <= f.y + fz.h) {
+        n.parent = absorbFrameId
+        changed = true
+      }
+    })
+  }
+  // Frames stretch to hold their members (smallest first, so one inside another is
+  // already big enough when the bigger one looks).
+  frames
+    .map((f) => nodes[f.id])
+    .sort((a, b) => frameSize(a).w * frameSize(a).h - frameSize(b).w * frameSize(b).h)
+    .forEach((f) => {
+      const kids = Object.values(nodes).filter((c) => c.parent && nodes[c.parent] === f && hasPosition(c))
+      if (!kids.length) return
+      const fs = frameSize(f)
+      let x1 = f.x
+      let y1 = f.y
+      let x2 = f.x + fs.w
+      let y2 = f.y + fs.h
+      kids.forEach((c) => {
+        const b = boxOf(c)
+        x1 = Math.min(x1, c.x - GROW_L)
+        y1 = Math.min(y1, c.y - GROW_T)
+        x2 = Math.max(x2, c.x + b.w + GROW_R)
+        y2 = Math.max(y2, c.y + b.h + GROW_B)
+      })
+      if (Math.abs(x1 - f.x) > 0.01 || Math.abs(y1 - f.y) > 0.01 || Math.abs(x2 - x1 - fs.w) > 0.01 || Math.abs(y2 - y1 - fs.h) > 0.01) {
+        f.x = x1
+        f.y = y1
+        f.manualWidth = x2 - x1
+        f.manualHeight = y2 - y1
+        changed = true
+      }
+    })
+  // A way out belongs to the frame the node is in, one per frame.
+  const seen = new Set()
+  Object.values(nodes).forEach((n) => {
+    if (!n.exit) return
+    if (!n.parent || seen.has(n.parent)) {
+      delete n.exit
+      changed = true
+    } else seen.add(n.parent)
+  })
+  return changed
+}
+
+// Problems made by the earlier step-inside version have no box of their own;
+// give each one the box that wraps what was inside it.
+function migrateProblemFrames(nodes) {
+  let changed = false
+  Object.entries(nodes).forEach(([id, n]) => {
+    if (n.type !== 'problem' || n.manualWidth || !hasPosition(n)) return
+    const inside = Object.values(nodes).filter((c) => c.parent === id && c.type !== 'problem' && hasPosition(c))
+    if (inside.length) {
+      const minX = Math.min(...inside.map((c) => c.x))
+      const minY = Math.min(...inside.map((c) => c.y))
+      const maxX = Math.max(...inside.map((c) => c.x + (c.width || 220)))
+      const maxY = Math.max(...inside.map((c) => c.y + (c.height || 150)))
+      n.x = minX - PAD_L
+      n.y = minY - PAD_T
+      n.manualWidth = maxX - minX + PAD_L + PAD_R
+      n.manualHeight = maxY - minY + PAD_T + PAD_B
+    } else {
+      n.manualWidth = FRAME_W
+      n.manualHeight = FRAME_H
+    }
+    changed = true
+  })
+  // Its own x/y were for the card; any nested problem boxes were made above, so re-sync after.
+  return changed
+}
+
 function spotBelowMap(nodes, skip = 0) {
   const placed = Object.values(nodes).filter(hasPosition)
   if (!placed.length) return { x: 60, y: 60 + skip * 190 }
@@ -73,9 +211,24 @@ function spotBelowMap(nodes, skip = 0) {
   return { x, y: bottom + 50 + skip * 190 }
 }
 
+// A copy of a line (duplicate, copy/paste) carries no comment highlight: the comment stays with the original.
+function cleanLineCopy(line) {
+  const c = JSON.parse(JSON.stringify(line))
+  c.text = stripCommentSpans(c.text)
+  return c
+}
+function cleanSectionCopy(sec) {
+  const c = JSON.parse(JSON.stringify(sec))
+  ;(c.lines || []).forEach((l) => {
+    l.text = stripCommentSpans(l.text)
+  })
+  return c
+}
+
 function snapshotScript(script) {
   return {
     title: script.title,
+    comments: JSON.parse(JSON.stringify(script.comments || [])),
     sections: JSON.parse(JSON.stringify(script.sections)),
     categories: JSON.parse(JSON.stringify(script.categories)),
     pinnedSectionIds: JSON.parse(JSON.stringify(script.pinnedSectionIds)),
@@ -109,6 +262,15 @@ export const useStore = create(
     hideNotes: false,
     zoom: 1,
     inspectorTab: 'categories',
+    // Comments: the thread being looked at (its highlight and card light up), a counter
+    // the shortcut bumps so the floating comment button opens, who you comment as, and
+    // whether resolved threads are listed.
+    activeCommentId: null,
+    commentRequest: 0,
+    commentRequestLine: null, // the line a request came from (its button), else the one you are in
+    commentAuthor: 'Me',
+    commentsShowResolved: false,
+    commentsInMargin: true, // open comments float beside their text, like Google Docs
     filterCategory: null,
     librarySearch: '',
     openTagMenuFor: null,
@@ -170,6 +332,9 @@ export const useStore = create(
     // into MapView — set by requestMapSelection, consumed and cleared by
     // MapView's own effect. Never read/written anywhere else.
     mapSelectRequest: null,
+    // The problem frame each script's mind map is focused on (not saved): everything
+    // outside it is dimmed. null / missing = no focus.
+    mapFocus: {},
     mapViewOpen: false,
     mapSplitOpen: false,
     // Mind map only: hides the topbar, tab bar and timeline above it.
@@ -199,7 +364,9 @@ export const useStore = create(
     // The floating notepad: where it sits (x/y null = bottom-right), its size,
     // text zoom, whether the ruled lines show and whether it's open; and its
     // tabs per script (see lib/scratchNotes.js).
-    scratchpad: { open: false, x: null, y: null, w: 360, h: 380, zoom: 1, lines: true },
+    // `detached`: the pad is out of the app window, on its own spot of the desktop (an owned
+    // window, see electron/main/padWindow.js); `win` is where that window was last (screen pixels).
+    scratchpad: { open: false, x: null, y: null, w: 360, h: 380, zoom: 1, lines: true, detached: false, win: null },
     scratchPads: {},
     // Where each script's mind map was last left: { [scriptId]: { x, y, zoom } }
     // (the pan offset in screen px, and the zoom). App settings, not the
@@ -270,6 +437,8 @@ export const useStore = create(
         if (settings && settings.theme) s.theme = settings.theme
         if (settings && typeof settings.editorPageContrast === 'boolean') s.editorPageContrast = settings.editorPageContrast
         if (settings && typeof settings.mapHideBars === 'boolean') s.mapHideBars = settings.mapHideBars
+        if (settings && typeof settings.commentAuthor === 'string' && settings.commentAuthor.trim()) s.commentAuthor = settings.commentAuthor.trim()
+        if (settings && typeof settings.commentsInMargin === 'boolean') s.commentsInMargin = settings.commentsInMargin
         if (settings && settings.themeVariants && typeof settings.themeVariants === 'object') s.themeVariants = settings.themeVariants
         if (settings && typeof settings.glassFrost === 'number') s.glassFrost = settings.glassFrost
         if (settings && settings.themeFamilyPick && typeof settings.themeFamilyPick === 'object') s.themeFamilyPick = settings.themeFamilyPick
@@ -479,6 +648,8 @@ export const useStore = create(
         theme: s.theme,
         editorPageContrast: s.editorPageContrast,
         mapHideBars: s.mapHideBars,
+        commentAuthor: s.commentAuthor,
+        commentsInMargin: s.commentsInMargin,
         themeVariants: s.themeVariants,
         glassFrost: s.glassFrost,
         themeFamilyPick: s.themeFamilyPick,
@@ -588,6 +759,39 @@ export const useStore = create(
     closeScratchpad() {
       set((s) => {
         s.scratchpad.open = false
+      })
+      get().saveAppSettings()
+    },
+    // Moves the notepad out of the app window onto the desktop (any monitor), or back in.
+    detachScratchpad() {
+      set((s) => {
+        s.scratchpad.detached = true
+        s.scratchpad.open = true
+      })
+      get().saveAppSettings()
+    },
+    dockScratchpad() {
+      set((s) => {
+        s.scratchpad.detached = false
+        s.scratchpad.open = true
+      })
+      get().saveAppSettings()
+    },
+    setPadWindowBounds(b) {
+      set((s) => {
+        s.scratchpad.win = { x: b.x, y: b.y, width: b.width, height: b.height }
+      })
+      get().saveAppSettings()
+    },
+    // What the notepad window changed (its pages, text size, ruled lines): the app window keeps the real copy.
+    applyPadFromWindow(p) {
+      if (!p || !p.scriptId || !p.book) return
+      set((s) => {
+        s.scratchPads[p.scriptId] = p.book
+        if (p.scratchpad) {
+          if (typeof p.scratchpad.zoom === 'number') s.scratchpad.zoom = p.scratchpad.zoom
+          if (typeof p.scratchpad.lines === 'boolean') s.scratchpad.lines = p.scratchpad.lines
+        }
       })
       get().saveAppSettings()
     },
@@ -865,6 +1069,7 @@ export const useStore = create(
         s.scripts[idx].categories = snap.categories
         s.scripts[idx].pinnedSectionIds = snap.pinnedSectionIds
         s.scripts[idx].mapLayout = snap.mapLayout
+        s.scripts[idx].comments = snap.comments || []
         s.scripts[idx].updatedAt = Date.now()
         s.openTagMenuFor = null
       })
@@ -885,6 +1090,7 @@ export const useStore = create(
         s.scripts[idx].categories = snap.categories
         s.scripts[idx].pinnedSectionIds = snap.pinnedSectionIds
         s.scripts[idx].mapLayout = snap.mapLayout
+        s.scripts[idx].comments = snap.comments || []
         s.scripts[idx].updatedAt = Date.now()
         s.openTagMenuFor = null
       })
@@ -1226,6 +1432,131 @@ export const useStore = create(
         if (script) script.updatedAt = Date.now()
       })
       get().scheduleSave(scriptId)
+    },
+
+    // ---------- comments ----------
+    // A comment thread: { id, sectionId, lineId, quote, author, createdAt, resolved, messages: [{id, author, text, at}] }.
+    // Its highlight is a span (data-cmt = the thread id) in the line's own HTML, so it moves with the text.
+    // The caller has already wrapped the text and saved the line (and pushed the undo step).
+    addComment(scriptId, { commentId, sectionId, lineId, quote, text }) {
+      const me = get().commentAuthor || 'Me'
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        if (!script) return
+        if (!script.comments) script.comments = []
+        const now = Date.now()
+        script.comments.push({
+          id: commentId,
+          sectionId,
+          lineId,
+          quote: (quote || '').slice(0, 400),
+          author: me,
+          createdAt: now,
+          resolved: false,
+          messages: [{ id: uid(), author: me, text, at: now }]
+        })
+        script.updatedAt = now
+      })
+      get().scheduleSave(scriptId)
+    },
+    replyToComment(scriptId, threadId, text) {
+      const t = (text || '').trim()
+      if (!t) return
+      get().pushUndo(scriptId)
+      const me = get().commentAuthor || 'Me'
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        const th = script && (script.comments || []).find((c) => c.id === threadId)
+        if (!th) return
+        th.messages.push({ id: uid(), author: me, text: t, at: Date.now() })
+        script.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId)
+    },
+    toggleCommentResolved(scriptId, threadId) {
+      get().pushUndo(scriptId)
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        const th = script && (script.comments || []).find((c) => c.id === threadId)
+        if (!th) return
+        th.resolved = !th.resolved
+        if (th.resolved) th.resolvedAt = Date.now()
+        else delete th.resolvedAt
+        script.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId)
+    },
+    // Removes a thread and takes its highlight off the text.
+    deleteComment(scriptId, threadId) {
+      get().pushUndo(scriptId)
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        if (!script) return
+        const th = (script.comments || []).find((c) => c.id === threadId)
+        if (!th) return
+        script.comments = script.comments.filter((c) => c.id !== threadId)
+        script.sections.forEach((sec) =>
+          sec.lines.forEach((l) => {
+            if (l.text && l.text.indexOf(threadId) >= 0) l.text = unwrapComment(l.text, threadId)
+          })
+        )
+        if (s.activeCommentId === threadId) s.activeCommentId = null
+        script.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId)
+    },
+    // Removes one message; the last message of a thread takes the thread with it.
+    deleteCommentMessage(scriptId, threadId, messageId) {
+      const script = get().scripts.find((sc) => sc.id === scriptId)
+      const th = script && (script.comments || []).find((c) => c.id === threadId)
+      if (!th) return
+      if (th.messages.length <= 1) {
+        get().deleteComment(scriptId, threadId)
+        return
+      }
+      get().pushUndo(scriptId)
+      set((s) => {
+        const sc = s.scripts.find((x) => x.id === scriptId)
+        const t = sc.comments.find((c) => c.id === threadId)
+        t.messages = t.messages.filter((m) => m.id !== messageId)
+        sc.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId)
+    },
+    setActiveComment(id) {
+      set((s) => {
+        s.activeCommentId = id || null
+      })
+    },
+    // Opens the Comments tab on a thread (clicking its highlight, or finishing a new comment).
+    focusComment(id) {
+      set((s) => {
+        s.activeCommentId = id || null
+        s.inspectorTab = 'comments'
+      })
+    },
+    requestComment(lineKey) {
+      set((s) => {
+        s.commentRequestLine = lineKey || null
+        s.commentRequest += 1
+      })
+    },
+    setCommentAuthor(name) {
+      set((s) => {
+        s.commentAuthor = name
+      })
+      get().saveAppSettings()
+    },
+    toggleCommentsInMargin() {
+      set((s) => {
+        s.commentsInMargin = !s.commentsInMargin
+      })
+      get().saveAppSettings()
+    },
+    toggleCommentsShowResolved() {
+      set((s) => {
+        s.commentsShowResolved = !s.commentsShowResolved
+      })
     },
 
     setLineTag(scriptId, sectionId, lineId, categoryId) {
@@ -2411,7 +2742,7 @@ export const useStore = create(
       const sec = script && script.sections.find((se) => se.id === sectionId)
       const line = sec && sec.lines.find((l) => l.id === lineId)
       if (!line) return 0
-      setClipboardLines([JSON.parse(JSON.stringify(line))])
+      setClipboardLines([cleanLineCopy(line)])
       return 1
     },
     copySelectionToClipboard(scriptId) {
@@ -2424,7 +2755,7 @@ export const useStore = create(
             const [secId, lineId] = k.split(':')
             const sec = script.sections.find((se) => se.id === secId)
             const line = sec && sec.lines.find((l) => l.id === lineId)
-            return line ? JSON.parse(JSON.stringify(line)) : null
+            return line ? cleanLineCopy(line) : null
           })
           .filter(Boolean)
       )
@@ -2533,7 +2864,7 @@ export const useStore = create(
         if (!sec) return
         const idx = sec.lines.findIndex((l) => l.id === lineId)
         if (idx < 0) return
-        const clone = JSON.parse(JSON.stringify(sec.lines[idx]))
+        const clone = cleanLineCopy(sec.lines[idx])
         clone.id = uid()
         clone.noteOpen = false
         sec.lines.splice(idx + 1, 0, clone)
@@ -2559,7 +2890,7 @@ export const useStore = create(
           if (!sec) return
           const idx = sec.lines.findIndex((l) => l.id === lineId)
           if (idx < 0) return
-          const clone = JSON.parse(JSON.stringify(sec.lines[idx]))
+          const clone = cleanLineCopy(sec.lines[idx])
           clone.id = uid()
           clone.noteOpen = false
           sec.lines.splice(idx + 1, 0, clone)
@@ -2690,6 +3021,8 @@ export const useStore = create(
           Object.assign(n, spotBelowMap(script.mapLayout.nodes, k))
           repaired = true
         })
+        if (migrateProblemFrames(script.mapLayout.nodes)) repaired = true
+        if (syncFramesIn(script.mapLayout.nodes)) repaired = true
       })
       if (repaired) get().scheduleSave(scriptId, { flash: false })
     },
@@ -2714,13 +3047,16 @@ export const useStore = create(
       set((s) => {
         const script = s.scripts.find((sc) => sc.id === scriptId)
         if (!script) return
-        nodeIds.forEach((id) => {
+        const moving = new Set(nodeIds)
+        descendantIds(script.mapLayout.nodes, nodeIds.filter((id) => script.mapLayout.nodes[id] && script.mapLayout.nodes[id].type === 'problem')).forEach((id) => moving.add(id))
+        moving.forEach((id) => {
           const node = script.mapLayout.nodes[id]
           if (node && Number.isFinite(node.x) && Number.isFinite(node.y)) {
             node.x += dx
             node.y += dy
           }
         })
+        syncFramesIn(script.mapLayout.nodes)
         script.updatedAt = Date.now()
       })
       get().scheduleSave(scriptId, { flash: false })
@@ -2903,6 +3239,7 @@ export const useStore = create(
           bgColor: opts.bgColor || null,
           shape: opts.shape || 'rectangle'
         }
+        syncFramesIn(script.mapLayout.nodes, new Set([newId]))
         script.updatedAt = Date.now()
       })
       get().scheduleSave(scriptId, { flash: false })
@@ -2939,6 +3276,7 @@ export const useStore = create(
           if (i > 0) script.mapLayout.edges.push({ id: uid(), from: ids[i - 1], to: id })
           ids.push(id)
         })
+        syncFramesIn(script.mapLayout.nodes, new Set(ids))
         script.updatedAt = Date.now()
       })
       get().scheduleSave(scriptId, { flash: false })
@@ -2951,7 +3289,10 @@ export const useStore = create(
       const offsets = { up: [0, -190], down: [0, 190], left: [-280, 0], right: [280, 0] }
       const [dx, dy] = offsets[dir] || offsets.down
       const newId = get().addIdeaNode(scriptId, fromNode.x + dx, fromNode.y + dy)
-      if (newId) get().addMapEdge(scriptId, fromId, newId)
+      if (newId) {
+        get().addMapEdge(scriptId, fromId, newId)
+        get().growFrameFor(scriptId, fromId, [newId])
+      }
       return newId
     },
     setIdeaNodeTitle(scriptId, nodeId, title) {
@@ -3116,6 +3457,250 @@ export const useStore = create(
       })
       get().scheduleSave(scriptId, { flash: false })
       return newId
+    },
+    // ---------- problems: labelled frames around idea nodes ----------
+    // Which problem the map is focused on (null = none): everything outside it is dimmed.
+    setMapFocus(scriptId, problemId) {
+      set((s) => {
+        s.mapFocus[scriptId] = problemId || null
+      })
+    },
+    // Re-works which frame each node sits in, after something moved or was resized.
+    // After a drag or resize: re-file the nodes that were moved (a frame's own contents moved
+    // with it, so they are not), and let a resized frame take in what it now covers.
+    syncFrames(scriptId, ids, absorbFrameId) {
+      let changed = false
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        if (!script) return
+        const nodes = script.mapLayout.nodes
+        let evalIds = null
+        if (ids && ids.length) {
+          const moved = new Set(ids)
+          evalIds = new Set(ids.filter((id) => !(nodes[id] && nodes[id].parent && moved.has(nodes[id].parent))))
+        }
+        changed = syncFramesIn(nodes, evalIds, absorbFrameId)
+        if (changed) script.updatedAt = Date.now()
+      })
+      if (changed) get().scheduleSave(scriptId, { flash: false })
+    },
+    // Takes nodes out of the problem they are in.
+    releaseFromProblem(scriptId, ids) {
+      const script = get().scripts.find((sc) => sc.id === scriptId)
+      if (!script) return
+      const inFrame = ids.filter((id) => script.mapLayout.nodes[id] && script.mapLayout.nodes[id].parent)
+      if (!inFrame.length) return
+      get().pushUndo(scriptId)
+      set((s) => {
+        const sc = s.scripts.find((x) => x.id === scriptId)
+        inFrame.forEach((id) => {
+          delete sc.mapLayout.nodes[id].parent
+          delete sc.mapLayout.nodes[id].exit
+        })
+        syncFramesIn(sc.mapLayout.nodes)
+        sc.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+    },
+    // An empty frame, centred where asked; it takes in whatever it covers.
+    addProblemNode(scriptId, x, y) {
+      get().pushUndo(scriptId)
+      let newId = null
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        if (!script) return
+        newId = uid()
+        const at = Number.isFinite(x) && Number.isFinite(y) ? { x: x - FRAME_W / 2 + 110, y: y - 40 } : spotBelowMap(script.mapLayout.nodes)
+        script.mapLayout.nodes[newId] = { ...at, collapsed: false, type: 'problem', label: '', summary: '', compress: false, manualWidth: FRAME_W, manualHeight: FRAME_H }
+        syncFramesIn(script.mapLayout.nodes, null, newId)
+        script.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+      return newId
+    },
+    // Draws a frame around the selected idea nodes (and problems). Returns its id, or null.
+    groupIntoProblem(scriptId, ids) {
+      const script = get().scripts.find((sc) => sc.id === scriptId)
+      if (!script) return null
+      const nodes = script.mapLayout.nodes
+      const group = ids.filter((id) => nodes[id] && (nodes[id].type === 'idea' || nodes[id].type === 'problem') && hasPosition(nodes[id]))
+      if (!group.length) return null
+      get().pushUndo(scriptId)
+      const newId = uid()
+      set((s) => {
+        const sc = s.scripts.find((x) => x.id === scriptId)
+        if (!sc) return
+        const ns = sc.mapLayout.nodes
+        const minX = Math.min(...group.map((id) => ns[id].x))
+        const minY = Math.min(...group.map((id) => ns[id].y))
+        const maxX = Math.max(...group.map((id) => ns[id].x + boxOf(ns[id]).w))
+        const maxY = Math.max(...group.map((id) => ns[id].y + boxOf(ns[id]).h))
+        ns[newId] = {
+          x: minX - PAD_L,
+          y: minY - PAD_T,
+          collapsed: false,
+          type: 'problem',
+          label: '',
+          summary: '',
+          compress: false,
+          manualWidth: maxX - minX + PAD_L + PAD_R,
+          manualHeight: maxY - minY + PAD_T + PAD_B
+        }
+        // They keep whatever frame they were all in (the new frame goes inside it too).
+        const parents = new Set(group.map((id) => ns[id].parent || null))
+        const common = parents.size === 1 ? [...parents][0] : null
+        if (common && ns[common]) ns[newId].parent = common
+        group.forEach((id) => (ns[id].parent = newId))
+        syncFramesIn(ns)
+        sc.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+      return newId
+    },
+    // Takes the frame away; the nodes it held stay where they are.
+    ungroupProblem(scriptId, problemId) {
+      const script = get().scripts.find((sc) => sc.id === scriptId)
+      const prob = script && script.mapLayout.nodes[problemId]
+      if (!prob || prob.type !== 'problem') return []
+      get().pushUndo(scriptId)
+      const freed = Object.keys(script.mapLayout.nodes).filter((id) => script.mapLayout.nodes[id].parent === problemId)
+      set((s) => {
+        const sc = s.scripts.find((x) => x.id === scriptId)
+        if (!sc) return
+        delete sc.mapLayout.nodes[problemId]
+        sc.mapLayout.edges = sc.mapLayout.edges.filter((e) => e.from !== problemId && e.to !== problemId)
+        if (sc.mapLayout.mainThreadId === problemId) sc.mapLayout.mainThreadId = null
+        syncFramesIn(sc.mapLayout.nodes)
+        sc.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+      return freed
+    },
+    // Fold a frame into one small card (what is inside is hidden, not changed) or open it again.
+    toggleProblemFolded(scriptId, nodeId) {
+      get().pushUndo(scriptId)
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        const node = script && script.mapLayout.nodes[nodeId]
+        if (!node || node.type !== 'problem') return
+        if (node.folded) delete node.folded
+        else node.folded = true
+        script.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+    },
+    // A node was just added next to one inside a frame: stretch that frame (and any
+    // frame around it) to take the new node(s) in. No undo step of its own — it rides
+    // on the add's.
+    growFrameFor(scriptId, sourceId, newIds) {
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        if (!script) return
+        const ns = script.mapLayout.nodes
+        const src = ns[sourceId]
+        let fid = src && src.parent
+        if (!fid || !ns[fid]) return
+        newIds.forEach((id) => {
+          if (ns[id]) ns[id].parent = fid // the new nodes belong to the same problem
+        })
+        let boxes = newIds.filter((id) => ns[id] && hasPosition(ns[id])).map((id) => ({ x: ns[id].x, y: ns[id].y, ...boxOf(ns[id]) }))
+        let guard = 0
+        while (fid && ns[fid] && guard++ < 20) {
+          const f = ns[fid]
+          const fs = frameSize(f)
+          let x1 = f.x
+          let y1 = f.y
+          let x2 = f.x + fs.w
+          let y2 = f.y + fs.h
+          boxes.forEach((b) => {
+            x1 = Math.min(x1, b.x - PAD_L)
+            y1 = Math.min(y1, b.y - PAD_T)
+            x2 = Math.max(x2, b.x + b.w + PAD_R)
+            y2 = Math.max(y2, b.y + b.h + PAD_B)
+          })
+          f.x = x1
+          f.y = y1
+          f.manualWidth = x2 - x1
+          f.manualHeight = y2 - y1
+          boxes = [{ x: f.x, y: f.y, w: f.manualWidth, h: f.manualHeight }]
+          fid = f.parent
+        }
+        syncFramesIn(ns)
+        script.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+    },
+    // Re-wraps a frame around what is in it.
+    fitFrameToContents(scriptId, frameId) {
+      const script = get().scripts.find((sc) => sc.id === scriptId)
+      const ns = script && script.mapLayout.nodes
+      if (!ns || !ns[frameId] || !Object.values(ns).some((n) => n.parent === frameId)) return
+      get().pushUndo(scriptId)
+      set((s) => {
+        const sc = s.scripts.find((x) => x.id === scriptId)
+        const nodes = sc.mapLayout.nodes
+        const inside = Object.values(nodes).filter((n) => n.parent === frameId && hasPosition(n))
+        if (!inside.length) return
+        const minX = Math.min(...inside.map((n) => n.x))
+        const minY = Math.min(...inside.map((n) => n.y))
+        const maxX = Math.max(...inside.map((n) => n.x + boxOf(n).w))
+        const maxY = Math.max(...inside.map((n) => n.y + boxOf(n).h))
+        const f = nodes[frameId]
+        f.x = minX - PAD_L
+        f.y = minY - PAD_T
+        f.manualWidth = maxX - minX + PAD_L + PAD_R
+        f.manualHeight = maxY - minY + PAD_T + PAD_B
+        syncFramesIn(nodes)
+        sc.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+    },
+    setProblemField(scriptId, nodeId, key, value) {
+      if (key !== 'label' && key !== 'summary') return
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        const node = script && script.mapLayout.nodes[nodeId]
+        if (node && node.type === 'problem') node[key] = value
+      })
+    },
+    commitProblemField(scriptId) {
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        if (script) script.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+    },
+    // Told as one line in the Outline (the summary) instead of everything inside.
+    toggleProblemCompress(scriptId, nodeId) {
+      get().pushUndo(scriptId)
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        const node = script && script.mapLayout.nodes[nodeId]
+        if (!node || node.type !== 'problem') return
+        node.compress = !node.compress
+        script.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+    },
+    // Marks a node as the way out of the frame it sits in (the one line that
+    // closes the problem) — only one per frame; marking it again clears it.
+    toggleWayOut(scriptId, nodeId) {
+      const script = get().scripts.find((sc) => sc.id === scriptId)
+      const node = script && script.mapLayout.nodes[nodeId]
+      if (!node || !node.parent || !script.mapLayout.nodes[node.parent]) return
+      get().pushUndo(scriptId)
+      set((s) => {
+        const sc = s.scripts.find((x) => x.id === scriptId)
+        const ns = sc.mapLayout.nodes
+        const me = ns[nodeId]
+        const had = !!me.exit
+        Object.keys(ns).forEach((id) => {
+          if (ns[id].parent === me.parent) delete ns[id].exit
+        })
+        if (!had) me.exit = true
+        sc.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
     },
     setChapterNodeLabel(scriptId, nodeId, label) {
       set((s) => {
@@ -3349,6 +3934,7 @@ export const useStore = create(
         idSet.forEach((id) => delete script.mapLayout.nodes[id])
         script.mapLayout.edges = script.mapLayout.edges.filter((e) => !idSet.has(e.from) && !idSet.has(e.to))
         if (idSet.has(script.mapLayout.mainThreadId)) script.mapLayout.mainThreadId = null
+        syncFramesIn(script.mapLayout.nodes)
         script.updatedAt = Date.now()
       })
       get().scheduleSave(scriptId, { flash: false })
@@ -3374,6 +3960,7 @@ export const useStore = create(
         idSet.forEach((id) => delete script.mapLayout.nodes[id])
         script.mapLayout.edges = script.mapLayout.edges.filter((e) => !idSet.has(e.from) && !idSet.has(e.to))
         if (idSet.has(script.mapLayout.mainThreadId)) script.mapLayout.mainThreadId = null
+        syncFramesIn(script.mapLayout.nodes)
         script.updatedAt = Date.now()
       })
       get().scheduleSave(scriptId, { flash: false })
@@ -3394,7 +3981,7 @@ export const useStore = create(
         const edges = script.mapLayout.edges
         const incoming = edges.filter((e) => e.to === nodeId).map((e) => e.from)
         const outgoing = edges.filter((e) => e.from === nodeId).map((e) => e.to)
-        const isIdea = script.mapLayout.nodes[nodeId] && script.mapLayout.nodes[nodeId].type === 'idea'
+        const isIdea = script.mapLayout.nodes[nodeId] && script.mapLayout.nodes[nodeId].type
         if (isIdea) {
           delete script.mapLayout.nodes[nodeId]
         } else {
@@ -3424,7 +4011,31 @@ export const useStore = create(
         const node = script && script.mapLayout.nodes[nodeId]
         if (!node) return
         newId = uid()
-        script.mapLayout.nodes[newId] = { ...JSON.parse(JSON.stringify(node)), x: node.x + 30, y: node.y + 30 }
+        const isFrame = node.type === 'problem'
+        // A frame is copied with what is inside it, set beside the original so the copy's
+        // contents don't sit in both frames; anything else is nudged down and right.
+        const shift = isFrame ? { x: frameSize(node).w + 60, y: 0 } : { x: 30, y: 30 }
+        const copy = { ...JSON.parse(JSON.stringify(node)), x: node.x + shift.x, y: node.y + shift.y }
+        delete copy.exit // a problem has one way out; the copy is not it
+        if (isFrame) delete copy.parent // set beside the original; filed by where it lands
+        script.mapLayout.nodes[newId] = copy
+        if (isFrame) {
+          const inside = [...descendantIds(script.mapLayout.nodes, [nodeId])].filter((id) => id !== newId)
+          const idMap = { [nodeId]: newId }
+          inside.forEach((id) => (idMap[id] = uid()))
+          inside.forEach((id) => {
+            const n = JSON.parse(JSON.stringify(script.mapLayout.nodes[id]))
+            n.x += shift.x
+            n.y += shift.y
+            if (idMap[n.parent]) n.parent = idMap[n.parent]
+            else delete n.parent
+            script.mapLayout.nodes[idMap[id]] = n
+          })
+          script.mapLayout.edges
+            .filter((e) => idMap[e.from] && idMap[e.to] && e.from !== nodeId && e.to !== nodeId)
+            .forEach((e) => script.mapLayout.edges.push({ id: uid(), from: idMap[e.from], to: idMap[e.to] }))
+        }
+        syncFramesIn(script.mapLayout.nodes, new Set([newId]))
         script.updatedAt = Date.now()
       })
       get().scheduleSave(scriptId, { flash: false })
@@ -3441,7 +4052,7 @@ export const useStore = create(
         const script = s.scripts.find((sc) => sc.id === scriptId)
         const sec = script && script.sections.find((se) => se.id === sectionId)
         if (!sec) return
-        const clone = JSON.parse(JSON.stringify(sec))
+        const clone = cleanSectionCopy(sec)
         clone.id = uid()
         clone.lines = clone.lines.map((l) => ({ ...l, id: uid() }))
         script.sections.push(clone)
@@ -3469,7 +4080,7 @@ export const useStore = create(
         sectionIds.forEach((sectionId) => {
           const sec = script.sections.find((se) => se.id === sectionId)
           if (!sec) return
-          const clone = JSON.parse(JSON.stringify(sec))
+          const clone = cleanSectionCopy(sec)
           clone.id = uid()
           clone.lines = clone.lines.map((l) => ({ ...l, id: uid() }))
           script.sections.push(clone)

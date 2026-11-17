@@ -296,7 +296,14 @@ export const CHANGELOG = {
     'New dark and light variations: Ink Wash Night, Cyanotype Paper, Card Catalog Walnut, Riso Zine Black, Spellbound Parchment, Ronin Paper, Windows XP Noir, Minecraft Deepslate, Terraria Day and Underground, Frutiger Aero Black'
   ],
   '0.5.84': ['Liquid Glass: dropdown lists (Footage project picker, Teleprompter font, mind map) are readable again instead of white with pale text'],
-  '0.5.85': ['Ctrl+Shift+A (hide the top bars) now works in the script editor and outline too, with a small Show bars button in the title bar to bring them back']
+  '0.5.85': ['Ctrl+Shift+A (hide the top bars) now works in the script editor and outline too, with a small Show bars button in the title bar to bring them back'],
+  '0.5.86': [
+    'Comments on the script, like Google Docs: select text (or put the cursor in a line) and press Ctrl+Alt+M, or use the speech-bubble button on a line. The text gets a faint highlight and the comment floats in the page margin beside it — or as a small dot in split view. Reply, resolve or delete from the card or the new Comments tab',
+    'Mind map: problems. Select idea nodes and press Ctrl+G to draw a labelled frame around them; nodes inside keep its colour on their links, the frame stretches to hold them, and you can fold it into one card, focus on it (dims the rest) or mark the node that ends it as the way out (Ctrl+Alt+G). The Outline nests what is inside a problem, and can tell it as one line',
+    'The notepad can move out of the app window onto any monitor (the new button in its header). It stays part of the app: no taskbar button, and it minimises, restores and closes with the app',
+    'Ctrl+Z now undoes each node drag on the mind map one at a time',
+    'Holding Space to pan the mind map no longer sends you back to the script if you had just clicked the Map button'
+  ]
 }
 
 function parseVersion(v) {

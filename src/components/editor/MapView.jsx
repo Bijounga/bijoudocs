@@ -7,8 +7,9 @@ import Icon from '../icons.jsx'
 import MapNode, { NODE_WIDTH, NODE_H } from './MapNode.jsx'
 import IdeaNode from './IdeaNode.jsx'
 import ChapterNode from './ChapterNode.jsx'
+import ProblemFrame, { FOLD_W, FOLD_H } from './ProblemFrame.jsx'
 import ShapePicker, { SHAPES } from './ShapePicker.jsx'
-import { computeMainThread } from '../../lib/mapGraph.js'
+import { computeMainThread, isProblemNode, descendantIds, ancestorChain, foldedHidden, visibleLines } from '../../lib/mapGraph.js'
 import { presetChain, wouldLoop } from '../../lib/ideaPresets.js'
 import { routeElbow, pathFromPoints } from '../../lib/mapEdgeRouting.js'
 import { saveFieldWord } from '../../state/lineRefs.js'
@@ -68,6 +69,7 @@ function blurActiveEditableField() {
 // before — this only changes behavior once a node has actually mounted
 // and been measured at least once.
 function nodeSize(node) {
+  if (node.type === 'problem') return node.folded ? { w: FOLD_W, h: FOLD_H } : { w: node.manualWidth || 420, h: node.manualHeight || 300 }
   return { w: node.width || NODE_WIDTH, h: node.height || NODE_H }
 }
 
@@ -316,6 +318,18 @@ export default function MapView({ scriptId, script }) {
   const [snapGuides, setSnapGuides] = useState(null) // { x, y } world coords of the current alignment guide lines, or null on either axis when not snapped
   const [selectedEdgeId, setSelectedEdgeId] = useState(null)
   const [selectedNodeIds, setSelectedNodeIds] = useState([])
+  // Focus on a problem: everything outside its frame is dimmed (nothing is hidden), and the view fits it.
+  const focusRaw = useStore((s) => s.mapFocus[scriptId] || null)
+  const setMapFocus = useStore((s) => s.setMapFocus)
+  const addProblemNode = useStore((s) => s.addProblemNode)
+  const groupIntoProblem = useStore((s) => s.groupIntoProblem)
+  const toggleWayOut = useStore((s) => s.toggleWayOut)
+  const syncFrames = useStore((s) => s.syncFrames)
+  const growFrameFor = useStore((s) => s.growFrameFor)
+  const toggleProblemFolded = useStore((s) => s.toggleProblemFolded)
+  const [focusHide, setFocusHide] = useState(false) // while focused: hide the rest instead of dimming it
+  const focusId = focusRaw && isProblemNode(script.mapLayout.nodes[focusRaw]) ? focusRaw : null
+  const viewBeforeFocus = useRef(null) // where the view was before focusing, put back when the focus is cleared
   const [ideaMenuOpen, setIdeaMenuOpen] = useState(false)
   // Opened by the keybind with the mouse over the map: the menu appears at
   // the cursor ({x, y} screen, world = where the node goes); null = the
@@ -422,6 +436,45 @@ export default function MapView({ scriptId, script }) {
     }
   }, [mapSelectRequest, scriptId, clearMapSelectRequest])
 
+  // Focusing a problem fits the view to its frame; clearing the focus puts the view back.
+  useEffect(() => {
+    const rect = canvasRef.current && canvasRef.current.getBoundingClientRect()
+    if (!focusId) {
+      const back = viewBeforeFocus.current
+      viewBeforeFocus.current = null
+      if (back) {
+        setPan({ x: back.x, y: back.y })
+        setZoom(back.zoom)
+        zoomRef.current = back.zoom
+      }
+      return
+    }
+    const f = script.mapLayout.nodes[focusId]
+    if (!rect || !f) return
+    if (!viewBeforeFocus.current) viewBeforeFocus.current = { x: panRef.current.x, y: panRef.current.y, zoom: zoomRef.current }
+    const { w, h } = nodeSize(f)
+    const z = Math.max(ZOOM_MIN, Math.min(1.2, (rect.width - 120) / w, (rect.height - 120) / h))
+    zoomRef.current = z
+    setZoom(z)
+    setPan({ x: rect.width / 2 - (f.x + w / 2) * z, y: rect.height / 2 - (f.y + h / 2) * z })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusId])
+  // The dimming: a data attribute (React never overwrites it) on everything outside the focused frame and what is in it.
+  useEffect(() => {
+    const inner = canvasRef.current && canvasRef.current.querySelector('.map-canvas-inner')
+    if (!inner) return
+    if (!focusId && !inner.querySelector('[data-dim]')) return
+    const keep = focusId ? new Set([focusId, ...descendantIds(script.mapLayout.nodes, [focusId])]) : null
+    inner.querySelectorAll('[data-section-id]').forEach((el) => {
+      if (keep && !keep.has(el.dataset.sectionId)) el.setAttribute('data-dim', '1')
+      else el.removeAttribute('data-dim')
+    })
+    inner.querySelectorAll('[data-edge-from]').forEach((el) => {
+      if (keep && !(keep.has(el.dataset.edgeFrom) && keep.has(el.dataset.edgeTo))) el.setAttribute('data-dim', '1')
+      else el.removeAttribute('data-dim')
+    })
+  })
+
   useEffect(() => {
     if (!ideaMenuOpen) return
     function onDocMouseDown(e) {
@@ -456,6 +509,10 @@ export default function MapView({ scriptId, script }) {
 
   useEffect(() => {
     function onKeyDown(e) {
+      // Space pans here, but on a focused button (say the Map toggle you just
+      // clicked to open this view) it would also "click" it on release and send
+      // you back to the script. Let the button go first.
+      if (e.code === 'Space' && document.activeElement && document.activeElement.tagName === 'BUTTON') document.activeElement.blur()
       if (e.code === 'Space' && !e.repeat) {
         spaceDownRef.current = true
         if (canvasRef.current) canvasRef.current.style.cursor = 'grab'
@@ -528,6 +585,22 @@ export default function MapView({ scriptId, script }) {
           return
         }
       }
+      // Enter on a selected problem focuses on it.
+      if (
+        e.key === 'Enter' &&
+        !ideaMenuOpen &&
+        !isEditingText &&
+        (!active || active === document.body) &&
+        !e.ctrlKey &&
+        !e.metaKey &&
+        !e.altKey &&
+        validSelectedNodeIds.length === 1 &&
+        isProblemNode(script.mapLayout.nodes[validSelectedNodeIds[0]])
+      ) {
+        e.preventDefault()
+        setMapFocus(scriptId, validSelectedNodeIds[0])
+        return
+      }
       // Escape in a node's text leaves the field but keeps the node selected,
       // so Enter takes you straight back in.
       if (e.key === 'Escape' && !ideaMenuOpen && isEditingText && active.tagName === 'TEXTAREA') {
@@ -583,6 +656,12 @@ export default function MapView({ scriptId, script }) {
         }
       }
 
+      // Esc clears the focus on a problem (after anything that wants Esc for itself, above).
+      if (e.key === 'Escape' && !ideaMenuOpen && !presetManagerOpen && !isEditingText && focusId && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault()
+        setMapFocus(scriptId, null)
+        return
+      }
       // Arrow keys nudge the selected nodes (Shift = a bigger step). Only when
       // nothing is being typed into and no menu wants the arrows.
       if (
@@ -619,6 +698,23 @@ export default function MapView({ scriptId, script }) {
       if (combo === st.keybinds.mapHideBars) {
         e.preventDefault()
         toggleMapHideBars()
+        return
+      }
+      // These two work while you are typing in a node too (a Ctrl combo never types anything):
+      // they act on the node you are in.
+      const editingNodeId = isEditingText && active.closest && active.closest('.map-node') ? active.closest('.map-node').dataset.sectionId : null
+      if (combo === st.keybinds.mapGroupProblem && (!isEditingText || editingNodeId)) {
+        e.preventDefault()
+        if (!e.repeat) groupOrAddProblem(undefined, editingNodeId ? (validSelectedNodeIds.includes(editingNodeId) ? validSelectedNodeIds : [editingNodeId]) : undefined)
+        return
+      }
+      if (combo === st.keybinds.mapWayOut && (!isEditingText || editingNodeId)) {
+        e.preventDefault()
+        if (e.repeat) return
+        const targetId = editingNodeId || (validSelectedNodeIds.length === 1 ? validSelectedNodeIds[0] : null)
+        const tn = targetId && script.mapLayout.nodes[targetId]
+        if (tn && tn.parent && script.mapLayout.nodes[tn.parent]) toggleWayOut(scriptId, targetId)
+        else useStore.getState().flashSaved('Select one node inside a problem first, then mark it as the way out')
         return
       }
       if (combo === st.keybinds.mapAddIdeaNode) {
@@ -804,7 +900,7 @@ export default function MapView({ scriptId, script }) {
       return
     }
     if (e.button !== 0) return
-    if (e.target.closest('.map-node') || e.target.closest('.map-edge-hit')) return
+    if (e.target.closest('.map-node') || e.target.closest('.problem-frame-head') || e.target.closest('.problem-frame-grip') || e.target.closest('.map-edge-hit')) return
     // Same fix as the node-drag one above (see handleNodeMouseDown): a
     // rubber-band select drag starting on empty canvas is exactly the kind
     // of large, fast pointer sweep that triggers the browser's native
@@ -841,7 +937,9 @@ export default function MapView({ scriptId, script }) {
     blurActiveEditableField()
     e.preventDefault()
     const isPartOfSelection = validSelectedNodeIds.includes(sectionId) && validSelectedNodeIds.length > 1
-    const groupIds = isPartOfSelection ? validSelectedNodeIds : [sectionId]
+    const picked = isPartOfSelection ? validSelectedNodeIds : [sectionId]
+    // A frame carries what is inside it.
+    const groupIds = [...new Set([...picked, ...descendantIds(script.mapLayout.nodes, picked.filter((id) => isProblemNode(script.mapLayout.nodes[id])))])]
     const groupStart = {}
     groupIds.forEach((id) => {
       const n = script.mapLayout.nodes[id]
@@ -1016,6 +1114,8 @@ export default function MapView({ scriptId, script }) {
       if (d.type === 'pan') {
         setPan({ x: d.panStart.x + (e.clientX - d.startX), y: d.panStart.y + (e.clientY - d.startY) })
       } else if (d.type === 'node') {
+        // One undo step per drag (the first move of it), not per tick — so Ctrl+Z walks back through your moves one by one.
+        if (!d.moved) pushUndo(scriptId)
         d.moved = true
         let dx = (e.clientX - d.startX) / zoom
         let dy = (e.clientY - d.startY) / zoom
@@ -1032,8 +1132,9 @@ export default function MapView({ scriptId, script }) {
             const { w, h } = nodeSize(primaryNode)
             const candX = d.nodeStart.x + dx
             const candY = d.nodeStart.y + dy
+            const hiddenNow = foldedHidden(nodesNow)
             const others = Object.entries(nodesNow)
-              .filter(([id]) => !d.groupIds.includes(id))
+              .filter(([id, n]) => !d.groupIds.includes(id) && n.type !== 'problem' && !hiddenNow.has(id))
               .map(([, n]) => n)
             const snap = snapPosition(candX, candY, w, h, others, zoom)
             dx += snap.x - candX
@@ -1071,7 +1172,10 @@ export default function MapView({ scriptId, script }) {
         if (targetCard && targetCard.dataset.sectionId && targetCard.dataset.sectionId !== d.fromId) {
           addMapEdge(scriptId, d.fromId, targetCard.dataset.sectionId)
         }
+      } else if (d && d.type === 'resize') {
+        syncFrames(scriptId, null, d.nodeId)
       } else if (d && d.type === 'node') {
+        if (d.moved) syncFrames(scriptId, d.groupIds)
         if (!d.moved) {
           if (d.shiftKey) {
             setSelectedNodeIds((prev) => (prev.includes(d.sectionId) ? prev.filter((id) => id !== d.sectionId) : [...prev, d.sectionId]))
@@ -1087,8 +1191,10 @@ export default function MapView({ scriptId, script }) {
         const cur = useStore.getState()
         const curScript = cur.scripts.find((sc) => sc.id === scriptId)
         const nodesNow = curScript ? curScript.mapLayout.nodes : {}
+        const hiddenNow = foldedHidden(nodesNow)
         const hitIds = Object.entries(nodesNow)
-          .filter(([, n]) => {
+          .filter(([hid, n]) => {
+            if (n.type === 'problem' || hiddenNow.has(hid)) return false // a frame is picked by its bar, not by a drag across it
             const { w, h } = nodeSize(n)
             return n.x < x2 && n.x + w > x1 && n.y < y2 && n.y + h > y1
           })
@@ -1180,6 +1286,8 @@ export default function MapView({ scriptId, script }) {
     menuFromRef.current = null
     if (made.length && from) {
       addMapEdge(scriptId, from.nodeId, made[0])
+      growFrameFor(scriptId, from.nodeId, made) // added inside a frame: the frame takes it in
+
       setSelectedNodeIds([made[0]])
       revealNode(made[0])
       if (from.typing) setTimeout(() => focusNodeField(made[0]), 0)
@@ -1187,6 +1295,61 @@ export default function MapView({ scriptId, script }) {
       setSelectedNodeIds(made)
     }
     setIdeaMenuOpen(false)
+  }
+
+  // Fold a frame into a card / open it again.
+  function foldProblem(id) {
+    toggleProblemFolded(scriptId, id)
+    setSelectedNodeIds([id])
+  }
+  // The "+ Add to this problem" button: the idea menu after the last node in the
+  // frame (so the new one is connected to it), or in the middle of an empty frame.
+  function addInsideFrame(frameId) {
+    const cur = useStore.getState().scripts.find((sc) => sc.id === scriptId)
+    if (!cur) return
+    const ns = cur.mapLayout.nodes
+    const members = Object.entries(ns).filter(([, n]) => n.parent === frameId && n.type === 'idea')
+    const edgesNow = cur.mapLayout.edges
+    const ends = members.filter(([id]) => !edgesNow.some((e) => e.from === id && ns[e.to] && ns[e.to].parent === frameId))
+    const pool = ends.length ? ends : members
+    const last = pool.sort((a, b) => b[1].y - a[1].y || b[1].x - a[1].x)[0]
+    if (last) {
+      openMenuAfterNode(last[0], false)
+      return
+    }
+    const f = ns[frameId]
+    const rect = canvasRef.current && canvasRef.current.getBoundingClientRect()
+    if (!f || !rect) return
+    const { w } = nodeSize(f)
+    const world = { x: f.x + w / 2, y: f.y + 140 }
+    const z = zoomRef.current
+    const pn = panRef.current
+    menuFromRef.current = null
+    setPresetManagerOpen(false)
+    setSelectedNodeIds([])
+    setIdeaMenuAt({ x: rect.left + pn.x + world.x * z, y: rect.top + pn.y + world.y * z, world })
+    setIdeaMenuIndex(0)
+    setIdeaMenuOpen(true)
+  }
+  // Focus on a problem (dims the rest); null clears it.
+  function focusProblem(id) {
+    if (!id) return setMapFocus(scriptId, null)
+    const cur = useStore.getState().scripts.find((sc) => sc.id === scriptId)
+    if (cur && isProblemNode(cur.mapLayout.nodes[id])) setMapFocus(scriptId, id)
+  }
+  // With idea nodes selected, wraps them in a new problem; with nothing to wrap, adds an empty one.
+  function groupOrAddProblem(at, pickIds) {
+    const ns = script.mapLayout.nodes
+    const ids = (pickIds || validSelectedNodeIds).filter((id) => ns[id] && (ns[id].type === 'idea' || ns[id].type === 'problem'))
+    if (ids.length) {
+      const pid = groupIntoProblem(scriptId, ids)
+      if (pid) setSelectedNodeIds([pid])
+      return
+    }
+    const world = placementPoint(at)
+    if (!world) return
+    const pid = addProblemNode(scriptId, world.x - NODE_WIDTH / 2, world.y - NODE_H / 2)
+    if (pid) setSelectedNodeIds([pid])
   }
 
   function handleAddChapterNode(at) {
@@ -1218,22 +1381,51 @@ export default function MapView({ scriptId, script }) {
   const mapLayout = script.mapLayout
   const nodes = mapLayout.nodes
   const { order, litEdgeIds } = useMemo(() => computeMainThread(mapLayout), [mapLayout])
+  // What each problem frame says: how many nodes are in it, and its way out.
+  const hiddenIds = useMemo(() => foldedHidden(nodes), [nodes])
+  const { childCount, wayOutById, frames, depthById } = useMemo(() => {
+    const counts = {}
+    const outs = {}
+    const list = []
+    const short = (t) => (t.length > 70 ? t.slice(0, 68) + '…' : t)
+    Object.keys(nodes).forEach((id) => {
+      const n = nodes[id]
+      if (n.type === 'problem') list.push(id)
+      if (n.parent && nodes[n.parent]) {
+        counts[n.parent] = (counts[n.parent] || 0) + 1
+        if (n.exit) outs[n.parent] = short(n.type === 'problem' ? n.label || 'Untitled problem' : [n.title, n.text].filter(Boolean).join(': ') || 'Untitled idea')
+      }
+    })
+    // Bigger frames first, so a frame inside another is drawn on top of it.
+    list.sort((a, b) => {
+      const sa = nodeSize(nodes[a])
+      const sb = nodeSize(nodes[b])
+      return sb.w * sb.h - sa.w * sa.h
+    })
+    const depths = {}
+    list.forEach((id) => (depths[id] = ancestorChain(nodes, id).length))
+    return { childCount: counts, wayOutById: outs, frames: list, depthById: depths }
+  }, [nodes])
+  // The lines: a link into a frame that is folded away is drawn to its card.
+  const lines = useMemo(() => visibleLines(mapLayout), [mapLayout])
   // Built once per layout, reused per-edge below (each edge just filters
   // out its own two endpoints) rather than rebuilt inside the edges.map
   // loop — same box list, only the exclusion differs per edge.
   const routingObstacles = useMemo(
     () =>
-      Object.entries(nodes).map(([id, n]) => ({
-        id,
-        x: n.x,
-        y: n.y,
-        width: n.width || NODE_WIDTH,
-        // A real measured height (auto-sizing shape nodes) is trustworthy
-        // as-is; anything else still only has the nominal NODE_H to go on,
-        // so keep using the generous estimate for those.
-        height: n.height || OBSTACLE_EST_HEIGHT
-      })),
-    [nodes]
+      Object.entries(nodes)
+        .filter(([id, n]) => (n.type !== 'problem' || n.folded) && !hiddenIds.has(id))
+        .map(([id, n]) => ({
+          id,
+          x: n.x,
+          y: n.y,
+          width: n.type === 'problem' ? FOLD_W : n.width || NODE_WIDTH,
+          // A real measured height (auto-sizing shape nodes) is trustworthy
+          // as-is; anything else still only has the nominal NODE_H to go on,
+          // so keep using the generous estimate for those.
+          height: n.type === 'problem' ? FOLD_H : n.height || OBSTACLE_EST_HEIGHT
+        })),
+    [nodes, hiddenIds]
   )
   // Which connector dots each node has a line on, and the end-of-thread "+"
   // direction, from one pass over the edges. A node's Set is reused while its
@@ -1242,7 +1434,7 @@ export default function MapView({ scriptId, script }) {
   const sidesCache = useRef(new Map())
   const { sidesById, endDirById } = useMemo(() => {
     const incident = {}
-    mapLayout.edges.forEach((edge) => {
+    lines.forEach((edge) => {
       ;(incident[edge.from] = incident[edge.from] || []).push(edge)
       ;(incident[edge.to] = incident[edge.to] || []).push(edge)
     })
@@ -1273,11 +1465,11 @@ export default function MapView({ scriptId, script }) {
     })
     sidesCache.current = next
     return { sidesById: sides, endDirById: ends }
-  }, [nodes, mapLayout.edges])
+  }, [nodes, lines])
   // The handlers handed to every node, stable across renders (they read the latest closures through a ref),
   // so React.memo on the node components can skip them.
   const handlersRef = useRef({})
-  handlersRef.current = { handleNodeMouseDown, handleConnectorMouseDown, goToSection, handleAddInDirection, handleNodeContextMenu, handleResizeMouseDown, handleBendMouseDown }
+  handlersRef.current = { handleNodeMouseDown, handleConnectorMouseDown, goToSection, handleAddInDirection, handleNodeContextMenu, handleResizeMouseDown, handleBendMouseDown, focusProblem, foldProblem, addInsideFrame }
   const stable = useMemo(
     () => ({
       onNodeMouseDown: (...a) => handlersRef.current.handleNodeMouseDown(...a),
@@ -1286,27 +1478,42 @@ export default function MapView({ scriptId, script }) {
       onAddInDirection: (...a) => handlersRef.current.handleAddInDirection(...a),
       onContextMenu: (...a) => handlersRef.current.handleNodeContextMenu(...a),
       onResizeMouseDown: (...a) => handlersRef.current.handleResizeMouseDown(...a),
-      onBendMouseDown: (...a) => handlersRef.current.handleBendMouseDown(...a)
+      onBendMouseDown: (...a) => handlersRef.current.handleBendMouseDown(...a),
+      onFocusProblem: (...a) => handlersRef.current.focusProblem(...a),
+      onFoldProblem: (...a) => handlersRef.current.foldProblem(...a),
+      onAddInside: (...a) => handlersRef.current.addInsideFrame(...a)
     }),
     []
   )
   // The routed lines: re-routed when nodes or edges change, not when the view pans or zooms.
   const edgeEls = useMemo(
     () =>
-      mapLayout.edges.map((edge) => {
-        const from = nodes[edge.from]
-        const to = nodes[edge.to]
+      lines.map((line) => {
+        const from = nodes[line.from]
+        const to = nodes[line.to]
         if (!from || !to) return null
+        const edge = line.edge
         const [sideA, sideB] = pickSides(from, to)
         const a = sideAnchor(from, sideA)
         const b = sideAnchor(to, sideB)
-        const obstacles = routingObstacles.filter((n) => n.id !== edge.from && n.id !== edge.to)
-        const { axis, points, handle } = routeElbow(a, sideA, b, sideB, edge.bendOffset, obstacles)
+        const obstacles = routingObstacles.filter((n) => n.id !== line.from && n.id !== line.to)
+        const { axis, points, handle } = routeElbow(a, sideA, b, sideB, edge ? edge.bendOffset : undefined, obstacles)
         const d = pathFromPoints(points)
+        // A line that only stands in for links crossing a problem's border: drawn, but nothing to grab.
+        if (!edge) {
+          return (
+            <g key={line.id} className="map-edge-group is-proj">
+              <path d={d} className="map-edge map-edge-proj" markerEnd="url(#map-arrow)" />
+            </g>
+          )
+        }
         const lit = litEdgeIds.has(edge.id)
         const selected = selectedEdgeId === edge.id
+        // A link between two nodes of the same problem is drawn in that problem's colour.
+        const pfParent = from.parent && from.parent === to.parent && nodes[from.parent] ? from.parent : null
+        const pf = pfParent ? (depthById[pfParent] || 0) % 3 : null
         return (
-          <g key={edge.id} className={'map-edge-group' + (selected ? ' is-selected' : '')}>
+          <g key={edge.id} className={'map-edge-group' + (selected ? ' is-selected' : '')} data-edge-from={edge.from} data-edge-to={edge.to} data-pf={pf == null ? undefined : pf}>
             <path
               d={d}
               className={'map-edge-hit'}
@@ -1318,7 +1525,7 @@ export default function MapView({ scriptId, script }) {
             <path
               d={d}
               className={'map-edge' + (lit ? ' is-lit' : '') + (selected ? ' is-selected' : '')}
-              markerEnd={lit ? 'url(#map-arrow-lit)' : 'url(#map-arrow)'}
+              markerEnd={lit ? 'url(#map-arrow-lit)' : pf != null ? 'url(#map-arrow-pf' + pf + ')' : 'url(#map-arrow)'}
             />
             {/* Reroute handle — a fat invisible hit-circle plus a small
                 visible dot, hover/selection-revealed in CSS (same
@@ -1336,7 +1543,7 @@ export default function MapView({ scriptId, script }) {
           </g>
         )
       }),
-    [mapLayout.edges, nodes, routingObstacles, litEdgeIds, selectedEdgeId, stable]
+    [lines, nodes, routingObstacles, litEdgeIds, selectedEdgeId, stable, depthById]
   )
 
   return (
@@ -1411,6 +1618,13 @@ export default function MapView({ scriptId, script }) {
         <button className="icon-btn tb-icon" onClick={() => handleAddChapterNode()} title="Add chapter — a group header for the Outline">
           <Icon name="layers" />
         </button>
+        <button
+          className="icon-btn tb-icon"
+          onClick={() => groupOrAddProblem()}
+          title={'Problem — wraps the selected idea nodes in one you can step inside, or adds an empty one (' + keybinds.mapGroupProblem + ')'}
+        >
+          <Icon name="problem" />
+        </button>
         <div className="divider-v" />
         <button
           className={'icon-btn tb-icon' + (script.mapLayout.hideSummaries ? ' active' : '')}
@@ -1464,6 +1678,7 @@ export default function MapView({ scriptId, script }) {
             'Right-click for options',
             'Tab / Shift+Tab: next / previous connected node — off the end, it adds one',
             'Enter on a selected node: start typing in it (Esc to stop)',
+            'Problems: Ctrl+G draws a frame around the selected idea nodes; Enter on a frame dims everything else (Esc shows it all again)',
             'Ctrl+C / Ctrl+V to duplicate',
             'Pull a connector dot onto another node to link them',
             'Click or pull a connected dot to disconnect it',
@@ -1474,7 +1689,7 @@ export default function MapView({ scriptId, script }) {
         </span>
       </div>
       <div
-        className="map-canvas"
+        className={'map-canvas' + (focusId ? ' has-focus' : '') + (focusId && focusHide ? ' focus-hide' : '')}
         ref={canvasRef}
         onMouseMove={(e) => (pointerRef.current = { x: e.clientX, y: e.clientY })}
         onMouseLeave={() => (pointerRef.current = null)}
@@ -1483,6 +1698,25 @@ export default function MapView({ scriptId, script }) {
         onContextMenu={handleCanvasContextMenu}
       >
         {script.sections.length === 0 && <div className="filter-empty">No sections yet.</div>}
+        {focusId && (
+          <div className="map-focus-pill" onMouseDown={(e) => e.stopPropagation()} onContextMenu={(e) => e.stopPropagation()}>
+            <Icon name="target" size={12} />
+            <span>
+              Focus: <b>{nodes[focusId] && nodes[focusId].label ? nodes[focusId].label : 'Untitled problem'}</b>
+            </span>
+            <span className="map-focus-seg" title="What happens to everything outside it">
+              <button className={focusHide ? '' : 'active'} onClick={() => setFocusHide(false)}>
+                Dim the rest
+              </button>
+              <button className={focusHide ? 'active' : ''} onClick={() => setFocusHide(true)}>
+                Hide the rest
+              </button>
+            </span>
+            <button className="map-crumb map-crumb-back" onClick={() => setMapFocus(scriptId, null)} title="Show everything again (Esc)">
+              Show all
+            </button>
+          </div>
+        )}
         <div className="map-canvas-inner" style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}>
           <svg className="map-edges-svg">
             <defs>
@@ -1492,6 +1726,11 @@ export default function MapView({ scriptId, script }) {
               <marker id="map-arrow-lit" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
                 <path d="M0,0 L10,5 L0,10 z" fill="var(--cyan)" />
               </marker>
+              {['--amber', '--cyan', '--pink'].map((c, i) => (
+                <marker key={c} id={'map-arrow-pf' + i} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0,0 L10,5 L0,10 z" fill={'var(' + c + ')'} />
+                </marker>
+              ))}
             </defs>
             {edgeEls}
             {connectPreview &&
@@ -1542,7 +1781,7 @@ export default function MapView({ scriptId, script }) {
             )
           })}
           {Object.entries(nodes)
-            .filter(([, n]) => isIdeaNode(n))
+            .filter(([id, n]) => isIdeaNode(n) && !hiddenIds.has(id))
             .map(([id, node]) => (
               <IdeaNode
                 key={id}
@@ -1581,6 +1820,28 @@ export default function MapView({ scriptId, script }) {
                 onResizeMouseDown={stable.onResizeMouseDown}
               />
             ))}
+          {/* Frames are drawn over the nodes, so a frame's bar is never hidden behind a neighbouring card; their middle lets clicks through. */}
+          {frames
+            .filter((id) => !hiddenIds.has(id))
+            .map((id) => (
+            <ProblemFrame
+              key={id}
+              scriptId={scriptId}
+              id={id}
+              node={nodes[id]}
+              depth={depthById[id] || 0}
+              isSelected={validSelectedNodeIds.includes(id)}
+              isFocused={focusId === id}
+              insideCount={childCount[id] || 0}
+              wayOut={wayOutById[id] || null}
+              onNodeMouseDown={stable.onNodeMouseDown}
+              onContextMenu={stable.onContextMenu}
+              onResizeMouseDown={stable.onResizeMouseDown}
+              onFocus={stable.onFocusProblem}
+              onFold={stable.onFoldProblem}
+              onAddInside={stable.onAddInside}
+            />
+          ))}
         </div>
       </div>
     </div>

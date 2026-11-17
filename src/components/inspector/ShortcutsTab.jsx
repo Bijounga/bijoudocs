@@ -37,6 +37,17 @@ const BUILT_IN = [
     desc:
       'Moves to the node this one is connected to (Shift+Tab: the one before). If you were typing, you carry on typing in it; if it was only selected, it is just highlighted and Enter starts typing. At the end of a chain it opens the add-idea menu for a new connected node.'
   },
+  {
+    keys: 'Enter / Esc',
+    label: 'Mind map: focus on a problem',
+    desc:
+      'A problem is a labelled frame around idea nodes — nothing is hidden. Enter on a selected frame dims everything outside it and zooms to it (Esc shows everything again); double-click its bar to fold it into one card and back. Frame selected nodes with Ctrl+G, add to a frame with its + button or Tab at the end of its chain, and mark the node that closes a problem as its way out.'
+  },
+  {
+    keys: 'Comment',
+    label: 'Comment on text',
+    desc: 'Select text in a line and click the Comment button that appears (or press Ctrl+Alt+M). The text is highlighted; click it, or the speech bubble in the sidebar, to read, reply, resolve or delete.'
+  },
   { keys: 'Dbl-click', label: 'Open as a tab', desc: 'Double-click a section title, or use its new-tab button.' },
   { keys: 'Click', label: 'Resize a pasted image', desc: 'Each click cycles its size.' }
 ]

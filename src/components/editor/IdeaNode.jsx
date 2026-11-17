@@ -153,6 +153,7 @@ function IdeaNode({
         (isLit ? ' is-lit' : '') +
         (isSelected ? ' is-selected' : '') +
         (node.struck ? ' struck' : '') +
+        (node.exit ? ' is-wayout' : '') +
         (isSimpleShape ? ' idea-node-simple' : '')
       }
       data-section-id={id}

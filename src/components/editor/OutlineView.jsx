@@ -67,6 +67,10 @@ export default function OutlineView({ scriptId, script }) {
   const setActiveTab = useStore((s) => s.setActiveTab)
   const toggleOutlineView = useStore((s) => s.toggleOutlineView)
   const toggleMapView = useStore((s) => s.toggleMapView)
+  const setMapFocus = useStore((s) => s.setMapFocus)
+  const setProblemField = useStore((s) => s.setProblemField)
+  const commitProblemField = useStore((s) => s.commitProblemField)
+  const toggleProblemCompress = useStore((s) => s.toggleProblemCompress)
   const deleteOutlineNode = useStore((s) => s.deleteOutlineNode)
   const toggleResumeOutlineNode = useStore((s) => s.toggleResumeOutlineNode)
   const toggleStruckForMapNodes = useStore((s) => s.toggleStruckForMapNodes)
@@ -109,7 +113,7 @@ export default function OutlineView({ scriptId, script }) {
   }, [jumpOutlineHighlightId])
 
   const nodes = script.mapLayout.nodes
-  const { ordered, dividers } = flattenMapOrder(script.mapLayout)
+  const { ordered, dividers, depths } = flattenMapOrder(script.mapLayout)
   // Multiple dividers can land on the same index (e.g. a chapter ending
   // right where the next one begins), so group by index rather than
   // overwrite.
@@ -168,6 +172,7 @@ export default function OutlineView({ scriptId, script }) {
       const node = nodes[id]
       if (!node) return false
       if (isIdeaNode(node)) return matchesQuery(node.title, node.text)
+      if (node.type === 'problem') return matchesQuery(node.label, node.summary)
       const sec = script.sections.find((se) => se.id === id)
       return sec && matchesQuery(sec.heading, sec.beatSummary)
     })
@@ -180,6 +185,18 @@ export default function OutlineView({ scriptId, script }) {
 
   function deleteIdea(id) {
     deleteOutlineNode(scriptId, id)
+  }
+
+  function deleteProblem(id) {
+    const inside = Object.values(nodes).filter((n) => n.parent === id).length
+    const msg = inside ? 'Remove this problem frame? The ' + inside + ' node' + (inside === 1 ? '' : 's') + ' inside it stay.' : 'Remove this problem frame?'
+    if (window.confirm(msg)) deleteOutlineNode(scriptId, id)
+  }
+
+  // Show a problem on the map, focused.
+  function openProblemOnMap(id) {
+    setMapFocus(scriptId, id)
+    toggleMapView()
   }
 
   function deleteSectionNode(id, sec) {
@@ -211,11 +228,70 @@ export default function OutlineView({ scriptId, script }) {
           const node = nodes[id]
           if (!node) return null
           const dividersHere = dividersByIndex.get(i) || []
+          const depth = (depths && depths[i]) || 0
+          const indent = depth ? { marginLeft: depth * 22 } : undefined
           if (hiddenIndexes.has(i)) {
             // The group's heading (and a previous group's end marker) still show above its first hidden item.
             return dividersHere.length ? (
               <React.Fragment key={id}>{dividersHere.filter((d) => d.kind !== 'subEnd').map((d, di) => renderDivider(d, di))}</React.Fragment>
             ) : null
+          }
+          // A problem: its own row, with what is inside listed right after, indented (or just its one line).
+          if (node.type === 'problem') {
+            if (!matchesQuery(node.label, node.summary)) return null
+            const inside = Object.values(nodes).filter((n) => n.parent === id).length
+            return (
+              <React.Fragment key={id}>
+                {dividersHere.map((d, di) => renderDivider(d, di))}
+                <div className={'outline-item outline-problem' + (node.struck ? ' struck' : '')} style={indent} data-item-id={id}>
+                  <span className="outline-item-num">{i + 1}</span>
+                  <div className="outline-item-body">
+                    <div className="outline-item-head">
+                      <span className="outline-problem-kicker">
+                        <Icon name="problem" size={12} />
+                        Problem
+                      </span>
+                      <input
+                        className="outline-item-title"
+                        placeholder="Untitled problem"
+                        value={node.label || ''}
+                        data-node-id={id}
+                        onFocus={() => pushUndo(scriptId)}
+                        onChange={(e) => setProblemField(scriptId, id, 'label', e.target.value)}
+                        onBlur={() => commitProblemField(scriptId)}
+                      />
+                      <button
+                        className={'icon-btn outline-problem-short' + (node.compress ? ' active' : '')}
+                        style={{ padding: '4px 8px' }}
+                        onClick={() => toggleProblemCompress(scriptId, id)}
+                        title={node.compress ? 'Told as one line — click to list everything inside' : 'List everything inside, or click to tell it as one line'}
+                      >
+                        1 line
+                      </button>
+                      <button className="icon-btn" style={{ padding: '4px 8px' }} onClick={() => openProblemOnMap(id)} title="Show it on the map, focused">
+                        <Icon name="target" size={12} />
+                      </button>
+                      <button className="icon-btn" style={{ padding: '4px 8px' }} onClick={() => deleteProblem(id)} title="Remove this problem frame (the nodes stay on the map)">
+                        <Icon name="trash" size={12} />
+                      </button>
+                    </div>
+                    {node.compress ? (
+                      <textarea
+                        className="outline-item-text"
+                        placeholder="The one line for the script…"
+                        value={node.summary || ''}
+                        data-node-id={id}
+                        onFocus={() => pushUndo(scriptId)}
+                        onChange={(e) => setProblemField(scriptId, id, 'summary', e.target.value)}
+                        onBlur={() => commitProblemField(scriptId)}
+                      />
+                    ) : (
+                      <div className="outline-problem-meta">{inside ? inside + ' inside, listed below' : 'Nothing inside yet'}</div>
+                    )}
+                  </div>
+                </div>
+              </React.Fragment>
+            )
           }
           if (isIdeaNode(node)) {
             if (!matchesQuery(node.title, node.text)) return null
@@ -227,8 +303,10 @@ export default function OutlineView({ scriptId, script }) {
                     'outline-item' +
                     (script.resumeOutlineNodeId === id ? ' resume-point' : '') +
                     (jumpOutlineHighlightId === id ? ' jump-flash' : '') +
-                    (node.struck ? ' struck' : '')
+                    (node.struck ? ' struck' : '') +
+                    (node.exit ? ' is-wayout' : '')
                   }
+                  style={indent}
                   data-item-id={id}
                 >
                   <span className="outline-item-num">{i + 1}</span>
@@ -263,6 +341,12 @@ export default function OutlineView({ scriptId, script }) {
                           </div>
                         )}
                       </div>
+                      {node.exit && (
+                        <span className="outline-wayout" title="The way out of its problem — the line that closes it">
+                          <Icon name="flag" size={11} />
+                          Way out
+                        </span>
+                      )}
                       <input
                         className="outline-item-title"
                         placeholder="Untitled idea"

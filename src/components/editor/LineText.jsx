@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react'
 import { setLineRef } from '../../state/lineRefs.js'
+import { useStore } from '../../state/store.js'
 
 // Uncontrolled rich-text contentEditable: React never re-renders its
 // children on keystroke (that's what caused cursor/scroll loss in the
@@ -163,6 +164,9 @@ export default function LineText({ dataKey, value, placeholder, onCommit, onUndo
   // Click a pasted image to cycle its display width — 150/300/450/650px —
   // so a full-resolution screenshot doesn't take over the whole line.
   function handleClick(e) {
+    // A comment's highlighted text: open that thread in the Comments tab.
+    const hl = e.target.closest && e.target.closest('[data-cmt]')
+    if (hl && window.getSelection().isCollapsed) useStore.getState().focusComment(hl.getAttribute('data-cmt'))
     if (e.target.tagName === 'IMG') {
       e.preventDefault()
       const current = parseInt(e.target.style.width || '300', 10) || 300

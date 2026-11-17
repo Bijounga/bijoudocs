@@ -18,7 +18,10 @@ import Icon from './icons.jsx'
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v))
 
-export default function Scratchpad({ script }) {
+// `mode` is 'window' when this is the notepad's own window (outside the app window, see
+// PadWindowApp.jsx): it fills that window and its buttons talk to the app window.
+export default function Scratchpad({ script, mode }) {
+  const inWindow = mode === 'window'
   const pad = useStore((s) => s.scratchpad)
   const scriptId = script ? script.id : null
   const book = useStore((s) => getPad(s.scratchPads, scriptId))
@@ -28,6 +31,7 @@ export default function Scratchpad({ script }) {
   const setRect = useStore((s) => s.setScratchpadRect)
   const zoomPad = useStore((s) => s.zoomScratchpad)
   const toggleLines = useStore((s) => s.toggleScratchpadLines)
+  const detach = useStore((s) => s.detachScratchpad)
   const setTab = useStore((s) => s.setScratchTab)
   const addTab = useStore((s) => s.addScratchTab)
   const renameTab = useStore((s) => s.renameScratchTab)
@@ -86,6 +90,11 @@ export default function Scratchpad({ script }) {
     if (pad.open && !wasOpen.current) focusEnd()
     wasOpen.current = pad.open
   }, [pad.open])
+  // Its own window has just opened: the cursor goes in.
+  useEffect(() => {
+    if (inWindow) requestAnimationFrame(focusEnd)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // The picked tab stays in view when there are more tabs than fit.
   useEffect(() => {
@@ -127,13 +136,15 @@ export default function Scratchpad({ script }) {
   // Dragging its corner to resize: remember the new size once it settles.
   useEffect(() => {
     const el = boxRef.current
-    if (!el) return
+    if (!el || inWindow) return undefined // a window's size is the window's (the app window keeps it)
     let t
     const ro = new ResizeObserver(() => {
       clearTimeout(t)
       t = setTimeout(() => {
         const w = Math.round(el.offsetWidth)
         const h = Math.round(el.offsetHeight)
+        // Gone from the screen (moved out to its own window) measures 0: not a size to remember.
+        if (w < 100 || h < 100) return
         const cur = useStore.getState().scratchpad
         if (Math.abs(w - cur.w) > 1 || Math.abs(h - cur.h) > 1) setRect({ w, h })
       }, 300)
@@ -143,9 +154,10 @@ export default function Scratchpad({ script }) {
       ro.disconnect()
       clearTimeout(t)
     }
-  }, [pad.open, setRect])
+  }, [pad.open, setRect, inWindow])
 
-  if (!pad.open || !script) return null
+  // Out of the app window it lives in its own window instead (PadBridge opens that).
+  if (!pad.open || !script || (pad.detached && !inWindow)) return null
 
   function save() {
     const el = areaRef.current
@@ -252,10 +264,15 @@ export default function Scratchpad({ script }) {
   return (
     <div
       ref={boxRef}
-      className={'scratchpad' + (pad.lines ? ' ruled' : '')}
-      style={{ left: pos.x, top: pos.y, width: pad.w, height: pad.h, '--pad-zoom': pad.zoom }}
+      className={'scratchpad' + (pad.lines ? ' ruled' : '') + (inWindow ? ' window-mode' : '')}
+      style={inWindow ? { '--pad-zoom': pad.zoom } : { left: pos.x, top: pos.y, width: pad.w, height: pad.h, '--pad-zoom': pad.zoom }}
     >
-      <div className="scratchpad-head" onMouseDown={startDrag} onDoubleClick={() => setRect({ x: null, y: null })} title="Drag to move — double-click to put it back in the corner">
+      <div
+        className="scratchpad-head"
+        onMouseDown={inWindow ? undefined : startDrag}
+        onDoubleClick={inWindow ? undefined : () => setRect({ x: null, y: null })}
+        title={inWindow ? 'Drag to move it anywhere on any screen' : 'Drag to move — double-click to put it back in the corner'}
+      >
         <Icon name="pad" size={13} />
         <span className="scratchpad-title">Notepad · {script.title || 'Untitled'}</span>
         <button
@@ -265,7 +282,20 @@ export default function Scratchpad({ script }) {
         >
           <Icon name="menu" size={12} />
         </button>
-        <button className="icon-btn tb-icon scratchpad-close" onClick={closePad} title={'Put the notepad away — your notes stay (' + keybind + ')'}>
+        {inWindow ? (
+          <button className="icon-btn tb-icon" onClick={() => window.bijou.padCommand('dock')} title="Put the notepad back inside the app window">
+            <Icon name="dock" size={12} />
+          </button>
+        ) : (
+          <button className="icon-btn tb-icon" onClick={detach} title="Move the notepad out of the app window — onto any screen (it stays part of the app and minimises with it)">
+            <Icon name="popout" size={12} />
+          </button>
+        )}
+        <button
+          className="icon-btn tb-icon scratchpad-close"
+          onClick={inWindow ? () => window.bijou.padCommand('close') : closePad}
+          title={'Put the notepad away — your notes stay (' + keybind + ')'}
+        >
           <Icon name="x" size={12} />
         </button>
       </div>

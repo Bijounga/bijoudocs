@@ -32,6 +32,157 @@ export function computeMainThread(mapLayout) {
   return { order, litEdgeIds }
 }
 
+// ---------- problems: a node you can step inside ----------
+// A "problem" node (type: 'problem') holds other nodes: each of those has
+// `parent: <problem id>`. Nodes with no parent live at the top level of the
+// map. Positions inside a problem are in the same world coordinates as before
+// (so ungrouping puts everything back where it was); entering a problem just
+// shows the nodes whose parent it is.
+export const isProblemNode = (n) => !!n && n.type === 'problem'
+
+// The problem a node sits in, or null at the top level (also null if that
+// problem no longer exists).
+export const parentOf = (nodes, n) => (n && n.parent && nodes[n.parent] && nodes[n.parent].type === 'problem' ? n.parent : null)
+
+// Every problem above a node, nearest first.
+export function ancestorChain(nodes, id) {
+  const chain = []
+  let cur = nodes[id]
+  let guard = 0
+  while (cur && guard++ < 60) {
+    const p = parentOf(nodes, cur)
+    if (!p) break
+    chain.push(p)
+    cur = nodes[p]
+  }
+  return chain
+}
+
+// Every node inside a set of problems, at any depth (not the problems themselves).
+export function descendantIds(nodes, ids) {
+  const roots = new Set(ids)
+  const out = new Set()
+  Object.keys(nodes).forEach((id) => {
+    let cur = nodes[id]
+    let guard = 0
+    while (cur && guard++ < 60) {
+      const p = parentOf(nodes, cur)
+      if (!p) break
+      if (roots.has(p)) {
+        out.add(id)
+        break
+      }
+      cur = nodes[p]
+    }
+  })
+  return out
+}
+
+// The node that stands for `id` when looking at `scope` (a problem id, or
+// null for the top level): the id itself if it sits right in that scope, the
+// problem it is inside if it is deeper, or null if it is not within that scope.
+export function projectTo(nodes, id, scope) {
+  let cur = id
+  let guard = 0
+  while (nodes[cur] && guard++ < 60) {
+    const p = parentOf(nodes, nodes[cur])
+    if (p === scope) return cur
+    if (!p) return null
+    cur = p
+  }
+  return null
+}
+
+// Ids hidden because a frame around them is folded into a card (the folded
+// frame itself is not in here).
+export function foldedHidden(nodes) {
+  const hidden = new Set()
+  Object.keys(nodes).forEach((id) => {
+    let cur = nodes[id]
+    let guard = 0
+    while (cur && guard++ < 60) {
+      const p = parentOf(nodes, cur)
+      if (!p) break
+      if (nodes[p].folded) {
+        hidden.add(id)
+        break
+      }
+      cur = nodes[p]
+    }
+  })
+  return hidden
+}
+
+// The lines to draw on the map: a link to a node hidden inside a folded frame is
+// drawn to the folded card instead. `edge` is the real edge when the line is one,
+// null when it only stands in for links into a folded frame.
+export function visibleLines(mapLayout) {
+  const { nodes, edges } = mapLayout
+  const stand = (id) => {
+    let cur = id
+    let top = id
+    let guard = 0
+    while (nodes[cur] && guard++ < 60) {
+      const p = parentOf(nodes, nodes[cur])
+      if (!p) break
+      if (nodes[p].folded) top = p
+      cur = p
+    }
+    return top
+  }
+  const out = []
+  const seen = new Map()
+  edges.forEach((e) => {
+    const a = stand(e.from)
+    const b = stand(e.to)
+    if (!nodes[a] || !nodes[b] || a === b) return
+    const real = a === e.from && b === e.to
+    const key = a + '>' + b
+    const prev = seen.get(key)
+    if (prev) {
+      if (real && !prev.edge) {
+        prev.edge = e
+        prev.id = e.id
+      }
+      return
+    }
+    const item = { id: real ? e.id : 'proj:' + key, from: a, to: b, edge: real ? e : null }
+    seen.set(key, item)
+    out.push(item)
+  })
+  return out
+}
+
+// The lines to draw when looking at `scope`. A line between two nodes inside
+// the same problem is drawn as is; a line that crosses a problem's border is
+// drawn to the problem itself (so a chain that runs in and out of one still
+// reads as a chain from outside). `edge` is the real edge when the line is one,
+// null when it is only a stand-in.
+export function scopeEdges(mapLayout, scope) {
+  const { nodes, edges } = mapLayout
+  const out = []
+  const seen = new Map()
+  edges.forEach((e) => {
+    const a = projectTo(nodes, e.from, scope)
+    const b = projectTo(nodes, e.to, scope)
+    if (!a || !b || a === b) return
+    const real = a === e.from && b === e.to
+    const key = a + '>' + b
+    const prev = seen.get(key)
+    if (prev) {
+      if (real && !prev.edge) {
+        prev.edge = e
+        prev.id = e.id
+      }
+      return
+    }
+    const item = { id: real ? e.id : 'proj:' + key, from: a, to: b, edge: real ? e : null }
+    seen.set(key, item)
+    out.push(item)
+  })
+  return out
+}
+
 // Turns the map's nodes into a single reading order for the Outline tab —
 // a flattened, linear list view of the same content, meant to be easy to
 // skim/export/eventually import from elsewhere. Chapter nodes (type:
@@ -49,7 +200,7 @@ export function computeMainThread(mapLayout) {
 // incoming edge, so a thread reads start-to-finish), and anything with no
 // connections at all comes last, top-to-bottom then left-to-right the way
 // it visually reads on the map.
-export function flattenMapOrder(mapLayout) {
+function flattenLevel(mapLayout) {
   const { nodes, edges, mainThreadId } = mapLayout
   const ids = Object.keys(nodes)
   const outgoing = new Map()
@@ -172,4 +323,53 @@ export function flattenMapOrder(mapLayout) {
   if (stray.length && connectedCount > 0) dividers.push({ index: connectedCount, label: null, kind: 'divider' })
 
   return { ordered: [...ordered, ...stray], dividers }
+}
+
+// The Outline's reading order. Problems are rows of their own with what is
+// inside them listed right after, one level deeper (unless a problem is set to
+// be told as one line, when only the row shows). `depths` runs alongside
+// `ordered`. With no problems this is exactly flattenLevel() above.
+export function flattenMapOrder(mapLayout) {
+  const nodes = mapLayout.nodes
+  const grouped = Object.values(nodes).some((n) => n && n.parent && parentOf(nodes, n))
+  if (!grouped) {
+    const flat = flattenLevel(mapLayout)
+    return { ...flat, depths: flat.ordered.map(() => 0) }
+  }
+  function level(scope, depth) {
+    const here = {}
+    Object.keys(nodes).forEach((id) => {
+      if (parentOf(nodes, nodes[id]) === scope) here[id] = nodes[id]
+    })
+    const sub = {
+      nodes: here,
+      edges: scopeEdges(mapLayout, scope).map((e) => ({ id: e.id, from: e.from, to: e.to })),
+      mainThreadId: projectTo(nodes, mapLayout.mainThreadId, scope)
+    }
+    const flat = flattenLevel(sub)
+    const byIndex = new Map()
+    flat.dividers.forEach((d) => {
+      if (!byIndex.has(d.index)) byIndex.set(d.index, [])
+      byIndex.get(d.index).push(d)
+    })
+    const ordered = []
+    const depths = []
+    const dividers = []
+    const placeDividers = (i) => (byIndex.get(i) || []).forEach((d) => dividers.push({ ...d, index: ordered.length }))
+    flat.ordered.forEach((id, i) => {
+      placeDividers(i)
+      ordered.push(id)
+      depths.push(depth)
+      if (isProblemNode(nodes[id]) && !nodes[id].compress) {
+        const inner = level(id, depth + 1)
+        const base = ordered.length
+        inner.dividers.forEach((d) => dividers.push({ ...d, index: base + d.index }))
+        ordered.push(...inner.ordered)
+        depths.push(...inner.depths)
+      }
+    })
+    placeDividers(flat.ordered.length)
+    return { ordered, depths, dividers }
+  }
+  return level(null, 0)
 }

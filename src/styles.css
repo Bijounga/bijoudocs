@@ -6483,6 +6483,10 @@ body.is-resizing-panel {
   color: var(--pink);
   opacity: 1;
 }
+.line-btn.has-comment {
+  color: var(--amber);
+  opacity: 1;
+}
 .line-btn.has-takes {
   color: var(--ink-dim);
   opacity: 1;
@@ -6738,7 +6742,8 @@ body.is-resizing-panel {
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
-  min-width: 46px;
+  /* seven tabs have to fit the default inspector width on one row */
+  min-width: 38px;
 }
 .insp-tab.active {
   color: var(--cyan);
@@ -11711,3 +11716,931 @@ body.is-resizing-panel {
   cursor: pointer;
 }
 .titlebar-showbars:hover { opacity: 1; }
+
+/* ---------- Problems: labelled frames around idea nodes ---------- */
+/* A frame is a separate space: its own tint, a rail down the left (the contents sit
+   indented under the title), a bar to grab it by. The middle lets clicks through, so
+   you can still drag-select and work on the nodes inside; the edges and the bar grab. */
+.problem-frame {
+  --pf: var(--amber);
+  position: absolute;
+  container-type: inline-size;
+  pointer-events: none;
+  box-sizing: border-box;
+  /* Open-ended: a title bar and a rail down the left, no box and no tint; the nodes
+     that belong to it are told apart by the colour of the links between them. */
+  border: 1px solid transparent;
+  border-radius: 14px 0 0 14px;
+  background: none;
+  box-shadow: inset 5px 0 0 var(--pf);
+}
+.problem-frame[data-depth='1'] {
+  --pf: var(--cyan);
+}
+.problem-frame[data-depth='2'] {
+  --pf: var(--pink);
+}
+.problem-frame.is-selected {
+  border-style: dashed;
+  border-color: var(--cyan);
+  box-shadow: inset 5px 0 0 var(--pf), 0 0 0 2px color-mix(in srgb, var(--cyan) 70%, transparent);
+}
+.problem-frame.is-focused {
+  border-color: color-mix(in srgb, var(--pf) 55%, transparent);
+  box-shadow: inset 5px 0 0 var(--pf), 0 0 0 2px color-mix(in srgb, var(--pf) 60%, transparent);
+}
+.problem-frame-head {
+  position: absolute;
+  left: 0;
+  /* a title bar, not a lid: as wide as the frame, up to a point (a frame can stretch a long way) */
+  width: min(100%, 520px);
+  top: 0;
+  height: 38px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px 0 16px;
+  pointer-events: auto;
+  cursor: grab;
+  user-select: none;
+  background: color-mix(in srgb, var(--pf) 16%, var(--panel));
+  border-bottom: 1px solid color-mix(in srgb, var(--pf) 30%, transparent);
+  border-radius: 13px 13px 13px 0;
+}
+/* Edges you can drag a frame by (the corners and the bar are its own). */
+.problem-frame-grip {
+  position: absolute;
+  pointer-events: auto;
+  cursor: grab;
+}
+.problem-frame-grip.side-left {
+  left: 0;
+  top: 38px;
+  bottom: 0;
+  width: 14px;
+}
+.problem-frame-grip.side-right {
+  right: 0;
+  top: 38px;
+  bottom: 0;
+  width: 12px;
+}
+.problem-frame-grip.side-bottom {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 10px;
+}
+.problem-frame-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  color: var(--pf);
+}
+.problem-frame-label {
+  flex: 1 1 90px;
+  min-width: 50px;
+  background: transparent;
+  border: none;
+  padding: 3px 4px;
+  margin-left: -4px;
+  border-radius: 5px;
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  cursor: text;
+}
+.problem-frame-label:hover {
+  background: color-mix(in srgb, var(--ink) 7%, transparent);
+}
+.problem-frame-label:focus {
+  outline: none;
+  background: color-mix(in srgb, var(--ink) 10%, transparent);
+}
+.problem-frame-label::placeholder {
+  color: var(--ink-faint);
+  font-weight: 500;
+}
+.problem-frame-exit {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 42%;
+  font-size: 11px;
+  color: var(--wayout-text);
+  white-space: nowrap;
+}
+.problem-frame-exit svg {
+  flex: 0 0 auto;
+}
+.problem-frame-exit-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.problem-frame-exit.none {
+  color: var(--ink-faint);
+  font-style: italic;
+}
+/* A narrow frame keeps its title: the way out shrinks to its flag (the full text is on hover). */
+@container (max-width: 470px) {
+  .problem-frame:not(.is-folded) .problem-frame-exit-text {
+    display: none;
+  }
+}
+.problem-frame-btn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 5px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--ink-dim);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.problem-frame-btn:hover {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--ink) 10%, transparent);
+}
+.problem-frame-btn.active {
+  color: var(--pf);
+  border-color: color-mix(in srgb, var(--pf) 55%, transparent);
+  background: color-mix(in srgb, var(--pf) 12%, transparent);
+}
+.problem-frame-btn.primary {
+  color: var(--pf);
+}
+.problem-frame-btn.danger:hover {
+  color: var(--danger);
+}
+.problem-frame-btn-text {
+  letter-spacing: 0.02em;
+}
+.problem-frame-btn-icon {
+  display: none;
+}
+@container (max-width: 470px) {
+  .problem-frame-btn-text {
+    display: none;
+  }
+  .problem-frame-btn-icon {
+    display: inline-flex;
+  }
+}
+.problem-frame-add {
+  position: absolute;
+  left: 56px;
+  bottom: 14px;
+  height: 26px;
+  padding: 0 12px;
+  pointer-events: auto;
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--pf);
+  background: color-mix(in srgb, var(--pf) 10%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--pf) 55%, transparent);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.problem-frame-add:hover {
+  background: color-mix(in srgb, var(--pf) 22%, transparent);
+  border-style: solid;
+}
+.problem-frame-summary {
+  position: absolute;
+  left: 232px;
+  right: 14px;
+  bottom: 14px;
+  height: 26px;
+  box-sizing: border-box;
+  pointer-events: auto;
+  background: var(--panel-2);
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  padding: 0 8px;
+  font-family: var(--sans);
+  font-size: 12px;
+  color: var(--ink);
+}
+.problem-frame-summary:focus {
+  outline: none;
+  border-color: var(--pf);
+}
+.problem-frame .map-node-resize-edge,
+.problem-frame .map-node-resize-corner {
+  pointer-events: auto;
+}
+/* Folded: one small card standing for everything inside. */
+.problem-frame.is-folded {
+  box-shadow: inset 5px 0 0 var(--pf), 5px 5px 0 -1px var(--panel-2), 5px 5px 0 0 var(--line);
+}
+.problem-frame.is-folded.is-selected {
+  box-shadow: inset 5px 0 0 var(--pf), 0 0 0 2px color-mix(in srgb, var(--cyan) 70%, transparent), 5px 5px 0 -1px var(--panel-2), 5px 5px 0 0 var(--line);
+}
+.problem-fold-card {
+  height: 100%;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 8px 8px 16px;
+  border-bottom: none;
+  border-radius: 13px;
+}
+.problem-fold-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.problem-fold-meta {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--ink-faint);
+}
+.problem-fold-card .problem-frame-exit {
+  max-width: 100%;
+}
+/* The node that closes its problem. */
+.map-node.is-wayout {
+  border-color: var(--wayout);
+  /* the card's own border is its type colour, so ring it */
+  outline: 2px solid color-mix(in srgb, var(--wayout) 85%, transparent);
+  outline-offset: 3px;
+}
+.map-node.is-wayout::after {
+  content: 'WAY OUT';
+  position: absolute;
+  top: -9px;
+  right: 12px;
+  padding: 1px 7px;
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #2a2300;
+  background: var(--wayout);
+  border-radius: 999px;
+  pointer-events: none;
+}
+/* Focus: everything outside the focused problem is dimmed, never hidden or locked. */
+.map-canvas-inner [data-dim] {
+  opacity: 0.2;
+  transition: opacity 0.15s;
+}
+.map-focus-pill {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px 5px 10px;
+  background-color: var(--bg);
+  background-image: linear-gradient(var(--panel), var(--panel));
+  border: 1px solid color-mix(in srgb, var(--amber) 45%, var(--line));
+  border-radius: 10px;
+  font-size: 12px;
+  color: var(--ink-dim);
+  cursor: default;
+  user-select: none;
+}
+.map-focus-pill svg {
+  color: var(--amber);
+}
+.map-focus-pill b {
+  color: var(--ink);
+}
+.map-crumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  font-size: 12px;
+  color: var(--ink-dim);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.map-crumb:hover {
+  color: var(--ink);
+  background: var(--panel-3);
+}
+.map-canvas.focus-hide .map-canvas-inner [data-dim] {
+  display: none;
+}
+.map-focus-seg {
+  display: inline-flex;
+  padding: 2px;
+  background: var(--panel-2);
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+}
+.map-focus-seg button {
+  padding: 2px 8px;
+  font-size: 11px;
+  color: var(--ink-dim);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.map-focus-seg button.active {
+  color: var(--ink);
+  background: var(--panel-3);
+}
+.map-crumb-back {
+  color: var(--amber);
+  border: 1px solid color-mix(in srgb, var(--amber) 45%, transparent);
+}
+/* Outline: a problem and what is inside it */
+.outline-problem {
+  border-left: 3px solid var(--amber);
+}
+.outline-problem-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: 0 0 auto;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--amber);
+}
+.outline-problem-meta {
+  padding: 2px 2px 0;
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+.outline-problem-short.active {
+  color: var(--amber);
+}
+.outline-wayout {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--wayout-text);
+}
+.outline-item.is-wayout {
+  box-shadow: inset 3px 0 0 var(--wayout);
+}
+
+/* Links inside one problem take its colour. */
+.map-edge-group[data-pf='0'] .map-edge:not(.is-lit) {
+  stroke: var(--amber);
+}
+.map-edge-group[data-pf='1'] .map-edge:not(.is-lit) {
+  stroke: var(--cyan);
+}
+.map-edge-group[data-pf='2'] .map-edge:not(.is-lit) {
+  stroke: var(--pink);
+}
+
+/* The way out of a problem is yellow, so it is not mistaken for a green "Therefore". */
+:root {
+  --wayout: #ffe14d;
+  --wayout-text: color-mix(in srgb, var(--wayout) 72%, var(--ink));
+}
+
+/* ---------- Comments on the script ---------- */
+/* The highlighted text: a span with data-cmt in the line's own HTML. Resolved ones are
+   switched off, and the open one is lit, by CommentBubble. */
+.line-text [data-cmt] {
+  background: color-mix(in srgb, var(--amber) 5%, transparent);
+  border-bottom: 1px dotted color-mix(in srgb, var(--amber) 55%, transparent);
+  border-radius: 2px;
+  cursor: pointer;
+}
+.line-text [data-cmt].cmt-flash {
+  animation: cmt-flash 1.5s ease-out;
+}
+@keyframes cmt-flash {
+  0%,
+  40% {
+    background: color-mix(in srgb, var(--amber) 28%, transparent);
+  }
+}
+.comment-bubble {
+  position: absolute;
+  left: 0;
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  /* solid underneath: some themes (Liquid Glass) have see-through panels, and this floats over text */
+  background-color: var(--bg);
+  background-image: linear-gradient(var(--panel), var(--panel));
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+.comment-bubble:hover {
+  border-color: var(--amber);
+  color: var(--amber);
+}
+.comment-compose {
+  position: fixed;
+  z-index: 61;
+  width: 320px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  background-color: var(--bg);
+  background-image: linear-gradient(var(--panel), var(--panel));
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+.comment-compose-quote {
+  padding-left: 8px;
+  border-left: 3px solid var(--amber);
+  font-size: 12px;
+  font-style: italic;
+  color: var(--ink-dim);
+}
+.comment-compose-input,
+.cm-reply-input {
+  width: 100%;
+  box-sizing: border-box;
+  resize: none;
+  padding: 7px 9px;
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.comment-compose-input:focus,
+.cm-reply-input:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--amber) 55%, var(--line));
+}
+.comment-compose-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.comment-compose-hint {
+  flex: 1;
+  font-size: 10.5px;
+  color: var(--ink-faint);
+}
+.comment-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 26px;
+  padding: 0 10px;
+  font-size: 12px;
+  color: var(--ink-dim);
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  cursor: pointer;
+}
+.comment-btn:hover {
+  color: var(--ink);
+  border-color: var(--ink-faint);
+}
+.comment-btn.primary {
+  color: #1d1400;
+  font-weight: 600;
+  background: var(--amber);
+  border-color: var(--amber);
+}
+.comment-btn.primary:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.comment-btn.danger:hover {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+.comment-btn.active {
+  color: var(--amber);
+  border-color: var(--amber);
+}
+.insp-tab {
+  position: relative;
+}
+.insp-tab-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  box-sizing: border-box;
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 14px;
+  text-align: center;
+  color: #1d1400;
+  background: var(--amber);
+  border-radius: 999px;
+}
+.cm-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+}
+.cm-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cm-title {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.cm-as {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+.cm-as-input {
+  flex: 1;
+  min-width: 0;
+  padding: 3px 7px;
+  font-size: 12px;
+  color: var(--ink);
+  background: var(--panel-2);
+  border: 1px solid var(--line-soft);
+  border-radius: 6px;
+}
+.cm-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.cm-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 26px 10px;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--ink-faint);
+}
+.cm-empty p {
+  margin: 0;
+}
+.cm-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  background: var(--panel-2);
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+  cursor: pointer;
+}
+.cm-thread.active {
+  border-color: color-mix(in srgb, var(--amber) 50%, var(--line-soft));
+}
+.cm-thread.resolved {
+  opacity: 0.7;
+}
+.cm-quote {
+  padding-left: 8px;
+  border-left: 3px solid var(--amber);
+  font-size: 12px;
+  font-style: italic;
+  line-height: 1.4;
+  color: var(--ink-dim);
+}
+.cm-quote.gone {
+  border-left-color: var(--ink-faint);
+  color: var(--ink-faint);
+}
+.cm-msg {
+  display: flex;
+  gap: 8px;
+}
+.cm-avatar {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  border-radius: 50%;
+}
+.cm-msg-body {
+  flex: 1;
+  min-width: 0;
+}
+.cm-msg-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cm-author {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.cm-time {
+  flex: 1;
+  font-size: 10.5px;
+  color: var(--ink-faint);
+}
+.cm-x {
+  display: flex;
+  align-items: center;
+  padding: 2px;
+  color: var(--ink-faint);
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  opacity: 0;
+  cursor: pointer;
+}
+.cm-msg:hover .cm-x {
+  opacity: 1;
+}
+.cm-x:hover {
+  color: var(--danger);
+}
+.cm-text {
+  margin-top: 2px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--ink);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.cm-more {
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+.cm-reply {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+}
+.cm-reply-fake {
+  width: 100%;
+  padding: 6px 9px;
+  text-align: left;
+  font-size: 12.5px;
+  color: var(--ink-faint);
+  background: transparent;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  cursor: text;
+}
+.cm-reply-fake:hover {
+  border-color: var(--line);
+}
+.cm-actions {
+  display: flex;
+  gap: 6px;
+}
+
+/* The margin: a fixed column to the right of the script page where comments float,
+   each beside its own text (positions are worked out in CommentBubble). */
+.cm-margin {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  z-index: 55;
+  pointer-events: none;
+}
+.cm-margin-card {
+  position: absolute;
+  left: 0;
+  right: 0;
+  pointer-events: auto;
+  box-sizing: border-box;
+  background-color: var(--bg);
+  background-image: linear-gradient(var(--panel), var(--panel));
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  opacity: 0.88;
+  transition: opacity 0.12s, border-color 0.12s;
+}
+.cm-margin-card:hover,
+.cm-margin-card:has(> .cm-thread.active),
+.cm-margin-card.cm-compose {
+  opacity: 1;
+}
+.cm-margin-card > .cm-thread {
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+}
+.cm-margin-card:has(> .cm-thread.active) {
+  border-color: color-mix(in srgb, var(--amber) 45%, var(--line));
+}
+.cm-compose {
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  border-color: var(--line);
+}
+.cm-compose-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cm-compose-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.cm-link {
+  padding: 4px 9px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-dim);
+  background: transparent;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.cm-link:hover {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--ink) 8%, transparent);
+}
+.cm-pill {
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1d1400;
+  background: color-mix(in srgb, var(--amber) 85%, var(--bg));
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.cm-pill:disabled {
+  color: var(--ink-faint);
+  background: var(--panel-3);
+  cursor: default;
+}
+
+/* The quiet margin card: just the words; resolve / delete sit in the corner and show on hover. */
+.cm-thread.compact {
+  position: relative;
+  gap: 4px;
+  padding: 7px 30px 7px 10px;
+  cursor: default;
+}
+.cm-thread.compact .cm-text {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--ink-dim);
+}
+.cm-thread.compact.active .cm-text {
+  color: var(--ink);
+}
+.cm-thread.compact .cm-msg + .cm-msg {
+  padding-top: 4px;
+  border-top: 1px solid var(--line-soft);
+}
+.cm-corner {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: flex;
+  gap: 1px;
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+.cm-thread.compact:hover .cm-corner,
+.cm-thread.compact.active .cm-corner {
+  opacity: 1;
+}
+.cm-corner-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: var(--ink-faint);
+  background: transparent;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.cm-corner-btn:hover {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--ink) 10%, transparent);
+}
+.cm-corner-btn.danger:hover {
+  color: var(--danger);
+}
+.cm-toggle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11.5px;
+  color: var(--ink-dim);
+  cursor: pointer;
+}
+.cm-time {
+  margin-top: 1px;
+  font-size: 10.5px;
+  color: var(--ink-faint);
+}
+
+/* Split view: a comment is a small dot at the edge of the script page; click it to open its card. */
+.cm-dot {
+  position: fixed;
+  z-index: 55;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: var(--amber);
+  background: color-mix(in srgb, var(--amber) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--amber) 55%, transparent);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.1s, transform 0.1s;
+}
+.cm-dot:hover {
+  background: color-mix(in srgb, var(--amber) 30%, transparent);
+  transform: scale(1.12);
+}
+.cm-dot.active {
+  color: #1d1400;
+  background: var(--amber);
+}
+
+/* The notepad in its own window (outside the app window): it fills that window, and its header moves the window. */
+.scratchpad.window-mode {
+  position: static;
+  width: 100vw;
+  height: 100vh;
+  min-width: 0;
+  min-height: 0;
+  max-width: none;
+  max-height: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  resize: none;
+  background-color: var(--bg);
+  background-image: linear-gradient(var(--pad-paper), var(--pad-paper));
+}
+.scratchpad.window-mode .scratchpad-head {
+  -webkit-app-region: drag;
+  cursor: default;
+}
+.scratchpad.window-mode .scratchpad-head button {
+  -webkit-app-region: no-drag;
+}
+html.pad-window,
+html.pad-window body,
+html.pad-window #app {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+}

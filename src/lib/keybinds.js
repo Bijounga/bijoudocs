@@ -31,6 +31,9 @@ export const DEFAULT_KEYBINDS = {
   mapSelectDownstream: 'ctrl+shift+.',
   mapSelectUpstream: 'ctrl+shift+,',
   mapSelectConnected: 'ctrl+shift+/',
+  addComment: 'ctrl+alt+m',
+  mapGroupProblem: 'ctrl+g',
+  mapWayOut: 'ctrl+alt+g',
   markResumePoint: 'ctrl+shift+p',
   jumpToResumePoint: 'ctrl+shift+o',
   findSynonyms: 'ctrl+shift+w'
@@ -100,6 +103,17 @@ export const SHORTCUT_META = [
     id: 'mapSelectConnected',
     label: 'Select everything connected to this node',
     desc: 'With a mind-map node selected, extends the selection to everything reachable in either direction — the whole connected thread it\'s part of.'
+  },
+  { id: 'addComment', label: 'Comment on selected text', desc: 'With text selected in a line, opens a comment box for it, like in Google Docs. The text is highlighted; read, reply to and resolve comments in the Comments tab (the speech bubble).' },
+  {
+    id: 'mapGroupProblem',
+    label: 'Group into a problem (mind map)',
+    desc: 'With idea nodes selected, draws a problem frame around them (Enter on the frame dims everything else; Esc shows it all again). With nothing selected, adds an empty frame.'
+  },
+  {
+    id: 'mapWayOut',
+    label: 'Mark as the way out (mind map)',
+    desc: 'With a node inside a problem frame selected, marks it as how that problem ends — the line that closes it. Press again to clear. A frame has one way out.'
   },
   {
     id: 'markResumePoint',

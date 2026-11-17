@@ -34,6 +34,38 @@ const api = {
   installUpdateNow: () => ipcRenderer.invoke('update:installNow'),
   checkForUpdatesNow: () => ipcRenderer.invoke('update:checkNow'),
   downloadManualUpdate: (version) => ipcRenderer.invoke('update:downloadManualMac', version),
+  // The notepad outside the app window (an owned window; see main/padWindow.js).
+  padOpen: (want, fromRect, snapshot) => ipcRenderer.invoke('pad:open', want, fromRect, snapshot),
+  padClose: () => ipcRenderer.invoke('pad:close'),
+  padPush: (snapshot) => ipcRenderer.send('pad:push', snapshot),
+  padGetInit: () => ipcRenderer.invoke('pad:getInit'),
+  padSend: (payload) => ipcRenderer.send('pad:send', payload),
+  padCommand: (cmd) => ipcRenderer.send('pad:command', cmd),
+  onPadSnapshot: (cb) => {
+    const l = (_e, s) => cb(s)
+    ipcRenderer.on('pad:snapshot', l)
+    return () => ipcRenderer.removeListener('pad:snapshot', l)
+  },
+  onPadFromWindow: (cb) => {
+    const l = (_e, p) => cb(p)
+    ipcRenderer.on('pad:fromWindow', l)
+    return () => ipcRenderer.removeListener('pad:fromWindow', l)
+  },
+  onPadCommand: (cb) => {
+    const l = (_e, c) => cb(c)
+    ipcRenderer.on('pad:command', l)
+    return () => ipcRenderer.removeListener('pad:command', l)
+  },
+  onPadBounds: (cb) => {
+    const l = (_e, b) => cb(b)
+    ipcRenderer.on('pad:bounds', l)
+    return () => ipcRenderer.removeListener('pad:bounds', l)
+  },
+  onPadClosed: (cb) => {
+    const l = () => cb()
+    ipcRenderer.on('pad:closed', l)
+    return () => ipcRenderer.removeListener('pad:closed', l)
+  },
   platform: process.platform,
   windowMinimize: () => ipcRenderer.invoke('window:minimize'),
   windowToggleMaximize: () => ipcRenderer.invoke('window:toggleMaximize'),

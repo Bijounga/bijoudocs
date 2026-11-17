@@ -9,6 +9,7 @@ import * as scriptWatcher from './scriptWatcher.js'
 import * as macUpdate from './macUpdate.js'
 import * as footage from './footage.js'
 import { findDeepLinkArg, parseDeepLink } from './deepLink.js'
+import { registerPadIpc, followMainWindow } from './padWindow.js'
 
 const isDev = !app.isPackaged
 const isMac = process.platform === 'darwin'
@@ -124,13 +125,18 @@ function createWindow() {
     return { action: 'deny' }
   })
 
-  if (isDev && process.env['ELECTRON_RENDERER_URL']) {
-    win.loadURL(process.env['ELECTRON_RENDERER_URL'])
-  } else {
-    win.loadFile(path.join(__dirname, '../renderer/index.html'))
-  }
+  loadRenderer(win)
 
   return win
+}
+
+// Loads the app's page into a window; `hash` picks what that page shows (the notepad window uses '#notepad').
+function loadRenderer(win, hash) {
+  if (isDev && process.env['ELECTRON_RENDERER_URL']) {
+    win.loadURL(process.env['ELECTRON_RENDERER_URL'] + (hash || ''))
+  } else {
+    win.loadFile(path.join(__dirname, '../renderer/index.html'), hash ? { hash: hash.replace(/^#/, '') } : undefined)
+  }
 }
 
 function registerIpc(win) {
@@ -349,6 +355,8 @@ app.whenReady().then(() => {
   const win = createWindow()
   mainWindow = win
   registerIpc(win)
+  registerPadIpc(() => mainWindow, { preload: path.join(__dirname, '../preload/index.js'), icon: path.join(__dirname, '../../build/icon.ico'), loadInto: loadRenderer })
+  followMainWindow(win)
   // The renderer says when it can take a link (its library has loaded); a link
   // that arrived earlier - including the one this process was launched with - waits.
   pendingLink = pendingLink || parseDeepLink(findDeepLinkArg(process.argv))

@@ -6,12 +6,14 @@ import CheckpointsTab from './CheckpointsTab.jsx'
 import ShortcutsTab from './ShortcutsTab.jsx'
 import ThemeTab from './ThemeTab.jsx'
 import FootageTab from './FootageTab.jsx'
+import CommentsTab from './CommentsTab.jsx'
 import Icon from '../icons.jsx'
 
 // Icon-only tabs — each name shows in the themed tooltip.
 const TABS = [
   { id: 'categories', label: 'Categories', icon: 'tag' },
   { id: 'sections', label: 'Sections', icon: 'list' },
+  { id: 'comments', label: 'Comments', icon: 'comment' },
   { id: 'checkpoints', label: 'Versions', icon: 'history' },
   { id: 'footage', label: 'Bijou Footage notes', icon: 'film' },
   { id: 'shortcuts', label: 'Keyboard shortcuts', icon: 'keys' },
@@ -22,6 +24,7 @@ export default function Inspector({ scriptId, script }) {
   const inspectorTab = useStore((s) => s.inspectorTab)
   const setInspectorTab = useStore((s) => s.setInspectorTab)
   const width = useStore((s) => s.inspectorWidth)
+  const openComments = (script.comments || []).filter((c) => !c.resolved).length
   const setInspectorWidth = useStore((s) => s.setInspectorWidth)
 
   // Drag the left edge to resize; saved once on release.
@@ -57,6 +60,7 @@ export default function Inspector({ scriptId, script }) {
               aria-label={t.label}
             >
               <Icon name={t.icon} size={15} />
+              {t.id === 'comments' && openComments > 0 && <span className="insp-tab-badge">{openComments > 99 ? '99+' : openComments}</span>}
             </button>
           ))}
         </div>
@@ -64,6 +68,7 @@ export default function Inspector({ scriptId, script }) {
       <div className="insp-body">
         {inspectorTab === 'categories' && <CategoriesTab scriptId={scriptId} script={script} />}
         {inspectorTab === 'sections' && <SectionsTab scriptId={scriptId} script={script} />}
+        {inspectorTab === 'comments' && <CommentsTab scriptId={scriptId} script={script} />}
         {inspectorTab === 'checkpoints' && <CheckpointsTab scriptId={scriptId} script={script} />}
         {inspectorTab === 'footage' && <FootageTab scriptId={scriptId} script={script} />}
         {inspectorTab === 'shortcuts' && <ShortcutsTab />}
