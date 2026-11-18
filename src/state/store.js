@@ -239,6 +239,7 @@ function snapshotScript(script) {
 export const useStore = create(
   immer((set, get) => ({
     loaded: false,
+    loadError: null, // set when the scripts folder could not be read at start-up
     scripts: [],
     currentScriptId: null,
     storageDir: '',
@@ -414,13 +415,34 @@ export const useStore = create(
 
     // ---------- persistence ----------
     async init() {
-      const [scripts, settings, storageDir, appVersion, globalCategories] = await Promise.all([
-        window.bijou.loadAllScripts(),
-        window.bijou.loadSettings(),
-        window.bijou.getDocsDir(),
-        window.bijou.getAppVersion(),
-        window.bijou.loadGlobalCategories()
-      ])
+      let loaded
+      try {
+        loaded = await Promise.all([
+          window.bijou.loadAllScripts(),
+          window.bijou.loadSettings(),
+          window.bijou.getDocsDir(),
+          window.bijou.getAppVersion(),
+          window.bijou.loadGlobalCategories()
+        ])
+      } catch (e) {
+        // Usually the scripts folder can't be reached (a synced drive that is not connected). Say so,
+        // with a way forward, instead of sitting on "Loading…" forever.
+        let dir = ''
+        try {
+          dir = await window.bijou.getDocsDir()
+        } catch (_) {
+          dir = ''
+        }
+        const msg = String((e && e.message) || e).replace(/^Error invoking remote method '[^']+': (Error: )?/, '')
+        set((s) => {
+          s.loadError = { message: msg, dir }
+        })
+        return
+      }
+      const [scripts, settings, storageDir, appVersion, globalCategories] = loaded
+      set((s) => {
+        s.loadError = null
+      })
       const sorted = scripts.slice().sort(byLandingOrder)
       set((s) => {
         s.scripts = scripts

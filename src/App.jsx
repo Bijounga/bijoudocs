@@ -28,6 +28,10 @@ import { themeAttrs, baseThemeOf } from './lib/themeFamilies.js'
 export default function App() {
   const loaded = useStore((s) => s.loaded)
   const init = useStore((s) => s.init)
+  const loadError = useStore((s) => s.loadError)
+  const initApp = init
+  const chooseDir = useStore((s) => s.chooseStorageDir)
+  const resetDir = useStore((s) => s.resetStorageDir)
   const noteColor = useStore((s) => s.noteColor)
   const theme = useStore((s) => s.theme)
   const customThemes = useStore((s) => s.customThemes)
@@ -252,7 +256,30 @@ export default function App() {
     return (
       <div className="app-root">
         <TitleBar />
-        <div className="app-loading">Loading BijouDocs…</div>
+        {loadError ? (
+          <div className="app-loading app-load-error">
+            <h2>BijouDocs can’t open your scripts folder</h2>
+            <p className="app-load-dir">{loadError.dir || 'the scripts folder'}</p>
+            <p>
+              If it lives on a synced drive (Google Drive, Dropbox…), make sure that app is running and the drive is connected, then try again. Nothing has been changed
+              or deleted.
+            </p>
+            <p className="app-load-detail">{loadError.message}</p>
+            <div className="app-load-btns">
+              <button className="comment-btn primary" onClick={() => initApp()}>
+                Try again
+              </button>
+              <button className="comment-btn" onClick={() => chooseDir()}>
+                Choose another folder…
+              </button>
+              <button className="comment-btn" onClick={() => resetDir()}>
+                Use the default folder
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="app-loading">Loading BijouDocs…</div>
+        )}
       </div>
     )
   }

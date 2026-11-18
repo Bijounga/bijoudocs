@@ -12644,3 +12644,37 @@ html.pad-window #app {
   overflow: hidden;
   background: var(--bg);
 }
+
+/* Start-up when the scripts folder can't be reached. */
+.app-load-error {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 560px;
+  line-height: 1.5;
+}
+.app-load-error h2 {
+  margin: 0;
+  font-size: 18px;
+  color: var(--ink);
+}
+.app-load-error p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-dim);
+}
+.app-load-dir {
+  font-family: var(--mono);
+  color: var(--amber) !important;
+}
+.app-load-detail {
+  font-family: var(--mono);
+  font-size: 11px !important;
+  color: var(--ink-faint) !important;
+}
+.app-load-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}

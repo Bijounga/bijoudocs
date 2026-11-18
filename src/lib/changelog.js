@@ -303,7 +303,8 @@ export const CHANGELOG = {
     'The notepad can move out of the app window onto any monitor (the new button in its header). It stays part of the app: no taskbar button, and it minimises, restores and closes with the app',
     'Ctrl+Z now undoes each node drag on the mind map one at a time',
     'Holding Space to pan the mind map no longer sends you back to the script if you had just clicked the Map button'
-  ]
+  ],
+  '0.5.87': ["If your scripts folder can't be reached at start-up (a synced drive such as Google Drive that isn't connected), BijouDocs now says so and offers Try again / Choose another folder / Use the default folder, instead of staying on 'Loading BijouDocs…' forever"]
 }
 
 function parseVersion(v) {
