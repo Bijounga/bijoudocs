@@ -10,6 +10,34 @@ export function defaultCategories() {
   ]
 }
 
+// Subsections: a line with `sub: true` is a small heading inside its section; the lines
+// after it (up to the next subsection heading) belong to it, shown a little indented,
+// and hidden while its `subCollapsed` is on. Returns, per line id, whether it sits under
+// a heading and whether it is hidden.
+export function subsectionState(sec) {
+  const under = new Set()
+  const hidden = new Set()
+  const counts = {} // heading id -> how many lines it holds
+  let inSub = false
+  let collapsed = false
+  let head = null
+  sec.lines.forEach((l) => {
+    if (l.sub) {
+      inSub = true
+      collapsed = !!l.subCollapsed
+      head = l.id
+      counts[head] = 0
+      return
+    }
+    if (inSub) {
+      under.add(l.id)
+      counts[head] += 1
+      if (collapsed) hidden.add(l.id)
+    }
+  })
+  return { under, hidden, counts }
+}
+
 export function mkLine(text, categoryId, note) {
   return { id: uid(), text: text || '', categoryId: categoryId || null, note: note || '', noteOpen: false, done: false, indent: 0, struck: false, bookmarked: false, takes: [] }
 }

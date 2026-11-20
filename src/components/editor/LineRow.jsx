@@ -21,7 +21,7 @@ import { handleHorizontalNav, handleVerticalNav } from '../../lib/navigation.js'
 import { beginLineDragSelect } from '../../state/dragSelect.js'
 import { useDropIndicator } from '../../hooks/useDropIndicator.js'
 
-export default function LineRow({ scriptId, sectionId, line, index, siblingCount, categories }) {
+export default function LineRow({ scriptId, sectionId, line, index, siblingCount, categories, underSub, heldCount }) {
   const pushUndo = useStore((s) => s.pushUndo)
   const commitLineText = useStore((s) => s.commitLineText)
   const openTagMenuFor = useStore((s) => s.openTagMenuFor)
@@ -30,6 +30,8 @@ export default function LineRow({ scriptId, sectionId, line, index, siblingCount
   const toggleLineDone = useStore((s) => s.toggleLineDone)
   const deleteLine = useStore((s) => s.deleteLine)
   const indentLine = useStore((s) => s.indentLine)
+  const toggleSubCollapsed = useStore((s) => s.toggleSubCollapsed)
+  const toggleSubsection = useStore((s) => s.toggleSubsection)
   const splitLineOnEnter = useStore((s) => s.splitLineOnEnter)
   const deleteEmptyLineBackspace = useStore((s) => s.deleteEmptyLineBackspace)
   const mergeLineIntoPrevious = useStore((s) => s.mergeLineIntoPrevious)
@@ -99,6 +101,20 @@ export default function LineRow({ scriptId, sectionId, line, index, siblingCount
       focusLineEnd(key)
       return
     }
+    // Ctrl+Enter on a subsection heading folds / unfolds it (like a Notion toggle).
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && line.sub) {
+      e.preventDefault()
+      toggleSubCollapsed(scriptId, sectionId, line.id)
+      return
+    }
+    // Typing "## " (or "#" / "###") at the start of an empty line makes it a subsection heading.
+    if (e.key === ' ' && !line.sub && !e.ctrlKey && !e.altKey && !e.metaKey && /^#{1,3}$/.test(el.textContent)) {
+      e.preventDefault()
+      el.innerHTML = ''
+      commitLineText(scriptId, sectionId, line.id, '')
+      toggleSubsection(scriptId, sectionId, line.id)
+      return
+    }
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       const { before, after } = splitHtmlAtCaret(el)
@@ -131,6 +147,12 @@ export default function LineRow({ scriptId, sectionId, line, index, siblingCount
       if (blankBreak) {
         e.preventDefault()
         blankBreak.remove()
+        return
+      }
+      // Backspace at the very start of a heading turns it back into a plain line first (nothing is merged or deleted).
+      if (line.sub && caretAtStart(el)) {
+        e.preventDefault()
+        toggleSubsection(scriptId, sectionId, line.id)
         return
       }
       const isEmpty = el.textContent.trim() === ''
@@ -176,7 +198,9 @@ export default function LineRow({ scriptId, sectionId, line, index, siblingCount
     beginLineDragSelect(key)
   }
 
-  const style = { marginLeft: line.indent * 22 }
+  // Lines under a subsection heading sit a little to the right of it.
+  const shift = line.indent * 22 + (underSub ? 16 : 0)
+  const style = { marginLeft: shift }
   if (cat) style['--tag-color'] = cat.color
 
   return (
@@ -188,6 +212,8 @@ export default function LineRow({ scriptId, sectionId, line, index, siblingCount
         (line.struck ? ' struck' : '') +
         (flash ? ' jump-flash' : '') +
         (selected ? ' selected' : '') +
+        (line.sub ? ' sub-head' : '') +
+        (underSub ? ' in-sub' : '') +
         (resumeLineKey === key ? ' resume-point' : '') +
         (dropIndicator.edge ? ' drop-indicator-' + dropIndicator.edge : '')
       }
@@ -263,11 +289,21 @@ export default function LineRow({ scriptId, sectionId, line, index, siblingCount
         >
           <Icon name="grip" size={11} />
         </span>
+        {line.sub && (
+          <button
+            className={'sub-chevron' + (line.subCollapsed ? ' collapsed' : '')}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => toggleSubCollapsed(scriptId, sectionId, line.id)}
+            title={line.subCollapsed ? 'Show the lines under this subsection' : 'Fold the lines under this subsection away'}
+          >
+            <Icon name="chevron" size={12} />
+          </button>
+        )}
         <LineText
           dataKey={key}
           value={line.text}
-          placeholder="Write a line..."
-          className="line-text"
+          placeholder={line.sub ? 'Heading' : 'Write a line...'}
+          className={'line-text' + (line.sub ? ' sub-text' : '')}
           onFocus={() => pushUndo(scriptId)}
           onUndoPoint={(html) => {
             commitLineText(scriptId, sectionId, line.id, html)
@@ -277,6 +313,11 @@ export default function LineRow({ scriptId, sectionId, line, index, siblingCount
           onKeyDown={handleKeyDown}
           onMouseDown={handleMouseDown}
         />
+        {line.sub && line.subCollapsed && (
+          <span className="sub-count" onClick={() => toggleSubCollapsed(scriptId, sectionId, line.id)} title="Click to show them">
+            {heldCount || 0} {heldCount === 1 ? 'line' : 'lines'}
+          </span>
+        )}
         {cat && (
           <span
             className="tag-pill"
@@ -310,6 +351,15 @@ export default function LineRow({ scriptId, sectionId, line, index, siblingCount
             <Icon name="search" />
           </button>
           <button
+            className={'line-btn' + (line.sub ? ' has-sub' : '')}
+            // Keeps the cursor where it is while you click it.
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => toggleSubsection(scriptId, sectionId, line.id)}
+            title={line.sub ? 'Turn this subsection heading back into a normal line' : 'Make this line a subsection heading (' + keybinds.subsection + ')'}
+          >
+            <Icon name="heading" />
+          </button>
+          <button
             className={'line-btn' + (hasComment ? ' has-comment' : '')}
             // Keeps the text you selected (and the caret) while you click it.
             onMouseDown={(e) => e.preventDefault()}
@@ -341,14 +391,14 @@ export default function LineRow({ scriptId, sectionId, line, index, siblingCount
       {line.note && !line.noteOpen && (
         <div
           className="note-preview"
-          style={{ marginLeft: line.indent * 22 }}
+          style={{ marginLeft: shift }}
           onClick={() => toggleLineNote(scriptId, sectionId, line.id)}
           title="Click to open the full note"
         >
           {line.note}
         </div>
       )}
-      {line.noteOpen && <NoteBox scriptId={scriptId} sectionId={sectionId} line={line} indent={line.indent} />}
+      {line.noteOpen && <NoteBox scriptId={scriptId} sectionId={sectionId} line={line} indent={shift / 22} />}
     </div>
   )
 }

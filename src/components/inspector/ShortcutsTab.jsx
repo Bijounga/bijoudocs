@@ -44,6 +44,11 @@ const BUILT_IN = [
       'A problem is a labelled frame around idea nodes — nothing is hidden. Enter on a selected frame dims everything outside it and zooms to it (Esc shows everything again); double-click its bar to fold it into one card and back. Frame selected nodes with Ctrl+G, add to a frame with its + button or Tab at the end of its chain, and mark the node that closes a problem as its way out.'
   },
   {
+    keys: '## + Space',
+    label: 'Subsection heading',
+    desc: 'Type ## and a space at the start of an empty line to make it a subsection heading (or use the H button on a line, or Ctrl+Alt+H). Click its arrow, or press Ctrl+Enter in it, to fold the lines under it; Backspace at its start turns it back into a plain line; dragging it moves its lines with it.'
+  },
+  {
     keys: 'Comment',
     label: 'Comment on text',
     desc: 'Select text in a line and click the Comment button that appears (or press Ctrl+Alt+M). The text is highlighted; click it, or the speech bubble in the sidebar, to read, reply, resolve or delete.'

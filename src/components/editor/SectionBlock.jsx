@@ -4,7 +4,8 @@ import Icon from '../icons.jsx'
 import LineRow from './LineRow.jsx'
 import ChecklistPanel from './ChecklistPanel.jsx'
 import { formatTC } from '../../lib/timecode.js'
-import { setLineRef } from '../../state/lineRefs.js'
+import { setLineRef, focusLineEnd, getLineEl } from '../../state/lineRefs.js'
+import { subsectionState } from '../../lib/model.js'
 import { handleHorizontalNav, handleVerticalNav } from '../../lib/navigation.js'
 import { useDropIndicator } from '../../hooks/useDropIndicator.js'
 
@@ -24,10 +25,17 @@ function sectionCategoryStats(categories, sec) {
   return stats
 }
 
+// A new line's element does not exist until React has rendered it (slow in a long section), so wait for it.
+function focusWhenMounted(key, tries = 40) {
+  if (getLineEl(key)) focusLineEnd(key)
+  else if (tries > 0) setTimeout(() => focusWhenMounted(key, tries - 1), 30)
+}
+
 export default function SectionBlock({ scriptId, sec, tc, categories, onSetFilter, mapOrder }) {
   const toggleSectionCollapsed = useStore((s) => s.toggleSectionCollapsed)
   const deleteSection = useStore((s) => s.deleteSection)
   const addLine = useStore((s) => s.addLine)
+  const addSubsection = useStore((s) => s.addSubsection)
   const setSectionHeading = useStore((s) => s.setSectionHeading)
   const commitSectionHeading = useStore((s) => s.commitSectionHeading)
   const setSectionColor = useStore((s) => s.setSectionColor)
@@ -60,6 +68,7 @@ export default function SectionBlock({ scriptId, sec, tc, categories, onSetFilte
   const allStruck = sec.lines.length > 0 && sec.lines.every((l) => l.struck)
   const selected = selectedSections && selectedSections.includes(sec.id)
   const stats = sectionCategoryStats(categories, sec)
+  const subState = subsectionState(sec)
   const headStyle = sec.titleColor ? { color: sec.titleColor } : undefined
   const headingKey = 'heading:' + sec.id
 
@@ -265,20 +274,36 @@ export default function SectionBlock({ scriptId, sec, tc, categories, onSetFilte
 
       {!sec.collapsed && (
         <div className="section-lines">
-          {sec.lines.map((line, idx) => (
-            <LineRow
-              key={line.id}
-              scriptId={scriptId}
-              sectionId={sec.id}
-              line={line}
-              index={idx}
-              siblingCount={sec.lines.length}
-              categories={categories}
-            />
-          ))}
-          <button className="add-line-btn" onClick={() => addLine(scriptId, sec.id)}>
-            + Add line
-          </button>
+          {sec.lines.map((line, idx) =>
+            subState.hidden.has(line.id) ? null : (
+              <LineRow
+                key={line.id}
+                scriptId={scriptId}
+                sectionId={sec.id}
+                line={line}
+                index={idx}
+                siblingCount={sec.lines.length}
+                categories={categories}
+                underSub={subState.under.has(line.id)}
+                heldCount={subState.counts[line.id]}
+              />
+            )
+          )}
+          <div className="add-line-row">
+            <button className="add-line-btn" onClick={() => addLine(scriptId, sec.id)}>
+              + Add line
+            </button>
+            <button
+              className="add-line-btn add-sub-btn"
+              title="A small heading inside this section, to separate events — the lines under it fold away with its arrow"
+              onClick={() => {
+                const k = addSubsection(scriptId, sec.id)
+                if (k) focusWhenMounted(k)
+              }}
+            >
+              + Subsection
+            </button>
+          </div>
         </div>
       )}
     </div>

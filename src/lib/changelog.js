@@ -304,7 +304,10 @@ export const CHANGELOG = {
     'Ctrl+Z now undoes each node drag on the mind map one at a time',
     'Holding Space to pan the mind map no longer sends you back to the script if you had just clicked the Map button'
   ],
-  '0.5.87': ["If your scripts folder can't be reached at start-up (a synced drive such as Google Drive that isn't connected), BijouDocs now says so and offers Try again / Choose another folder / Use the default folder, instead of staying on 'Loading BijouDocs…' forever"]
+  '0.5.87': ["If your scripts folder can't be reached at start-up (a synced drive such as Google Drive that isn't connected), BijouDocs now says so and offers Try again / Choose another folder / Use the default folder, instead of staying on 'Loading BijouDocs…' forever"],
+  '0.5.88': [
+    "Subsections: small headings inside a section, to separate events. Type ## and a space at the start of an empty line, use the H button on a line, the right-click menu, '+ Subsection', or Ctrl+Alt+H. Click the arrow (or press Ctrl+Enter in it) to fold the lines under it, which shows how many are inside; Backspace at the start of a heading turns it back into a normal line; dragging a heading moves its lines with it. Headings are left out of word counts and the teleprompter, and export as ###"
+  ]
 }
 
 function parseVersion(v) {

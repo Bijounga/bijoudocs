@@ -1,4 +1,5 @@
 import { caretAtStart, caretAtEnd, placeCaretEnd } from '../state/lineRefs.js'
+import { subsectionState } from './model.js'
 
 // Ordered list of "nav stops" (line-content search / selection-extend order):
 // a heading followed by its lines, skipped entirely if the section is
@@ -7,7 +8,12 @@ export function buildNavList(script) {
   const list = []
   const addSection = (sec) => {
     list.push({ type: 'heading', id: sec.id })
-    if (!sec.collapsed) sec.lines.forEach((l) => list.push({ type: 'line', key: sec.id + ':' + l.id }))
+    if (!sec.collapsed) {
+      const { hidden } = subsectionState(sec)
+      sec.lines.forEach((l) => {
+        if (!hidden.has(l.id)) list.push({ type: 'line', key: sec.id + ':' + l.id })
+      })
+    }
   }
   if (script.activeTabId && script.activeTabId !== 'all') {
     const sec = script.sections.find((s) => s.id === script.activeTabId)

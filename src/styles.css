@@ -6483,6 +6483,10 @@ body.is-resizing-panel {
   color: var(--pink);
   opacity: 1;
 }
+.line-btn.has-sub {
+  color: var(--cyan);
+  opacity: 1;
+}
 .line-btn.has-comment {
   color: var(--amber);
   opacity: 1;
@@ -12677,4 +12681,75 @@ html.pad-window #app {
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 6px;
+}
+
+/* ---------- Subsections: small headings inside a section ---------- */
+.line.sub-head {
+  margin-top: 14px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  border-left-color: transparent;
+  border-radius: 6px;
+}
+.line.sub-head:first-child {
+  margin-top: 2px;
+}
+.line-text.sub-text {
+  font-size: 1.07em;
+  font-weight: 700;
+  color: var(--ink);
+}
+.line-text.sub-text:empty::before {
+  font-weight: 500;
+}
+.sub-count {
+  flex: 0 0 auto;
+  align-self: center;
+  padding: 1px 8px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--ink-faint);
+  background: var(--panel-2);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.sub-count:hover {
+  color: var(--ink);
+}
+.sub-chevron {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 26px;
+  padding: 0;
+  margin-left: -4px;
+  color: var(--ink-dim);
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.sub-chevron:hover {
+  color: var(--ink);
+  background: var(--panel-3);
+}
+.sub-chevron svg {
+  transition: transform 0.12s;
+}
+.sub-chevron.collapsed svg {
+  transform: rotate(-90deg);
+}
+.add-line-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.add-line-btn.add-sub-btn {
+  margin-left: 0;
+  opacity: 0.7;
+}
+.add-line-btn.add-sub-btn:hover {
+  opacity: 1;
 }

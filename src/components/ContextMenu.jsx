@@ -20,6 +20,7 @@ export default function ContextMenu() {
   const commitLineText = useStore((s) => s.commitLineText)
   const pushUndo = useStore((s) => s.pushUndo)
   const deleteLine = useStore((s) => s.deleteLine)
+  const toggleSubsection = useStore((s) => s.toggleSubsection)
   const duplicateLine = useStore((s) => s.duplicateLine)
   const openTagMenu = useStore((s) => s.openTagMenu)
   const toggleLineNote = useStore((s) => s.toggleLineNote)
@@ -163,6 +164,11 @@ export default function ContextMenu() {
     items = [
       ...spellItems,
       { label: 'Tag…', onClick: act(() => openTagMenu(key)) },
+      {
+        label: line && line.sub ? 'Turn back into a normal line' : 'Make this a subsection heading',
+        shortcut: keybinds.subsection,
+        onClick: act(() => toggleSubsection(menu.scriptId, menu.sectionId, menu.lineId))
+      },
       // The word (and its Range, for the later replace) were already
       // captured back when this menu opened — LineRow.jsx's onContextMenu
       // handler does it synchronously on the real right-click, since the

@@ -32,6 +32,7 @@ export const DEFAULT_KEYBINDS = {
   mapSelectUpstream: 'ctrl+shift+,',
   mapSelectConnected: 'ctrl+shift+/',
   addComment: 'ctrl+alt+m',
+  subsection: 'ctrl+alt+h',
   mapGroupProblem: 'ctrl+g',
   mapWayOut: 'ctrl+alt+g',
   markResumePoint: 'ctrl+shift+p',
@@ -104,6 +105,7 @@ export const SHORTCUT_META = [
     label: 'Select everything connected to this node',
     desc: 'With a mind-map node selected, extends the selection to everything reachable in either direction — the whole connected thread it\'s part of.'
   },
+  { id: 'subsection', label: 'Subsection heading', desc: 'Turns the line you are in into a small subsection heading inside its section (or back into a normal line). The lines after it, up to the next heading, belong to it: they sit a little to the right and fold away with the heading\'s arrow.' },
   { id: 'addComment', label: 'Comment on selected text', desc: 'With text selected in a line, opens a comment box for it, like in Google Docs. The text is highlighted; read, reply to and resolve comments in the Comments tab (the speech bubble).' },
   {
     id: 'mapGroupProblem',

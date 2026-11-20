@@ -265,6 +265,12 @@ export function useGlobalKeydown() {
         st.toggleHideTags()
         return
       }
+      if (combo === st.keybinds.subsection && activeLineKey) {
+        e.preventDefault()
+        const [secId, lineId] = activeLineKey.split(':')
+        st.toggleSubsection(script.id, secId, lineId)
+        return
+      }
       if (combo === st.keybinds.addComment) {
         e.preventDefault()
         st.requestComment()

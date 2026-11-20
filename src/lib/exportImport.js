@@ -13,6 +13,10 @@ export function buildExportContent(script, format) {
     sec.lines.forEach((l) => {
       const cat = l.categoryId ? catInfo(script, l.categoryId) : null
       const text = stripHtmlToText(l.text)
+      if (l.sub) {
+        lines.push('### ' + text)
+        return
+      }
       const tagLabel = cat ? '[' + cat.label.toUpperCase() + '] ' : ''
       lines.push(tagLabel + text)
       if (l.note) lines.push((format === 'md' ? '> ' : '  Note: ') + l.note)
@@ -39,6 +43,12 @@ export function parseImportedText(text) {
   body.forEach((raw) => {
     const trimmed = raw.trim()
     if (!trimmed) return
+    if (/^###\s+/.test(trimmed) && current) {
+      const sub = mkLine(trimmed.replace(/^###\s+/, ''), null)
+      sub.sub = true
+      current.lines.push(sub)
+      return
+    }
     const isHeading =
       /^##\s+/.test(trimmed) ||
       (trimmed === trimmed.toUpperCase() && trimmed.length < 60 && /[A-Z]/.test(trimmed) && trimmed.split(' ').length <= 7 && !/^\[/.test(trimmed))

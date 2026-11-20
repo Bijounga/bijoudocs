@@ -100,7 +100,7 @@ export default function PadBridge({ script }) {
         if (st.scratchpad.open && st.scratchpad.detached) st.closeScratchpad()
       })
     ]
-    return () => offs.forEach((off) => off && off())
+    return () => offs.forEach((off) => typeof off === 'function' && off())
   }, [api])
 
   return null

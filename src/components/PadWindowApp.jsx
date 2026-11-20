@@ -68,7 +68,7 @@ export default function PadWindowApp() {
     }
     window.addEventListener('beforeunload', flush)
     return () => {
-      off && off()
+      if (typeof off === 'function') off()
       window.removeEventListener('beforeunload', flush)
       clearTimeout(timer)
     }

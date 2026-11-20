@@ -223,7 +223,7 @@ export default function TeleprompterView({ script }) {
               )
             }
             const visibleLines = sec.lines.filter((l) => {
-              if (l.struck) return false
+              if (l.struck || l.sub) return false
               if (!stripHtmlToText(l.text).trim()) return false
               const cat = l.categoryId ? catInfo(l.categoryId) : null
               if (!cat || cat.spoken !== false) return true

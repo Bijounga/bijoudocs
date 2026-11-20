@@ -90,7 +90,10 @@ function migrateScript(raw, { forceNewId = false } = {}) {
           takes: Array.isArray(l.takes) ? l.takes : [],
           // Set by the Premiere panel when a tagged line is pinned to a
           // sequence marker; must survive load/save or the link is lost.
-          ...(l.marker && typeof l.marker === 'object' ? { marker: l.marker } : {})
+          ...(l.marker && typeof l.marker === 'object' ? { marker: l.marker } : {}),
+          // A subsection heading inside a section (see the store's toggleSubsection).
+          ...(l.sub ? { sub: true } : {}),
+          ...(l.sub && l.subCollapsed ? { subCollapsed: true } : {})
         }))
       : []
   }))

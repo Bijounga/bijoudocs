@@ -1399,6 +1399,60 @@ export const useStore = create(
     },
 
     // ---------- lines ----------
+    // Subsections: turn a line into a small heading for the lines after it (or back).
+    toggleSubsection(scriptId, sectionId, lineId) {
+      get().pushUndo(scriptId)
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        const sec = script && script.sections.find((se) => se.id === sectionId)
+        const line = sec && sec.lines.find((l) => l.id === lineId)
+        if (!line) return
+        if (line.sub) {
+          delete line.sub
+          delete line.subCollapsed
+        } else {
+          line.sub = true
+          line.indent = 0
+        }
+        script.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+    },
+    toggleSubCollapsed(scriptId, sectionId, lineId) {
+      get().pushUndo(scriptId)
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        const sec = script && script.sections.find((se) => se.id === sectionId)
+        const line = sec && sec.lines.find((l) => l.id === lineId)
+        if (!line || !line.sub) return
+        if (line.subCollapsed) delete line.subCollapsed
+        else line.subCollapsed = true
+        script.updatedAt = Date.now()
+      })
+      get().scheduleSave(scriptId, { flash: false })
+    },
+    // A new, empty subsection heading after a line (or at the end of the section). Returns its line key.
+    addSubsection(scriptId, sectionId, afterLineId) {
+      get().pushUndo(scriptId)
+      let newKey = null
+      set((s) => {
+        const script = s.scripts.find((sc) => sc.id === scriptId)
+        const sec = script && script.sections.find((se) => se.id === sectionId)
+        if (!sec) return
+        const line = mkLine('', null)
+        line.sub = true
+        let idx = sec.lines.length
+        if (afterLineId) {
+          const i = sec.lines.findIndex((l) => l.id === afterLineId)
+          if (i >= 0) idx = i + 1
+        }
+        sec.lines.splice(idx, 0, line)
+        script.updatedAt = Date.now()
+        newKey = sectionId + ':' + line.id
+      })
+      get().scheduleSave(scriptId, { flash: false })
+      return newKey
+    },
     addLine(scriptId, sectionId, afterLineId) {
       get().pushUndo(scriptId)
       let newKey = null
@@ -1719,6 +1773,8 @@ export const useStore = create(
         const idx = sec.lines.findIndex((l) => l.id === lineId)
         if (idx < 0) return
         if (beforeHtml !== undefined) sec.lines[idx].text = sanitizeHtml(beforeHtml)
+        // Enter in a folded subsection heading opens it, so the new line is not hidden.
+        if (sec.lines[idx].sub && sec.lines[idx].subCollapsed) delete sec.lines[idx].subCollapsed
         const line = mkLine(afterHtml !== undefined ? sanitizeHtml(afterHtml) : '', null)
         line.indent = sec.lines[idx].indent
         sec.lines.splice(idx + 1, 0, line)
@@ -2375,10 +2431,16 @@ export const useStore = create(
         if (!sec) return
         const fromIdx = sec.lines.findIndex((l) => l.id === fromLineId)
         if (fromIdx < 0) return
-        const [moved] = sec.lines.splice(fromIdx, 1)
+        // A subsection heading carries the lines under it (up to the next heading).
+        let count = 1
+        if (sec.lines[fromIdx].sub) {
+          while (fromIdx + count < sec.lines.length && !sec.lines[fromIdx + count].sub) count++
+        }
+        if (sec.lines.slice(fromIdx, fromIdx + count).some((l) => l.id === toLineId)) return
+        const moved = sec.lines.splice(fromIdx, count)
         const toIdx = sec.lines.findIndex((l) => l.id === toLineId)
         const insertIdx = toIdx < 0 ? sec.lines.length : position === 'after' ? toIdx + 1 : toIdx
-        sec.lines.splice(insertIdx, 0, moved)
+        sec.lines.splice(insertIdx, 0, ...moved)
         script.updatedAt = Date.now()
       })
       get().scheduleSave(scriptId, { flash: false })

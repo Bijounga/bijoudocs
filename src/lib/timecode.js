@@ -46,6 +46,7 @@ export function sectionTimecodes(script) {
   return script.sections.map((sec) => {
     const start = cum
     sec.lines.forEach((l) => {
+      if (l.sub) return // a subsection heading is a label, not script
       const cat = l.categoryId ? catInfo(script, l.categoryId) : null
       if (cat && cat.spoken === false) return
       cum += (wordCount(stripHtmlToText(l.text)) / WPM) * 60
@@ -61,6 +62,7 @@ export function totalWordCountAll(script) {
   let total = 0
   script.sections.forEach((sec) => {
     sec.lines.forEach((l) => {
+      if (l.sub) return
       total += wordCount(stripHtmlToText(l.text))
     })
   })
