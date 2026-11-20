@@ -265,6 +265,11 @@ export function useGlobalKeydown() {
         st.toggleHideTags()
         return
       }
+      if (combo === st.keybinds.toggleMinimal) {
+        e.preventDefault()
+        st.toggleMinimalMode()
+        return
+      }
       if (combo === st.keybinds.subsection && activeLineKey) {
         e.preventDefault()
         const [secId, lineId] = activeLineKey.split(':')

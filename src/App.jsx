@@ -38,6 +38,7 @@ export default function App() {
   const themeVariants = useStore((s) => s.themeVariants)
   const glassFrost = useStore((s) => s.glassFrost)
   const editorPageContrast = useStore((s) => s.editorPageContrast)
+  const minimalMode = useStore((s) => s.minimalMode)
   const scripts = useStore((s) => s.scripts)
   const currentScriptId = useStore((s) => s.currentScriptId)
   const focusMode = useStore((s) => s.focusMode)
@@ -153,6 +154,35 @@ export default function App() {
   useEffect(() => {
     document.documentElement.setAttribute('data-editor-contrast', editorPageContrast ? 'on' : 'off')
   }, [editorPageContrast])
+  useEffect(() => {
+    document.documentElement.setAttribute('data-minimal', minimalMode ? 'on' : 'off')
+  }, [minimalMode])
+  // Ctrl + / - / 0 zoom the script text (the main process keeps them from zooming the window).
+  useEffect(() => {
+    if (!window.bijou || !window.bijou.onZoomKey) return undefined
+    const off = window.bijou.onZoomKey((dir) => {
+      const st = useStore.getState()
+      if (st.mapViewOpen || st.teleprompterOpen) return
+      if (dir === 'in') st.zoomIn()
+      else if (dir === 'out') st.zoomOut()
+      else st.zoomReset()
+    })
+    // Ctrl + wheel over the script does the same (the window's own pinch/wheel zoom is switched off).
+    const wheel = (e) => {
+      if (!e.ctrlKey) return
+      e.preventDefault()
+      const st = useStore.getState()
+      if (st.mapViewOpen || st.teleprompterOpen) return
+      if (!e.target.closest || !e.target.closest('.editor-wrap')) return
+      if (e.deltaY < 0) st.zoomIn()
+      else if (e.deltaY > 0) st.zoomOut()
+    }
+    window.addEventListener('wheel', wheel, { passive: false })
+    return () => {
+      window.removeEventListener('wheel', wheel)
+      if (typeof off === 'function') off()
+    }
+  }, [])
 
   useEffect(() => installGlobalDragSelectListeners(), [])
 

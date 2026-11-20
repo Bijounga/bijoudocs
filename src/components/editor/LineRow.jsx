@@ -321,7 +321,7 @@ export default function LineRow({ scriptId, sectionId, line, index, siblingCount
         {cat && (
           <span
             className="tag-pill"
-            style={{ background: cat.color, color: getInk(cat.color) }}
+            style={{ background: cat.color, color: getInk(cat.color), '--pill-c': cat.color }}
             onClick={() => openTagMenu(key)}
           >
             {cat.label}

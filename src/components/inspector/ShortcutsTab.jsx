@@ -53,6 +53,8 @@ const BUILT_IN = [
     label: 'Comment on text',
     desc: 'Select text in a line and click the Comment button that appears (or press Ctrl+Alt+M). The text is highlighted; click it, or the speech bubble in the sidebar, to read, reply, resolve or delete.'
   },
+  { keys: 'Ctrl + / − / 0', label: 'Zoom the script', desc: 'Also Ctrl+scroll over the script. Zooms the text only (the % in the top bar); 0 puts it back to 100%.' },
+  { keys: 'Drag edge', label: 'Page width', desc: 'Drag the left or right edge of the script page to make the lines wider or narrower (the text size stays the same). Double-click an edge to reset.' },
   { keys: 'Dbl-click', label: 'Open as a tab', desc: 'Double-click a section title, or use its new-tab button.' },
   { keys: 'Click', label: 'Resize a pasted image', desc: 'Each click cycles its size.' }
 ]

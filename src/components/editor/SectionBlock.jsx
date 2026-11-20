@@ -262,7 +262,7 @@ export default function SectionBlock({ scriptId, sec, tc, categories, onSetFilte
       {stats.length > 0 && (
         <div className="section-chips">
           {stats.map((s) => (
-            <div key={s.cat.id} className="section-chip" onClick={() => onSetFilter(s.cat.id)}>
+            <div key={s.cat.id} className="section-chip" style={{ '--pill-c': s.cat.color }} onClick={() => onSetFilter(s.cat.id)}>
               <span className="section-chip-dot" style={{ background: s.cat.color }} />
               {s.cat.label} {s.done}/{s.count}
             </div>

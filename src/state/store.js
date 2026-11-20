@@ -261,6 +261,10 @@ export const useStore = create(
     focusMode: false,
     hideTags: false,
     hideNotes: false,
+    // Minimal look: outlined tags, no bars down the left, quieter chrome (see styles.css [data-minimal]).
+    minimalMode: false,
+    // How wide the script's page is, in px at 100% (drag its edges to change it).
+    pageWidth: 760,
     zoom: 1,
     inspectorTab: 'categories',
     // Comments: the thread being looked at (its highlight and card light up), a counter
@@ -460,6 +464,8 @@ export const useStore = create(
         if (settings && typeof settings.editorPageContrast === 'boolean') s.editorPageContrast = settings.editorPageContrast
         if (settings && typeof settings.mapHideBars === 'boolean') s.mapHideBars = settings.mapHideBars
         if (settings && typeof settings.commentAuthor === 'string' && settings.commentAuthor.trim()) s.commentAuthor = settings.commentAuthor.trim()
+        if (settings && typeof settings.minimalMode === 'boolean') s.minimalMode = settings.minimalMode
+        if (settings && typeof settings.pageWidth === 'number' && settings.pageWidth >= 480 && settings.pageWidth <= 2400) s.pageWidth = settings.pageWidth
         if (settings && typeof settings.commentsInMargin === 'boolean') s.commentsInMargin = settings.commentsInMargin
         if (settings && settings.themeVariants && typeof settings.themeVariants === 'object') s.themeVariants = settings.themeVariants
         if (settings && typeof settings.glassFrost === 'number') s.glassFrost = settings.glassFrost
@@ -671,6 +677,8 @@ export const useStore = create(
         editorPageContrast: s.editorPageContrast,
         mapHideBars: s.mapHideBars,
         commentAuthor: s.commentAuthor,
+        minimalMode: s.minimalMode,
+        pageWidth: s.pageWidth,
         commentsInMargin: s.commentsInMargin,
         themeVariants: s.themeVariants,
         glassFrost: s.glassFrost,
@@ -1242,15 +1250,35 @@ export const useStore = create(
         s.hideNotes = !s.hideNotes
       })
     },
+    toggleMinimalMode() {
+      set((s) => {
+        s.minimalMode = !s.minimalMode
+      })
+      get().saveAppSettings()
+    },
+    // The script page's width (px at 100% zoom). `save` false while dragging, true on release.
+    setPageWidth(w, save = true) {
+      const v = Math.round(Math.max(480, Math.min(2400, w)))
+      set((s) => {
+        s.pageWidth = v
+      })
+      if (save) get().saveAppSettings()
+    },
     zoomIn() {
       set((s) => {
-        s.zoom = Math.min(1.6, Math.round((s.zoom + 0.1) * 100) / 100)
+        s.zoom = Math.min(2, Math.round((s.zoom + 0.1) * 100) / 100)
       })
       get().saveAppSettings()
     },
     zoomOut() {
       set((s) => {
-        s.zoom = Math.max(0.7, Math.round((s.zoom - 0.1) * 100) / 100)
+        s.zoom = Math.max(0.6, Math.round((s.zoom - 0.1) * 100) / 100)
+      })
+      get().saveAppSettings()
+    },
+    zoomReset() {
+      set((s) => {
+        s.zoom = 1
       })
       get().saveAppSettings()
     },

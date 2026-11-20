@@ -23,6 +23,8 @@ export default function Topbar({ script }) {
   const zoomOut = useStore((s) => s.zoomOut)
   const hideTags = useStore((s) => s.hideTags)
   const hideNotes = useStore((s) => s.hideNotes)
+  const minimalMode = useStore((s) => s.minimalMode)
+  const toggleMinimalMode = useStore((s) => s.toggleMinimalMode)
   const toggleHideTags = useStore((s) => s.toggleHideTags)
   const toggleHideNotes = useStore((s) => s.toggleHideNotes)
   const sectionJumpOpen = useStore((s) => s.sectionJumpOpen)
@@ -159,6 +161,13 @@ export default function Topbar({ script }) {
           title={(hideTags ? 'Show tags' : 'Hide tags') + kb('hideTags')}
         >
           <Icon name={hideTags ? 'tagOff' : 'tag'} />
+        </button>
+        <button
+          className={'icon-btn tb-icon' + (minimalMode ? ' active' : '')}
+          onClick={toggleMinimalMode}
+          title={(minimalMode ? 'Back to the full look' : 'Minimal look — outlined tags, no side bars, quieter chrome') + kb('toggleMinimal')}
+        >
+          <Icon name="minimal" />
         </button>
         <button
           className={'icon-btn tb-icon' + (hideNotes ? ' active' : '')}

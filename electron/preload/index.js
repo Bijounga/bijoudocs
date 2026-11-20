@@ -66,6 +66,11 @@ const api = {
     ipcRenderer.on('pad:closed', l)
     return () => ipcRenderer.removeListener('pad:closed', l)
   },
+  onZoomKey: (cb) => {
+    const l = (_e, dir) => cb(dir)
+    ipcRenderer.on('zoom:key', l)
+    return () => ipcRenderer.removeListener('zoom:key', l)
+  },
   platform: process.platform,
   windowMinimize: () => ipcRenderer.invoke('window:minimize'),
   windowToggleMaximize: () => ipcRenderer.invoke('window:toggleMaximize'),

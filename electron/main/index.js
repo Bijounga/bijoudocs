@@ -112,6 +112,19 @@ function createWindow() {
   })
 
   win.on('ready-to-show', () => win.show())
+  // Ctrl + / Ctrl - / Ctrl 0 would zoom the WHOLE window (every panel, tooltip and menu), which
+  // leaves the layout in a mess and stays that way between launches. They zoom the script text
+  // instead (the % in the top bar), and the window itself stays at 100%.
+  win.webContents.setVisualZoomLevelLimits(1, 1)
+  win.webContents.on('before-input-event', (event, input) => {
+    if (input.type !== 'keyDown' || !(input.control || input.meta) || input.alt) return
+    const k = input.key
+    const dir = k === '=' || k === '+' ? 'in' : k === '-' || k === '_' ? 'out' : k === '0' ? 'reset' : null
+    if (!dir) return
+    event.preventDefault()
+    win.webContents.send('zoom:key', dir)
+  })
+  win.webContents.on('did-finish-load', () => win.webContents.setZoomFactor(1))
   win.on('maximize', () => win.webContents.send('window:maximizedChanged', true))
   win.on('unmaximize', () => win.webContents.send('window:maximizedChanged', false))
   if (isDev) {

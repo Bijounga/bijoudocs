@@ -19,6 +19,8 @@ export default function EditorMain({ scriptId, script }) {
   const addSection = useStore((s) => s.addSection)
   const focusMode = useStore((s) => s.focusMode)
   const zoom = useStore((s) => s.zoom)
+  const pageWidth = useStore((s) => s.pageWidth)
+  const setPageWidth = useStore((s) => s.setPageWidth)
   const setActiveTab = useStore((s) => s.setActiveTab)
   const mapViewOpen = useStore((s) => s.mapViewOpen)
   const mapSplitOpen = useStore((s) => s.mapSplitOpen)
@@ -81,8 +83,28 @@ export default function EditorMain({ scriptId, script }) {
     )
   }
 
+  // The page is centred, so an edge dragged by d moves the other one too: the width changes by 2d.
+  function startPageResize(e, dir) {
+    e.preventDefault()
+    const startX = e.clientX
+    const startW = useStore.getState().pageWidth
+    document.body.classList.add('is-resizing-panel')
+    const move = (ev) => setPageWidth(startW + 2 * dir * (ev.clientX - startX), false)
+    const up = (ev) => {
+      document.removeEventListener('mousemove', move)
+      document.removeEventListener('mouseup', up)
+      document.body.classList.remove('is-resizing-panel')
+      setPageWidth(startW + 2 * dir * (ev.clientX - startX), true)
+    }
+    document.addEventListener('mousemove', move)
+    document.addEventListener('mouseup', up)
+  }
+
   const editor = (
-    <div className={'editor-wrap' + (focusMode ? ' focus-wide' : '')} style={{ zoom }}>
+    <div className={'editor-wrap' + (focusMode ? ' focus-wide' : '')} style={{ '--ez': zoom, '--page-w': pageWidth + 'px' }}>
+      {/* Drag the page's edges to make it wider or narrower; double-click to put it back. */}
+      <div className="page-grip left" onMouseDown={(e) => startPageResize(e, -1)} onDoubleClick={() => setPageWidth(760)} title="Drag to change the page width — double-click to reset" />
+      <div className="page-grip right" onMouseDown={(e) => startPageResize(e, 1)} onDoubleClick={() => setPageWidth(760)} title="Drag to change the page width — double-click to reset" />
       {showingSingle ? (
         <SectionBlock
           scriptId={scriptId}

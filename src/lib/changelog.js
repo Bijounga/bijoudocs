@@ -307,6 +307,11 @@ export const CHANGELOG = {
   '0.5.87': ["If your scripts folder can't be reached at start-up (a synced drive such as Google Drive that isn't connected), BijouDocs now says so and offers Try again / Choose another folder / Use the default folder, instead of staying on 'Loading BijouDocs…' forever"],
   '0.5.88': [
     "Subsections: small headings inside a section, to separate events. Type ## and a space at the start of an empty line, use the H button on a line, the right-click menu, '+ Subsection', or Ctrl+Alt+H. Click the arrow (or press Ctrl+Enter in it) to fold the lines under it, which shows how many are inside; Backspace at the start of a heading turns it back into a normal line; dragging a heading moves its lines with it. Headings are left out of word counts and the teleprompter, and export as ###"
+  ],
+  '0.5.89': [
+    "Minimal look: press Ctrl+Alt+K (or the leaf button in the top bar). Tags and section chips become outlines with the text in their own colour, the coloured bars down the left disappear, and the lines get a little more air. Everything still works",
+    "You can now widen the script's page: drag its left or right edge (double-click an edge to reset). The text size stays the same, so lines can run longer. It can only grow into free room, so close a side panel to widen it further",
+    "Zoom fixed: it now enlarges only the text, so the column no longer gets narrower as you zoom in. Ctrl+ +, Ctrl+ -, Ctrl+0 and Ctrl+scroll over the script zoom the text (60 to 200%) and no longer zoom the whole window"
   ]
 }
 
