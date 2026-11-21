@@ -222,7 +222,9 @@
    with. */
 [data-theme='dos'] body {
   font-weight: 400;
-  -webkit-text-stroke: 0.3px currentColor;
+  /* A sideways shadow thickens the letters, not a text-stroke: Chromium leaves the stroke off
+     spell-checked (misspelled) words, which then looked like a different, thinner font. */
+  text-shadow: 0.3px 0 0 currentColor;
 }
 [data-theme='dos'] .editor-wrap,
 [data-theme='dos'] .outline-list {
@@ -1879,7 +1881,9 @@ body {
 /* Tahoma has no medium weight; same hairline-stroke trick as MS-DOS. */
 [data-theme='xp'] body {
   font-weight: 400;
-  -webkit-text-stroke: 0.25px currentColor;
+  /* A sideways shadow thickens the letters, not a text-stroke: Chromium leaves the stroke off
+     spell-checked (misspelled) words, which then looked like a different, thinner font. */
+  text-shadow: 0.25px 0 0 currentColor;
 }
 [data-theme='xp'] .app-root {
   background: #3a6ea5 var(--theme-wallpaper, url('./assets/bg/xp-bliss.webp')) no-repeat;

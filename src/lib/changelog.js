@@ -312,6 +312,9 @@ export const CHANGELOG = {
     "Minimal look: press Ctrl+Alt+K (or the leaf button in the top bar). Tags and section chips become outlines with the text in their own colour, the coloured bars down the left disappear, and the lines get a little more air. Everything still works",
     "You can now widen the script's page: drag its left or right edge (double-click an edge to reset). The text size stays the same, so lines can run longer. It can only grow into free room, so close a side panel to widen it further",
     "Zoom fixed: it now enlarges only the text, so the column no longer gets narrower as you zoom in. Ctrl+ +, Ctrl+ -, Ctrl+0 and Ctrl+scroll over the script zoom the text (60 to 200%) and no longer zoom the whole window"
+  ],
+  '0.5.90': [
+    "Fixed misspelled words looking like a different, thinner font in the XP and DOS themes"
   ]
 }
 
