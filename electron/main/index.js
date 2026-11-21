@@ -117,6 +117,13 @@ function createWindow() {
   // instead (the % in the top bar), and the window itself stays at 100%.
   win.webContents.setVisualZoomLevelLimits(1, 1)
   win.webContents.on('before-input-event', (event, input) => {
+    // Plain Ctrl+R is Electron's built-in Reload, which restarts the whole window. It's easy to hit
+    // by accident next to Ctrl+E / Ctrl+T, so it does nothing in the installed app. Ctrl+Shift+R and
+    // F5 still reload on purpose. (Development keeps all of them.)
+    if (!isDev && input.type === 'keyDown' && (input.control || input.meta) && !input.alt && !input.shift && String(input.key).toLowerCase() === 'r') {
+      event.preventDefault()
+      return
+    }
     if (input.type !== 'keyDown' || !(input.control || input.meta) || input.alt) return
     const k = input.key
     const dir = k === '=' || k === '+' ? 'in' : k === '-' || k === '_' ? 'out' : k === '0' ? 'reset' : null

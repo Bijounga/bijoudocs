@@ -1,4 +1,4 @@
-import { BrowserWindow, screen, ipcMain } from 'electron'
+import { app, BrowserWindow, screen, ipcMain } from 'electron'
 
 // The notepad can leave the app window and sit on any monitor. It is still part of
 // the app, not a window of its own: an OWNED window (parent = the main window) with
@@ -71,6 +71,12 @@ export function registerPadIpc(getMainWindow, { preload, icon, loadInto }) {
       webPreferences: { preload, sandbox: false }
     })
     padWin.once('ready-to-show', () => padWin && !padWin.isDestroyed() && padWin.show())
+    // No accidental reload (plain Ctrl+R) in the installed app, same as the main window.
+    if (app.isPackaged) {
+      padWin.webContents.on('before-input-event', (event, input) => {
+        if (input.type === 'keyDown' && (input.control || input.meta) && !input.alt && !input.shift && String(input.key).toLowerCase() === 'r') event.preventDefault()
+      })
+    }
     const sendBounds = () => {
       clearTimeout(boundsTimer)
       boundsTimer = setTimeout(() => {

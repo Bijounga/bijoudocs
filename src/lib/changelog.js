@@ -315,6 +315,9 @@ export const CHANGELOG = {
   ],
   '0.5.90': [
     "Fixed misspelled words looking like a different, thinner font in the XP and DOS themes"
+  ],
+  '0.5.91': [
+    "Ctrl+R no longer reloads the app and resets what's on screen (easy to hit by accident next to Ctrl+E and Ctrl+T). Ctrl+Shift+R and F5 still reload"
   ]
 }
 
